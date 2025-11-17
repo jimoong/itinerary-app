@@ -22,23 +22,42 @@ export async function POST(request: NextRequest) {
 
     if (action === 'generate-all') {
       // Generate all 9 days (5 Prague + 4 London)
-      console.log('Generating all 9 days...');
+      console.log('========================================');
+      console.log('🚀 GENERATING ALL 9 DAYS OF ITINERARY');
+      console.log('========================================');
       const allDays = [];
       const visitedPlaces: string[] = [];
+      let aiGeneratedCount = 0;
+      let fallbackCount = 0;
       
       for (let i = 1; i <= 9; i++) {
-        console.log(`Generating day ${i}...`);
+        console.log(`\n--- Day ${i}/9 ---`);
         const day = await generateDayItinerary(TRIP_DETAILS, i, 9, visitedPlaces);
         allDays.push(day);
+        
+        // Track if this was AI generated or fallback (check if it has the expected structure)
+        // Fallback data typically has specific placeholder patterns
+        const isLikelyFallback = day.places.some(p => 
+          p.description?.includes('fallback') || 
+          p.description?.includes('default')
+        );
+        
+        if (isLikelyFallback) {
+          fallbackCount++;
+        } else {
+          aiGeneratedCount++;
+        }
         
         // Add this day's places to visited list
         day.places.forEach(place => {
           visitedPlaces.push(place.name);
         });
-        
-        console.log(`Day ${i} generated`);
       }
-      console.log('All days generated successfully');
+      
+      console.log('\n========================================');
+      console.log('✅ ITINERARY GENERATION COMPLETE');
+      console.log(`📊 Summary: ${aiGeneratedCount} days from AI, ${fallbackCount} days from fallback`);
+      console.log('========================================\n');
       return NextResponse.json({ days: allDays });
     }
 

@@ -142,7 +142,7 @@ Return ONLY a valid JSON object with this exact structure:
   try {
     console.log(`[generateDayItinerary] Calling AI for ${city} on ${date}...`);
     const response = await callAI(prompt);
-    console.log(`[generateDayItinerary] AI response received for ${city}`);
+    console.log(`[generateDayItinerary] ✅ AI GENERATED - Day ${dayNumber} (${city}) from AI API`);
     
     const parsed = JSON.parse(response.content);
     const places: Place[] = parsed.places.map((p: any, idx: number) => ({
@@ -150,6 +150,7 @@ Return ONLY a valid JSON object with this exact structure:
       ...p
     }));
 
+    console.log(`[generateDayItinerary] ✅ Successfully parsed ${places.length} places for ${city}`);
     return {
       date,
       dayNumber,
@@ -158,12 +159,13 @@ Return ONLY a valid JSON object with this exact structure:
       places
     };
   } catch (error) {
+    console.error('[generateDayItinerary] ❌ AI API FAILED');
     console.error('Error generating itinerary:', error);
     if (error instanceof Error) {
       console.error('Error details:', error.message);
       console.error('Error stack:', error.stack);
     }
-    console.log('Using fallback itinerary for day', dayNumber, 'in', city);
+    console.warn(`[generateDayItinerary] ⚠️ USING FALLBACK DATA - Day ${dayNumber} (${city})`);
     // Return fallback itinerary
     return generateFallbackItinerary(date, dayNumber, city, hotel);
   }
@@ -198,14 +200,18 @@ Return ONLY a valid JSON array with this structure:
 ]`;
 
   try {
+    console.log(`[regenerateDayWithChanges] Calling AI to re-optimize day ${day.dayNumber}...`);
     const response = await callAI(prompt);
+    console.log(`[regenerateDayWithChanges] ✅ AI GENERATED - Day ${day.dayNumber} re-optimized from AI API`);
     const parsed = JSON.parse(response.content);
     return parsed.map((p: any, idx: number) => ({
       id: places[idx]?.id || `${day.dayNumber}-${idx}`,
       ...p
     }));
   } catch (error) {
+    console.error('[regenerateDayWithChanges] ❌ AI API FAILED');
     console.error('Error regenerating day:', error);
+    console.warn(`[regenerateDayWithChanges] ⚠️ USING ORIGINAL PLACES - Day ${day.dayNumber}`);
     return places;
   }
 }
@@ -315,29 +321,34 @@ Return ONLY a valid JSON object (NOT an array) with this structure:
 }`;
 
   try {
+    console.log(`[regenerateSinglePlace] Calling AI to regenerate place at index ${placeIndex} on day ${dayNumber}...`);
     const response = await callAI(prompt);
     const parsed = JSON.parse(response.content);
     
     // Validate that the new place is actually different
     if (parsed.name.toLowerCase() === currentPlace.name.toLowerCase()) {
-      console.warn('AI returned the same place, retrying with more explicit prompt...');
+      console.warn('[regenerateSinglePlace] AI returned the same place, retrying with more explicit prompt...');
       // Try one more time with even more emphasis
       const retryPrompt = `You are a travel planning assistant. You MUST provide a different alternative location. Always respond with valid JSON only.\n\nURGENT: The previous suggestion "${parsed.name}" is the SAME as the current place. Please suggest a COMPLETELY DIFFERENT ${currentPlace.category} in ${city} for the same time slot (${suggestedStartTime}). Avoid these: ${placesToAvoid.join(', ')}`;
       
       const retryResponse = await callAI(retryPrompt);
       const retryParsed = JSON.parse(retryResponse.content);
+      console.log(`[regenerateSinglePlace] ✅ AI GENERATED - Place regenerated (retry) from AI API: ${retryParsed.name}`);
       return {
         id: currentPlace.id,
         ...retryParsed
       };
     }
     
+    console.log(`[regenerateSinglePlace] ✅ AI GENERATED - Place regenerated from AI API: ${parsed.name}`);
     return {
       id: currentPlace.id,
       ...parsed
     };
   } catch (error) {
+    console.error('[regenerateSinglePlace] ❌ AI API FAILED');
     console.error('Error regenerating place:', error);
+    console.warn(`[regenerateSinglePlace] ⚠️ KEEPING ORIGINAL PLACE - ${currentPlace.name}`);
     // Return original place if regeneration fails
     return currentPlace;
   }
