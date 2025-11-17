@@ -36,7 +36,52 @@ function cleanJsonResponse(content: string): string {
         console.log('[cleanJsonResponse] Successfully extracted valid JSON');
         return jsonMatch[1];
       } catch (e) {
-        // Continue to return original if extraction doesn't help
+        // Continue to more repair attempts
+      }
+    }
+    
+    // Try to repair truncated JSON
+    let repaired = cleaned;
+    
+    // Count braces and brackets
+    const openBraces = (repaired.match(/{/g) || []).length;
+    const closeBraces = (repaired.match(/}/g) || []).length;
+    const openBrackets = (repaired.match(/\[/g) || []).length;
+    const closeBrackets = (repaired.match(/\]/g) || []).length;
+    
+    console.log(`[cleanJsonResponse] Braces: ${openBraces}/${closeBraces}, Brackets: ${openBrackets}/${closeBrackets}`);
+    
+    // If JSON appears truncated, try to close it
+    if (openBraces > closeBraces || openBrackets > closeBrackets) {
+      console.log('[cleanJsonResponse] Detected truncated JSON, attempting to close...');
+      
+      // Remove any incomplete last item (likely truncated)
+      // Find the last complete object/value before truncation
+      const lastCommaIndex = repaired.lastIndexOf(',');
+      if (lastCommaIndex > 0) {
+        repaired = repaired.substring(0, lastCommaIndex);
+        console.log('[cleanJsonResponse] Removed incomplete trailing content');
+      }
+      
+      // Close missing brackets and braces
+      const newOpenBrackets = (repaired.match(/\[/g) || []).length;
+      const newCloseBrackets = (repaired.match(/\]/g) || []).length;
+      const newOpenBraces = (repaired.match(/{/g) || []).length;
+      const newCloseBraces = (repaired.match(/}/g) || []).length;
+      
+      if (newOpenBrackets > newCloseBrackets) {
+        repaired += ']'.repeat(newOpenBrackets - newCloseBrackets);
+      }
+      if (newOpenBraces > newCloseBraces) {
+        repaired += '}'.repeat(newOpenBraces - newCloseBraces);
+      }
+      
+      try {
+        JSON.parse(repaired);
+        console.log('[cleanJsonResponse] ✅ Successfully repaired truncated JSON');
+        return repaired;
+      } catch (e) {
+        console.warn('[cleanJsonResponse] Repair attempt failed');
       }
     }
     
@@ -211,6 +256,20 @@ Return ONLY a valid JSON object with this exact structure:
       console.error('Parse error:', parseError);
       console.error('First 500 chars of response:', response.content.substring(0, 500));
       console.error('Last 500 chars of response:', response.content.substring(Math.max(0, response.content.length - 500)));
+      
+      // If the error message contains a position, show context around that position
+      if (parseError instanceof Error && parseError.message.includes('position')) {
+        const posMatch = parseError.message.match(/position (\d+)/);
+        if (posMatch) {
+          const pos = parseInt(posMatch[1], 10);
+          const contextStart = Math.max(0, pos - 200);
+          const contextEnd = Math.min(cleanedContent.length, pos + 200);
+          console.error(`Context around position ${pos}:`);
+          console.error(cleanedContent.substring(contextStart, contextEnd));
+          console.error(' '.repeat(Math.min(200, pos - contextStart)) + '^--- Error here');
+        }
+      }
+      
       throw parseError;
     }
   } catch (error) {
