@@ -4,6 +4,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "London & Prague Itinerary Explorer",
   description: "Plan your family trip to London and Prague",
+  viewport: "width=device-width, initial-scale=1, viewport-fit=cover",
 };
 
 export default function RootLayout({

@@ -32,6 +32,25 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
   margin: 0;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+html {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+}
+
+/* Safe area inset utilities */
+.safe-area-inset-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.pb-safe {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
 }
 
 /* ============================================
