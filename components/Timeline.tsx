@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import { Place } from '@/lib/types';
-import { Clock, MapPin, Trash2, Coffee, Building2, TreePine, Landmark, ShoppingBag, Ticket, Navigation, Car, Train, TramFront, Heart, RefreshCw, Hotel } from 'lucide-react';
+import { Clock, MapPin, Trash2, Coffee, Building2, TreePine, Landmark, ShoppingBag, Ticket, Navigation, Car, Train, TramFront, Heart, RefreshCw, Hotel, Image } from 'lucide-react';
+import ImagePanel from './ImagePanel';
 
 interface TimelineProps {
   places: Place[];
@@ -14,6 +16,15 @@ interface TimelineProps {
 }
 
 export default function Timeline({ places, onRemovePlace, onPlaceClick, onRefreshPlace, highlightedPlaceId, refreshingPlaceIndex, nextPlaceIndex }: TimelineProps) {
+  const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
+  const [isImagePanelOpen, setIsImagePanelOpen] = useState(false);
+
+  const handleImageClick = (place: Place, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedPlace(place);
+    setIsImagePanelOpen(true);
+  };
+
   const getCategoryIcon = (category: string) => {
     switch (category.toLowerCase()) {
       case 'hotel':
@@ -102,8 +113,9 @@ export default function Timeline({ places, onRemovePlace, onPlaceClick, onRefres
   }
 
   return (
-    <div className="timeline">
-      {places.map((place, index) => {
+    <>
+      <div className="timeline">
+        {places.map((place, index) => {
         const isHighlighted = highlightedPlaceId === place.id;
         const isHotel = place.category === 'hotel';
         
@@ -140,6 +152,15 @@ export default function Timeline({ places, onRemovePlace, onPlaceClick, onRefres
                   {/* Action buttons - hide for hotel items */}
                   {!isHotel && (
                     <div className="flex gap-1 absolute right-0">
+                      {/* Image button */}
+                      <button
+                        onClick={(e) => handleImageClick(place, e)}
+                        className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors"
+                        title="View images"
+                      >
+                        <Image className="w-4 h-4" />
+                      </button>
+
                       {/* Refresh button */}
                       {onRefreshPlace && (
                         <button
@@ -148,7 +169,7 @@ export default function Timeline({ places, onRemovePlace, onPlaceClick, onRefres
                             onRefreshPlace(index);
                           }}
                           disabled={refreshingPlaceIndex === index}
-                          className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           title="Get AI suggestion for alternative place"
                         >
                           <RefreshCw className={`w-4 h-4 ${refreshingPlaceIndex === index ? 'animate-spin' : ''}`} />
@@ -248,7 +269,17 @@ export default function Timeline({ places, onRemovePlace, onPlaceClick, onRefres
           </div>
         );
       })}
-    </div>
+      </div>
+
+      {/* Image Panel */}
+      {selectedPlace && (
+        <ImagePanel
+          place={selectedPlace}
+          isOpen={isImagePanelOpen}
+          onClose={() => setIsImagePanelOpen(false)}
+        />
+      )}
+    </>
   );
 }
 
