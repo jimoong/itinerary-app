@@ -35,7 +35,7 @@ export default function DayNavigation({
   }
   
   return (
-    <div className="bg-white dark:bg-black border-t border-gray-200 dark:border-slate-700 shadow-lg px-6 py-3 safe-area-inset-bottom fixed bottom-0 left-0 right-0 z-40">
+    <div className="bg-white dark:bg-black border-t border-gray-200 dark:border-slate-700 shadow-lg px-6 py-4 safe-area-inset-bottom fixed bottom-0 left-0 right-0 z-40 h-16 pb-16">
       <div className="mx-auto flex items-center justify-center gap-4 pb-safe">
 
         <div className="flex items-left gap-2 absolute left-6">
@@ -49,7 +49,6 @@ export default function DayNavigation({
               }`}
             >
               <ChevronLeft className="w-4 h-4" />
-              <span className="hidden sm:inline">Previous</span>
             </button>
 
             <button
@@ -61,7 +60,6 @@ export default function DayNavigation({
                   : 'text-gray-400 dark:text-gray-600 border-gray-100 dark:border-slate-800 cursor-not-allowed'
               }`}
             >
-              <span className="hidden sm:inline">Next</span>
               <ChevronRight className="w-4 h-4" />
             </button>
 

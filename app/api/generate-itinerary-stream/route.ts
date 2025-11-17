@@ -2,6 +2,11 @@ import { NextRequest } from 'next/server';
 import { generateDayItinerary } from '@/lib/openai';
 import { TRIP_DETAILS } from '@/lib/constants';
 
+// Configure for streaming on Vercel
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const maxDuration = 300; // 5 minutes max
+
 export async function POST(request: NextRequest) {
   console.log('========================================');
   console.log('🚀 STREAMING ITINERARY GENERATION');

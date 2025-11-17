@@ -308,6 +308,10 @@ export default function Home() {
 
   const generateAllDays = async () => {
     setIsLoading(true);
+    
+    // Try streaming first, fallback to non-streaming if it fails
+    let useStreaming = true;
+    
     try {
       console.log('🚀 Starting streaming itinerary generation...');
       const response = await fetch('/api/generate-itinerary-stream', {
@@ -318,9 +322,55 @@ export default function Home() {
       console.log('Response status:', response.status);
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('API error:', errorText);
-        throw new Error(`Failed to generate itinerary: ${response.status}`);
+        console.warn('⚠️ Streaming failed, falling back to non-streaming API');
+        useStreaming = false;
+      } else {
+        useStreaming = true;
+      }
+      
+      if (!useStreaming) {
+        // Fallback to non-streaming API
+        console.log('📡 Using non-streaming API...');
+        const fallbackResponse = await fetch('/api/generate-itinerary', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'generate-all' }),
+        });
+        
+        if (!fallbackResponse.ok) {
+          const errorText = await fallbackResponse.text();
+          console.error('API error:', errorText);
+          throw new Error(`Failed to generate itinerary: ${fallbackResponse.status}`);
+        }
+        
+        const data = await fallbackResponse.json();
+        
+        if (!data.days || data.days.length !== 9) {
+          throw new Error(`Expected 9 days but got ${data.days?.length || 0}`);
+        }
+        
+        // Add hotels to each day
+        const daysWithHotels = await Promise.all(
+          data.days.map((day: DayItinerary) => addHotelsToDay(day))
+        );
+        
+        const newTrip: Trip = {
+          travelers: [
+            { role: "Dad", age: 46 },
+            { role: "Mom", age: 39 },
+            { role: "Girl", age: 9 },
+            { role: "Boy", age: 6 }
+          ],
+          days: daysWithHotels,
+          startDate: data.days[0].date,
+          endDate: data.days[data.days.length - 1].date,
+        };
+        
+        setTrip(newTrip);
+        saveTrip(newTrip);
+        console.log('✅ Non-streaming generation complete');
+        setIsLoading(false);
+        return;
       }
 
       const reader = response.body?.getReader();
@@ -676,7 +726,7 @@ export default function Home() {
             
             {/* Loading indicator while streaming */}
             {isLoading && trip && trip.days.length < 9 && (
-              <div className="px-4 py-3 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800">
+              <div className="px-4 py-3 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800 fixed z-50 bottom-20 left-1/2 w-80 -ml-40 rounded-lg shadow-lg">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2 text-sm font-medium text-blue-700 dark:text-blue-300">
                     <Loader2 className="w-4 h-4 animate-spin" />
