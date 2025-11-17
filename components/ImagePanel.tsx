@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Loader2, ImageOff } from 'lucide-react';
+import { X, Loader2, ImageOff, Clock, Phone, Globe, ExternalLink } from 'lucide-react';
 import { Place } from '@/lib/types';
 
 interface ImagePanelProps {
@@ -15,8 +15,16 @@ interface Photo {
   attribution: string;
 }
 
+interface PlaceDetails {
+  openingHours: string[] | null;
+  isOpenNow?: boolean;
+  phoneNumber: string | null;
+  website: string | null;
+}
+
 export default function ImagePanel({ place, isOpen, onClose }: ImagePanelProps) {
   const [photos, setPhotos] = useState<Photo[]>([]);
+  const [details, setDetails] = useState<PlaceDetails | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -53,17 +61,18 @@ export default function ImagePanel({ place, isOpen, onClose }: ImagePanelProps) 
       );
       
       if (!response.ok) {
-        throw new Error('Failed to fetch photos');
+        throw new Error('Failed to fetch place information');
       }
       
       const data = await response.json();
       setPhotos(data.photos || []);
+      setDetails(data.details || null);
       
-      if (data.photos.length === 0) {
+      if (data.photos.length === 0 && !data.details) {
         setError(true);
       }
     } catch (err) {
-      console.error('Error fetching photos:', err);
+      console.error('Error fetching place information:', err);
       setError(true);
     } finally {
       setLoading(false);
@@ -116,7 +125,7 @@ export default function ImagePanel({ place, isOpen, onClose }: ImagePanelProps) 
           {loading && (
             <div className="flex flex-col items-center justify-center py-20">
               <Loader2 className="w-12 h-12 animate-spin text-blue-600 mb-4" />
-              <p className="text-gray-600 dark:text-gray-400">Loading images...</p>
+              <p className="text-gray-600 dark:text-gray-400">Loading information...</p>
             </div>
           )}
 
@@ -124,32 +133,103 @@ export default function ImagePanel({ place, isOpen, onClose }: ImagePanelProps) 
             <div className="flex flex-col items-center justify-center py-20 px-6">
               <ImageOff className="w-16 h-16 text-gray-300 dark:text-gray-600 mb-4" />
               <p className="text-gray-600 dark:text-gray-400 text-center">
-                No images found for this location
+                No information found for this location
               </p>
             </div>
           )}
 
-          {!loading && !error && photos.length > 0 && (
-            <div className="p-4 pb-8 pt-0 space-y-4">
-              {photos.map((photo, index) => (
-                <div key={index} className="relative">
-                  {/* Placeholder with aspect ratio to prevent layout shift */}
-                  <div className="relative w-full" style={{ paddingBottom: '66.67%' }}>
-                    <img
-                      src={photo.url}
-                      alt={`${place.name} - Photo ${index + 1}`}
-                      className="absolute inset-0 w-full h-full object-cover rounded-lg shadow-md"
-                      loading="lazy"
-                    />
-                  </div>
-                  {photo.attribution && (
-                    <div 
-                      className="text-xs text-gray-500 dark:text-gray-400 mt-1"
-                      dangerouslySetInnerHTML={{ __html: photo.attribution }}
-                    />
+          {!loading && !error && (details || photos.length > 0) && (
+            <div className="p-4 pb-8 pt-4 space-y-6">
+              {/* Place Details Section */}
+              {details && (
+                <div className="space-y-4 pb-4 border-b border-gray-200 dark:border-slate-700">
+                  {/* Opening Hours */}
+                  {details.openingHours && details.openingHours.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                        <h3 className="font-semibold text-gray-900 dark:text-white">Hours</h3>
+                        {details.isOpenNow !== undefined && (
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${
+                            details.isOpenNow 
+                              ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' 
+                              : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                          }`}>
+                            {details.isOpenNow ? 'Open now' : 'Closed'}
+                          </span>
+                        )}
+                      </div>
+                      <div className="ml-7 space-y-1">
+                        {details.openingHours.map((hours, index) => (
+                          <p key={index} className="text-sm text-gray-600 dark:text-gray-400">
+                            {hours}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Phone Number */}
+                  {details.phoneNumber && (
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Phone className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                        <h3 className="font-semibold text-gray-900 dark:text-white">Phone</h3>
+                      </div>
+                      <a 
+                        href={`tel:${details.phoneNumber}`}
+                        className="ml-7 text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                      >
+                        {details.phoneNumber}
+                      </a>
+                    </div>
+                  )}
+
+                  {/* Website */}
+                  {details.website && (
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Globe className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                        <h3 className="font-semibold text-gray-900 dark:text-white">Website</h3>
+                      </div>
+                      <a 
+                        href={details.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ml-7 text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                      >
+                        Visit website
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
                   )}
                 </div>
-              ))}
+              )}
+
+              {/* Photos Section */}
+              {photos.length > 0 && (
+                <div className="space-y-4">
+                  {photos.map((photo, index) => (
+                    <div key={index} className="relative">
+                      {/* Placeholder with aspect ratio to prevent layout shift */}
+                      <div className="relative w-full" style={{ paddingBottom: '66.67%' }}>
+                        <img
+                          src={photo.url}
+                          alt={`${place.name} - Photo ${index + 1}`}
+                          className="absolute inset-0 w-full h-full object-cover rounded-lg shadow-md"
+                          loading="lazy"
+                        />
+                      </div>
+                      {photo.attribution && (
+                        <div 
+                          className="text-xs text-gray-500 dark:text-gray-400 mt-1"
+                          dangerouslySetInnerHTML={{ __html: photo.attribution }}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

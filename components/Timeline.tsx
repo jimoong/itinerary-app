@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Place } from '@/lib/types';
-import { Clock, MapPin, Trash2, Coffee, Building2, TreePine, Landmark, ShoppingBag, Ticket, Navigation, Car, Train, TramFront, Heart, RefreshCw, Hotel, Image, MoreVertical } from 'lucide-react';
+import { Clock, MapPin, Trash2, Coffee, Building2, TreePine, Landmark, ShoppingBag, Ticket, Navigation, Car, Train, TramFront, Heart, RefreshCw, Hotel, Info, MoreVertical } from 'lucide-react';
 import ImagePanel from './ImagePanel';
 
 interface TimelineProps {
@@ -197,13 +197,13 @@ export default function Timeline({ places, onRemovePlace, onPlaceClick, onRefres
                   {/* Action buttons - hide for hotel items */}
                   {!isHotel && (
                     <div className="flex gap-1 absolute right-0">
-                      {/* Image button */}
+                      {/* Info button */}
                       <button
                         onClick={(e) => handleImageClick(place, e)}
                         className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors"
-                        title="View images"
+                        title="View place info"
                       >
-                        <Image className="w-4 h-4" />
+                        <Info className="w-4 h-4" />
                       </button>
 
                       {/* More menu button */}
