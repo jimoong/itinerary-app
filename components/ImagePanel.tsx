@@ -139,10 +139,10 @@ export default function ImagePanel({ place, isOpen, onClose }: ImagePanelProps) 
           )}
 
           {!loading && !error && (details || photos.length > 0) && (
-            <div className="p-4 pb-8 pt-4 space-y-6">
-              {/* Place Details Section */}
-              {details && (
-                <div className="space-y-4 pb-4 border-b border-gray-200 dark:border-slate-700">
+            <div className="p-4 pb-8 pt-4">
+              {/* Place Details Section - only show if there's at least one detail */}
+              {details && (details.openingHours?.length || details.phoneNumber || details.website) && (
+                <div className="space-y-4 pb-4 mb-6 border-b border-gray-200 dark:border-slate-700">
                   {/* Opening Hours */}
                   {details.openingHours && details.openingHours.length > 0 && (
                     <div className="space-y-2">
