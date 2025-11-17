@@ -221,7 +221,7 @@ export default function Timeline({ places, onRemovePlace, onPlaceClick, onRefres
 
                         {/* Dropdown menu */}
                         {openMenuIndex === index && (
-                          <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-gray-200 dark:border-slate-700 overflow-hidden z-50">
+                          <div className="absolute right-0 top-full mt-1 w-60 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-gray-200 dark:border-slate-700 overflow-hidden z-50">
                             {/* Refresh option */}
                             {onRefreshPlace && (
                               <button
@@ -234,7 +234,7 @@ export default function Timeline({ places, onRemovePlace, onPlaceClick, onRefres
                                 className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-3 border-b border-gray-100 dark:border-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 <RefreshCw className={`w-4 h-4 text-blue-600 dark:text-blue-400 ${refreshingPlaceIndex === index ? 'animate-spin' : ''}`} />
-                                <span className="text-gray-700 dark:text-gray-300">Refresh suggestion</span>
+                                <span className="text-base text-gray-700 dark:text-gray-300">Refresh suggestion</span>
                               </button>
                             )}
                             
@@ -248,7 +248,7 @@ export default function Timeline({ places, onRemovePlace, onPlaceClick, onRefres
                               className="w-full px-4 py-3 text-left hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-3"
                             >
                               <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
-                              <span className="text-red-600 dark:text-red-400">Remove place</span>
+                              <span className="text-base text-red-600 dark:text-red-400">Remove place</span>
                             </button>
                           </div>
                         )}
