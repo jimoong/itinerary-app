@@ -156,7 +156,7 @@ export default function Timeline({ places, onRemovePlace, onPlaceClick, onRefres
                 {/* Time and duration */}
                 <div className="timeline__time">
                   {/* <Clock className="w-4 h-4" /> */}
-                  {getCategoryIcon(place.category)}
+                  {/* {getCategoryIcon(place.category)} */}
                   <span>{place.startTime || 'TBD'}</span>
                   {place.duration > 0 && (
                     <>
