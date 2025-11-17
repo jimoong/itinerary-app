@@ -90,7 +90,7 @@ export default function ImagePanel({ place, isOpen, onClose }: ImagePanelProps) 
                       transition-transform duration-300 ease-in-out
                       ${isAnimating 
                         ? 'translate-x-0 translate-y-0' 
-                        : 'md:translate-x-full translate-y-full'
+                        : 'md:translate-x-full md:translate-y-0 translate-y-full'
                       }`}>
         {/* Header */}
         <div className="flex-shrink-0 bg-white dark:bg-slate-900 dark:border-slate-700 px-6 py-4 flex items-center justify-between">
