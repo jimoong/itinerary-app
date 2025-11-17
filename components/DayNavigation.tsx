@@ -24,7 +24,9 @@ export default function DayNavigation({
   let formattedDate = 'Invalid Date';
   
   try {
-    const date = new Date(currentDay.date);
+    // Parse date as local date to avoid timezone issues
+    const [year, month, day] = currentDay.date.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
     if (!isNaN(date.getTime())) {
       formattedDate = format(date, 'MMM d');
     }
