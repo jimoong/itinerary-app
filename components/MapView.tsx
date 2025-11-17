@@ -452,6 +452,14 @@ export default function MapView({ places, onMarkerClick, highlightedPlaceId, cur
           
           // Fit to the route bounds with some padding
           googleMapRef.current.fitBounds(routeBounds, { top: 80, bottom: 80, left: 80, right: 80 });
+          
+          // Cap max zoom level to prevent zooming in too much (e.g., when from/to are same location)
+          const listener = google.maps.event.addListenerOnce(googleMapRef.current, 'bounds_changed', () => {
+            const currentZoom = googleMapRef.current?.getZoom();
+            if (currentZoom && currentZoom > 16) {
+              googleMapRef.current?.setZoom(16);
+            }
+          });
         }
       }
     } else if (places.length > 0 || currentLocation) {
