@@ -228,7 +228,7 @@ export default function Timeline({ places, onRemovePlace, onPlaceClick, onRefres
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  className="timeline__transport hover:bg-gray-50 transition-colors cursor-pointer"
+                  className="timeline__transport transition-colors cursor-pointer"
                   title="Get directions in Google Maps"
                 >
                   {getTransportIcon(place.transportToNext.mode)}
