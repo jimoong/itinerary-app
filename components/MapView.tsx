@@ -1,0 +1,363 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import { Loader } from '@googlemaps/js-api-loader';
+import { Place } from '@/lib/types';
+
+interface MapViewProps {
+  places: Place[];
+  onMarkerClick?: (placeId: string) => void;
+  highlightedPlaceId?: string;
+  currentLocation?: { lat: number; lng: number };
+  nextPlaceIndex?: number | null;
+}
+
+export default function MapView({ places, onMarkerClick, highlightedPlaceId, currentLocation, nextPlaceIndex }: MapViewProps) {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const googleMapRef = useRef<google.maps.Map | null>(null);
+  const markersRef = useRef<google.maps.Marker[]>([]);
+  const polylinesRef = useRef<google.maps.Polyline[]>([]);
+  const directionsRendererRef = useRef<google.maps.DirectionsRenderer[]>([]);
+  const currentLocationMarkerRef = useRef<google.maps.Marker | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Initialize map
+  useEffect(() => {
+    const initMap = async () => {
+      const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+      
+      if (!apiKey) {
+        console.error('Google Maps API key not found');
+        return;
+      }
+
+      const loader = new Loader({
+        apiKey,
+        version: 'weekly',
+        libraries: ['geometry'], // Load geometry library for polyline decoding
+      });
+
+      try {
+        await loader.load();
+        
+        if (mapRef.current && !googleMapRef.current) {
+          googleMapRef.current = new google.maps.Map(mapRef.current, {
+            zoom: 13,
+            center: places.length > 0 
+              ? { lat: places[0].lat, lng: places[0].lng }
+              : { lat: 50.0875, lng: 14.4324 }, // Prague default
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: true,
+          });
+          setIsLoaded(true);
+        }
+      } catch (error) {
+        console.error('Error loading Google Maps:', error);
+      }
+    };
+
+    initMap();
+  }, []);
+
+  // Update markers when places change
+  useEffect(() => {
+    if (!isLoaded || !googleMapRef.current) return;
+
+    // Clear existing markers
+    markersRef.current.forEach(marker => marker.setMap(null));
+    markersRef.current = [];
+
+    // Clear existing polylines
+    polylinesRef.current.forEach(polyline => polyline.setMap(null));
+    polylinesRef.current = [];
+
+    // Clear existing direction renderers
+    directionsRendererRef.current.forEach(renderer => renderer.setMap(null));
+    directionsRendererRef.current = [];
+
+    if (places.length === 0) return;
+
+    const bounds = new google.maps.LatLngBounds();
+
+    // Create new markers
+    places.forEach((place, index) => {
+      const isHighlighted = highlightedPlaceId === place.id;
+      const isHotel = place.category === 'hotel';
+      
+      // Use different shapes for hotel, highlighted, and normal markers
+      let markerIcon;
+      let markerLabel;
+      
+      if (isHotel) {
+        // Hotel marker - house/building icon
+        markerIcon = {
+          path: 'M 0,-12 L -8,-6 L -8,10 L -2,10 L -2,4 L 2,4 L 2,10 L 8,10 L 8,-6 Z M -1,0 L -1,-4 L 1,-4 L 1,0 Z', // House shape
+          scale: 1.2,
+          fillColor: '#FF6B6B', // Red color for hotel
+          fillOpacity: 1,
+          strokeColor: 'white',
+          strokeWeight: 2,
+          anchor: new google.maps.Point(0, 10),
+        };
+        markerLabel = {
+          text: '🏨',
+          color: 'white',
+          fontSize: '16px',
+          fontWeight: 'bold',
+        };
+      } else if (isHighlighted) {
+        // Rounded square shape for highlighted marker
+        markerIcon = {
+          path: 'M -10,-7 Q -10,-10 -7,-10 L 7,-10 Q 10,-10 10,-7 L 10,7 Q 10,10 7,10 L -7,10 Q -10,10 -10,7 Z',
+          scale: 1.5,
+          fillColor: '#00A4A7',
+          fillOpacity: 1,
+          strokeColor: 'white',
+          strokeWeight: 3,
+          anchor: new google.maps.Point(0, 0),
+        };
+        markerLabel = {
+          text: String(index + 1),
+          color: 'white',
+          fontSize: '14px',
+          fontWeight: 'bold',
+        };
+      } else {
+        // Circle shape for normal markers
+        markerIcon = {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 16,
+          fillColor: '#134686',
+          fillOpacity: 1,
+          strokeColor: 'white',
+          strokeWeight: 3,
+        };
+        markerLabel = {
+          text: String(index + 1),
+          color: 'white',
+          fontSize: '14px',
+          fontWeight: 'bold',
+        };
+      }
+      
+      const marker = new google.maps.Marker({
+        position: { lat: place.lat, lng: place.lng },
+        map: googleMapRef.current,
+        title: place.name,
+        label: markerLabel,
+        icon: markerIcon,
+        zIndex: isHighlighted ? 2000 : (isHotel ? 1500 : 1000), // Hotel markers have medium priority
+      });
+
+      marker.addListener('click', () => {
+        if (onMarkerClick) {
+          onMarkerClick(place.id);
+        }
+      });
+
+      markersRef.current.push(marker);
+      bounds.extend({ lat: place.lat, lng: place.lng });
+    });
+
+    // Add "You are here" current location marker if provided
+    if (currentLocation) {
+      // Clear existing current location marker
+      if (currentLocationMarkerRef.current) {
+        currentLocationMarkerRef.current.setMap(null);
+      }
+
+      const currentLocMarker = new google.maps.Marker({
+        position: { lat: currentLocation.lat, lng: currentLocation.lng },
+        map: googleMapRef.current,
+        title: 'You are here',
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 10,
+          fillColor: '#4285F4', // Google blue
+          fillOpacity: 1,
+          strokeColor: 'white',
+          strokeWeight: 3,
+        },
+        zIndex: 3000, // Appear on top of everything
+      });
+
+      currentLocationMarkerRef.current = currentLocMarker;
+      bounds.extend({ lat: currentLocation.lat, lng: currentLocation.lng });
+    } else {
+      // Remove marker if currentLocation is null
+      if (currentLocationMarkerRef.current) {
+        currentLocationMarkerRef.current.setMap(null);
+        currentLocationMarkerRef.current = null;
+      }
+    }
+
+    // Draw routes between consecutive places using Routes API (newer than Directions API)
+    const drawRoute = async (startPlace: Place, endPlace: Place, transportMode: string, strokeColor: string, strokeWeight: number = 3, strokeOpacity: number = 0.8) => {
+      try {
+        // Map transport modes to Routes API travel modes
+        let travelMode: string;
+        switch (transportMode) {
+          case 'walk':
+            travelMode = 'WALK';
+            break;
+          case 'metro':
+          case 'tram':
+            travelMode = 'TRANSIT';
+            break;
+          case 'taxi':
+            travelMode = 'DRIVE';
+            break;
+          default:
+            travelMode = 'WALK';
+        }
+
+        // Use Routes API (v2) via fetch
+        const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+        const response = await fetch('https://routes.googleapis.com/directions/v2:computeRoutes', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': apiKey || '',
+            'X-Goog-FieldMask': 'routes.polyline.encodedPolyline'
+          },
+          body: JSON.stringify({
+            origin: {
+              location: {
+                latLng: {
+                  latitude: startPlace.lat,
+                  longitude: startPlace.lng
+                }
+              }
+            },
+            destination: {
+              location: {
+                latLng: {
+                  latitude: endPlace.lat,
+                  longitude: endPlace.lng
+                }
+              }
+            },
+            travelMode: travelMode,
+            computeAlternativeRoutes: false
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Routes API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (data.routes && data.routes.length > 0 && data.routes[0].polyline?.encodedPolyline) {
+          // Decode the polyline
+          const path = google.maps.geometry.encoding.decodePath(data.routes[0].polyline.encodedPolyline);
+          
+          const polyline = new google.maps.Polyline({
+            path: path,
+            geodesic: true,
+            strokeColor: strokeColor,
+            strokeOpacity: strokeOpacity,
+            strokeWeight: strokeWeight,
+            map: googleMapRef.current,
+          });
+
+          polylinesRef.current.push(polyline);
+        } else {
+          throw new Error('No route found in response');
+        }
+      } catch (error) {
+        // Fallback to straight line if Routes API fails
+        console.warn(`Routes API failed, using straight line:`, error);
+        const routePath = [
+          { lat: startPlace.lat, lng: startPlace.lng },
+          { lat: endPlace.lat, lng: endPlace.lng }
+        ];
+
+        const polyline = new google.maps.Polyline({
+          path: routePath,
+          geodesic: true,
+          strokeColor: strokeColor,
+          strokeOpacity: strokeOpacity,
+          strokeWeight: strokeWeight,
+          map: googleMapRef.current,
+        });
+
+        polylinesRef.current.push(polyline);
+      }
+    };
+    
+    // Draw all routes
+    for (let i = 0; i < places.length - 1; i++) {
+      const start = places[i];
+      const end = places[i + 1];
+      const transportMode = start.transportToNext?.mode || 'walk';
+      
+      // Determine if this route should be highlighted
+      // Highlight the route leading TO the highlighted place
+      const isHighlightedRoute = highlightedPlaceId === end.id;
+      
+      // Use brand blue for unselected routes, cyan for highlighted route (matching marker colors)
+      const strokeColor = isHighlightedRoute ? '#00A4A7' : '#134686'; // Cyan or brand blue
+      const strokeWeight = isHighlightedRoute ? 5 : 5;
+      const strokeOpacity = isHighlightedRoute ? 1 : 1;
+
+      drawRoute(start, end, transportMode, strokeColor, strokeWeight, strokeOpacity);
+    }
+
+    // Fit map to show all markers or adjust zoom for highlighted location
+    if (highlightedPlaceId && places.length > 0) {
+      // Find the highlighted place and its previous place
+      const highlightedIndex = places.findIndex(p => p.id === highlightedPlaceId);
+      
+      if (highlightedIndex !== -1) {
+        const highlightedPlace = places[highlightedIndex];
+        
+        // If hotel is selected, show full day view
+        if (highlightedPlace.category === 'hotel') {
+          googleMapRef.current.fitBounds(bounds);
+        } else {
+          // Regular location - zoom to route
+          const previousPlace = highlightedIndex > 0 ? places[highlightedIndex - 1] : null;
+          
+          // Create bounds for the highlighted route
+          const routeBounds = new google.maps.LatLngBounds();
+          
+          if (previousPlace) {
+            // Include previous place and highlighted place
+            routeBounds.extend({ lat: previousPlace.lat, lng: previousPlace.lng });
+          }
+          routeBounds.extend({ lat: highlightedPlace.lat, lng: highlightedPlace.lng });
+          
+          // Fit to the route bounds with some padding
+          googleMapRef.current.fitBounds(routeBounds, { top: 80, bottom: 80, left: 80, right: 80 });
+        }
+      }
+    } else if (places.length > 0 || currentLocation) {
+      // No selection - show all markers
+      googleMapRef.current.fitBounds(bounds);
+      
+      // Adjust zoom if there's only one marker
+      if (places.length === 1 && !currentLocation) {
+        const listener = google.maps.event.addListenerOnce(googleMapRef.current, 'bounds_changed', () => {
+          const currentZoom = googleMapRef.current?.getZoom();
+          if (currentZoom && currentZoom > 15) {
+            googleMapRef.current?.setZoom(15);
+          }
+        });
+      }
+    }
+  }, [places, isLoaded, highlightedPlaceId, onMarkerClick, currentLocation, nextPlaceIndex]);
+
+  return (
+    <div className="relative w-full h-full">
+      <div ref={mapRef} className="w-full h-full rounded-lg" />
+      {!isLoaded && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg">
+          <div className="text-gray-600">Loading map...</div>
+        </div>
+      )}
+    </div>
+  );
+}
+

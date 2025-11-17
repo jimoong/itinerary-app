@@ -1,0 +1,404 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --primary-color: #134686;
+  --secondary-color: #10b981;
+  --accent-color: #ED3F27;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+#devtools-indicator, nextjs-portal {
+  display: none !important;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+}
+
+/* ============================================
+   MASTER STYLESHEET - ITINERARY APP
+   ============================================ */
+
+/* ----- DAY NAVIGATION COMPONENT ----- */
+.day-navigation {
+  /* Container styles */
+  padding: 24px;
+}
+
+.day-navigation__header {
+  /* Header section styles */
+}
+
+.day-navigation__title {
+  /* Day title styles */
+}
+
+.day-navigation__city-badge {
+  /* City badge styles */
+}
+
+.day-navigation__hotel-info {
+  /* Hotel information styles */
+}
+
+.day-navigation__controls {
+  /* Navigation button container */
+}
+
+.day-navigation__button {
+  /* Navigation button base styles */
+}
+
+.day-navigation__button--disabled {
+  /* Disabled button styles */
+}
+
+/* ----- MAP VIEW COMPONENT ----- */
+.map-view {
+  /* Map container styles */
+}
+
+.map-view__container {
+  /* Google Maps container */
+}
+
+.map-view__loading {
+  /* Loading state styles */
+}
+
+/* ----- TIMELINE COMPONENT ----- */
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.timeline__item {
+  position: relative;
+}
+
+.timeline__content {
+  position: relative;
+  padding-left: 3.5rem;
+  /* padding-bottom: 1.5rem; */
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+/* .timeline__item--highlighted {
+  background-color: #eff6ff;
+} */
+
+.timeline__dot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 1rem;
+  background-color: #134686;
+  z-index: 10;
+}
+
+.timeline__dot--highlighted {
+  background-color: #00A4A7;
+  /* box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1); */
+  border-radius: 4px;
+}
+
+.timeline__line {
+  position: absolute;
+  left: 1.125rem;
+  top: 3rem;
+  bottom: 0;
+  width: 1px;
+  background-color: #d1d5db;
+}
+.timeline__transportation .timeline__line {
+  top: 0;
+}
+
+.timeline__time {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  color: #4b5563;
+  margin-bottom: 0.5rem;
+  height: 36px;
+}
+
+.timeline__title {
+  font-weight: 600;
+  font-size: 1.125rem;
+  color: #111827;
+}
+
+.timeline__description {
+  color: #4b5563;
+  margin-bottom: 0.5rem;
+}
+
+.timeline__kids-rating {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.375rem;
+  color: #4b5563;
+  /* color: #7e22ce; */
+  /* background-color: #faf5ff; */
+  /* padding: 0.375rem 0.5rem; */
+  border-radius: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.timeline__category-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  background-color: #f3f4f6;
+  color: #374151;
+  font-size: 0.75rem;
+  border-radius: 9999px;
+  text-transform: capitalize;
+}
+
+.timeline__transport {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #6b7280;
+  /* background-color: #f9fafb; */
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  /* border: 1px solid #e5e7eb; */
+  margin-top: 1rem;
+}
+
+.timeline__remove-button {
+  padding: 0.5rem;
+  color: #9ca3af;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+}
+
+.timeline__remove-button:hover {
+  color: #ef4444;
+  background-color: #fef2f2;
+}
+
+.timeline__empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #6b7280;
+}
+
+/* ----- EDIT PLACE MODAL ----- */
+.edit-place-modal {
+  /* Modal overlay */
+}
+
+.edit-place-modal__content {
+  /* Modal content box */
+}
+
+.edit-place-modal__header {
+  /* Modal header */
+}
+
+.edit-place-modal__title {
+  /* Modal title */
+}
+
+.edit-place-modal__form {
+  /* Form container */
+}
+
+.edit-place-modal__field {
+  /* Form field wrapper */
+}
+
+.edit-place-modal__label {
+  /* Field label */
+}
+
+.edit-place-modal__input {
+  /* Text input */
+}
+
+.edit-place-modal__select {
+  /* Select dropdown */
+}
+
+.edit-place-modal__textarea {
+  /* Textarea */
+}
+
+.edit-place-modal__actions {
+  /* Button container */
+}
+
+.edit-place-modal__button {
+  /* Button base styles */
+}
+
+/* ----- MAIN PAGE ----- */
+.main-page {
+  /* Main page container */
+}
+
+.main-page__header {
+  /* Top navigation area */
+}
+
+.main-page__content {
+  /* Split panel content area */
+}
+
+.main-page__map-panel {
+  /* Left panel - map */
+}
+
+.main-page__timeline-panel {
+  /* Right panel - timeline */
+}
+
+.main-page__timeline-header {
+  /* Timeline panel header */
+}
+
+.main-page__timeline-content {
+  /* Scrollable timeline area */
+}
+
+.main-page__actions {
+  /* Bottom action buttons */
+}
+
+.main-page__button {
+  /* Button base styles */
+}
+
+.main-page__button--primary {
+  /* Primary action button */
+}
+
+.main-page__button--secondary {
+  /* Secondary action button */
+}
+
+.main-page__button--danger {
+  /* Danger/reset button */
+}
+
+/* ----- LOADING STATES ----- */
+.loading {
+  /* Loading screen */
+}
+
+.loading__spinner {
+  /* Spinner icon */
+}
+
+.loading__text {
+  /* Loading text */
+}
+
+/* ----- ERROR STATES ----- */
+.error-state {
+  /* Error message container */
+}
+
+.error-state__title {
+  /* Error title */
+}
+
+.error-state__message {
+  /* Error message */
+}
+
+.error-state__button {
+  /* Error action button */
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+.btn {
+  /* Base button styles */
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+.btn-secondary {
+  background-color: #10b981;
+  color: white;
+}
+
+.btn-danger {
+  background-color: #ef4444;
+  color: white;
+}
+
+.card {
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.badge-blue {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.badge-purple {
+  background-color: #f3e8ff;
+  color: #6b21a8;
+}
+
+.badge-green {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
