@@ -18,7 +18,31 @@ function cleanJsonResponse(content: string): string {
     cleaned = cleaned.substring(0, cleaned.length - 3);
   }
   
-  return cleaned.trim();
+  cleaned = cleaned.trim();
+  
+  // Try to fix common JSON issues
+  try {
+    // First attempt: parse as-is
+    JSON.parse(cleaned);
+    return cleaned;
+  } catch (error) {
+    console.warn('[cleanJsonResponse] Initial parse failed, attempting to fix JSON...');
+    
+    // Try to extract valid JSON if there's trailing content
+    const jsonMatch = cleaned.match(/^(\{[\s\S]*\}|\[[\s\S]*\])(?:\s|$)/);
+    if (jsonMatch) {
+      try {
+        JSON.parse(jsonMatch[1]);
+        console.log('[cleanJsonResponse] Successfully extracted valid JSON');
+        return jsonMatch[1];
+      } catch (e) {
+        // Continue to return original if extraction doesn't help
+      }
+    }
+    
+    console.warn('[cleanJsonResponse] Could not fix JSON, returning as-is');
+    return cleaned;
+  }
 }
 
 export async function generateDayItinerary(
@@ -163,22 +187,32 @@ Return ONLY a valid JSON object with this exact structure:
     console.log(`[generateDayItinerary] Calling AI for ${city} on ${date}...`);
     const response = await callAI(prompt);
     console.log(`[generateDayItinerary] ✅ AI GENERATED - Day ${dayNumber} (${city}) from AI API`);
+    console.log(`[generateDayItinerary] Response length: ${response.content.length} characters`);
     
     const cleanedContent = cleanJsonResponse(response.content);
-    const parsed = JSON.parse(cleanedContent);
-    const places: Place[] = parsed.places.map((p: any, idx: number) => ({
-      id: `${dayNumber}-${idx}`,
-      ...p
-    }));
+    
+    try {
+      const parsed = JSON.parse(cleanedContent);
+      const places: Place[] = parsed.places.map((p: any, idx: number) => ({
+        id: `${dayNumber}-${idx}`,
+        ...p
+      }));
 
-    console.log(`[generateDayItinerary] ✅ Successfully parsed ${places.length} places for ${city}`);
-    return {
-      date,
-      dayNumber,
-      city,
-      hotel,
-      places
-    };
+      console.log(`[generateDayItinerary] ✅ Successfully parsed ${places.length} places for ${city}`);
+      return {
+        date,
+        dayNumber,
+        city,
+        hotel,
+        places
+      };
+    } catch (parseError) {
+      console.error('[generateDayItinerary] ❌ JSON PARSE ERROR');
+      console.error('Parse error:', parseError);
+      console.error('First 500 chars of response:', response.content.substring(0, 500));
+      console.error('Last 500 chars of response:', response.content.substring(Math.max(0, response.content.length - 500)));
+      throw parseError;
+    }
   } catch (error) {
     console.error('[generateDayItinerary] ❌ AI API FAILED');
     console.error('Error generating itinerary:', error);
