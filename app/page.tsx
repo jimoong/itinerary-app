@@ -754,7 +754,7 @@ export default function Home() {
             
             {/* Loading indicator while streaming */}
             {isLoading && trip && trip.days.length < 9 && (
-              <div className="px-4 py-3 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800 fixed z-50 bottom-20 left-1/2 w-80 -ml-40 rounded-lg shadow-lg">
+              <div className="px-4 py-3 bg-blue-50 dark:bg-slate-800 border border-blue-200 dark:border-blue-700 fixed z-50 bottom-20 left-1/2 w-80 -ml-40 rounded-lg shadow-lg">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2 text-sm font-medium text-blue-700 dark:text-blue-300">
                     <Loader2 className="w-4 h-4 animate-spin" />
