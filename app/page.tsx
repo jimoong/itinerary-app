@@ -759,7 +759,7 @@ export default function Home() {
       {/* Main content - responsive layout */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0 md:pb-0">
         {/* Map panel - fixed height on mobile, flex on desktop */}
-        <div className="flex-none md:flex-1 p-3 md:p-6 h-[45vh] md:h-auto min-h-0">
+        <div className="flex-none md:flex-1 p-3 md:p-6 md:pr-0 h-[45vh] md:h-auto min-h-0">
           <div className="h-full bg-white dark:bg-black rounded-lg overflow-hidden relative">
             <MapView
               places={currentDay.places}
