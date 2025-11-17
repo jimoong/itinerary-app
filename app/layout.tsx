@@ -4,7 +4,14 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "London & Prague Itinerary Explorer",
   description: "Plan your family trip to London and Prague",
-  viewport: "width=device-width, initial-scale=1, viewport-fit=cover",
+  viewport: "width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no",
+  manifest: "/manifest.json",
+  themeColor: "#134686",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Itinerary",
+  },
 };
 
 export default function RootLayout({
