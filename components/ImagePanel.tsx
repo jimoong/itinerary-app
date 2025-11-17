@@ -217,13 +217,13 @@ export default function ImagePanel({ place, isOpen, onClose }: ImagePanelProps) 
                 {activeMainTab === 'info' && (
                   <>
                     {/* Editorial Summary */}
-                    {details?.editorialSummary && (
+                    {/* {details?.editorialSummary && (
                       <div className="mb-6 pb-4 border-b border-gray-200 dark:border-slate-700">
                         <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
                           {details.editorialSummary}
                         </p>
                       </div>
-                    )}
+                    )} */}
 
               {/* Place Details Section - only show if there's at least one detail */}
               {details && (details.openingHours?.length || details.phoneNumber || details.website) && (
@@ -387,17 +387,7 @@ export default function ImagePanel({ place, isOpen, onClose }: ImagePanelProps) 
                       {reviews.map((review, index) => (
                         <div key={index} className="pb-4 border-b border-gray-200 dark:border-slate-700 last:border-0 last:pb-0">
                           <div className="flex items-start gap-3">
-                            {review.profilePhotoUrl ? (
-                              <img 
-                                src={review.profilePhotoUrl} 
-                                alt={review.authorName}
-                                className="w-10 h-10 rounded-full flex-shrink-0"
-                              />
-                            ) : (
-                              <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0">
-                                <User className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                              </div>
-                            )}
+
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
                                 <span className="font-medium text-sm text-gray-900 dark:text-white">
