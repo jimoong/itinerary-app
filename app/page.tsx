@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import MapView from '@/components/MapView';
 import Timeline from '@/components/Timeline';
 import DayNavigation from '@/components/DayNavigation';
@@ -213,6 +213,7 @@ export default function Home() {
   const [nextPlaceIndex, setNextPlaceIndex] = useState<number | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [showCurrentLocation, setShowCurrentLocation] = useState(false);
+  const timelineScrollRef = useRef<HTMLDivElement>(null);
 
   // Request user's geolocation on mount
   useEffect(() => {
@@ -275,6 +276,13 @@ export default function Home() {
       setCurrentDayIndex(0);
     }
   }, [trip, currentDayIndex]);
+
+  // Scroll timeline to top when day changes
+  useEffect(() => {
+    if (timelineScrollRef.current) {
+      timelineScrollRef.current.scrollTop = 0;
+    }
+  }, [currentDayIndex]);
 
   // Calculate next place and auto-highlight based on current date and time
   useEffect(() => {
@@ -616,7 +624,7 @@ export default function Home() {
             </div> */}
 
             {/* Timeline content */}
-            <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 md:py-6">
+            <div ref={timelineScrollRef} className="flex-1 overflow-y-auto px-4 md:px-6 py-4 md:py-6">
               <Timeline
                 places={currentDay.places}
                 onRemovePlace={handleRemovePlace}

@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { Place } from '@/lib/types';
 import { Clock, MapPin, Trash2, Coffee, Building2, TreePine, Landmark, ShoppingBag, Ticket, Navigation, Car, Train, TramFront, Heart, RefreshCw, Hotel } from 'lucide-react';
 
