@@ -11,10 +11,15 @@ import { TRIP_DETAILS } from '@/lib/constants';
 import { findNextPlace } from '@/lib/timeUtils';
 import { RefreshCw, Plus, Loader2, RotateCcw } from 'lucide-react';
 
-// Utility function to calculate route between two points
-async function calculateRoute(from: { lat: number; lng: number }, to: { lat: number; lng: number }, mode: 'walk' | 'taxi' | 'metro' | 'tram' = 'walk'): Promise<{ duration: number; distance: string } | null> {
+type TransportMode = 'walk' | 'taxi' | 'metro' | 'tram';
+
+// Low-level helper to call Routes API
+async function fetchRoute(
+  from: { lat: number; lng: number },
+  to: { lat: number; lng: number },
+  mode: TransportMode
+): Promise<{ duration: number; distance: string } | null> {
   try {
-    // Map transport modes to Routes API travel modes
     let travelMode: string;
     switch (mode) {
       case 'walk':
@@ -74,22 +79,41 @@ async function calculateRoute(from: { lat: number; lng: number }, to: { lat: num
     
     if (data.routes && data.routes.length > 0) {
       const route = data.routes[0];
-      const durationSeconds = parseInt(route.duration?.replace('s', '') || '0');
+      const durationSeconds = parseInt(route.duration?.replace('s', '') || '0', 10);
       const durationMinutes = Math.ceil(durationSeconds / 60);
       const distanceMeters = route.distanceMeters || 0;
       const distanceKm = (distanceMeters / 1000).toFixed(1);
-      
+
       return {
         duration: durationMinutes,
         distance: `${distanceKm} km`
       };
     }
-    
+
     return null;
   } catch (error) {
     console.error('Error calculating route:', error);
     return null;
   }
+}
+
+// Smarter route calculator that prefers walking <= 20 min, otherwise transit
+async function calculateSmartRoute(
+  from: { lat: number; lng: number },
+  to: { lat: number; lng: number }
+): Promise<{ duration: number; distance: string; mode: TransportMode } | null> {
+  const walkRoute = await fetchRoute(from, to, 'walk');
+
+  if (walkRoute && walkRoute.duration <= 20) {
+    return { ...walkRoute, mode: 'walk' };
+  }
+
+  const transitRoute = await fetchRoute(from, to, 'metro');
+  if (transitRoute) {
+    return { ...transitRoute, mode: 'metro' };
+  }
+
+  return walkRoute ? { ...walkRoute, mode: 'walk' } : null;
 }
 
 // Utility function to add hotel as first and last place in the itinerary
@@ -122,10 +146,9 @@ async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
   let hotelToFirstRoute = null;
   if (placesWithoutHotels.length > 0) {
     const firstPlace = placesWithoutHotels[0];
-    hotelToFirstRoute = await calculateRoute(
+    hotelToFirstRoute = await calculateSmartRoute(
       { lat: day.hotel.lat, lng: day.hotel.lng },
-      { lat: firstPlace.lat, lng: firstPlace.lng },
-      'walk'
+      { lat: firstPlace.lat, lng: firstPlace.lng }
     );
   }
 
@@ -135,7 +158,7 @@ async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
     id: `hotel-start-${day.dayNumber}`, 
     startTime: '08:00',
     transportToNext: hotelToFirstRoute ? {
-      mode: 'walk',
+      mode: hotelToFirstRoute.mode,
       duration: hotelToFirstRoute.duration,
       distance: hotelToFirstRoute.distance
     } : undefined
@@ -145,10 +168,9 @@ async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
   let lastToHotelRoute = null;
   if (placesWithoutHotels.length > 0) {
     const lastPlace = placesWithoutHotels[placesWithoutHotels.length - 1];
-    lastToHotelRoute = await calculateRoute(
+    lastToHotelRoute = await calculateSmartRoute(
       { lat: lastPlace.lat, lng: lastPlace.lng },
-      { lat: day.hotel.lat, lng: day.hotel.lng },
-      'walk'
+      { lat: day.hotel.lat, lng: day.hotel.lng }
     );
   }
 
@@ -160,7 +182,7 @@ async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
           return {
             ...place,
             transportToNext: {
-              mode: 'walk' as const,
+              mode: lastToHotelRoute.mode,
               duration: lastToHotelRoute.duration,
               distance: lastToHotelRoute.distance
             }
@@ -550,22 +572,10 @@ export default function Home() {
 
   return (
     <div className="h-screen flex flex-col">
-      {/* Header - Hidden on mobile, shown at top on desktop */}
-      <div className="hidden md:block">
-        <DayNavigation
-          currentDay={currentDay}
-          totalDays={trip.days.length}
-          onPrevious={() => setCurrentDayIndex(Math.max(0, currentDayIndex - 1))}
-          onNext={() => setCurrentDayIndex(Math.min(trip.days.length - 1, currentDayIndex + 1))}
-          canGoPrevious={currentDayIndex > 0}
-          canGoNext={currentDayIndex < trip.days.length - 1}
-        />
-      </div>
-
       {/* Main content - responsive layout */}
-      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-        {/* Map panel - Top on mobile, Left on desktop */}
-        <div className="h-1/2 md:h-auto md:w-1/2 p-3 md:p-6">
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
+        {/* Map panel - fixed height on mobile, flex on desktop */}
+        <div className="flex-none md:flex-1 p-3 md:p-6 h-[45vh] md:h-auto min-h-0">
           <div className="h-full bg-white rounded-lg overflow-hidden relative">
             <MapView
               places={currentDay.places}
@@ -594,9 +604,9 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Timeline panel - Bottom on mobile, Right on desktop */}
-        <div className="h-1/2 md:h-auto md:w-1/2 p-3 pt-0 md:p-6 md:pl-3 flex flex-col">
-          <div className="flex-1 bg-white rounded-lg overflow-hidden flex flex-col">
+        {/* Timeline panel - flex to fill remaining space on mobile */}
+        <div className="flex-1 p-3 pt-0 md:p-6 md:pl-3 flex flex-col min-h-0">
+          <div className="flex-1 bg-white rounded-lg overflow-hidden flex flex-col min-h-0">
             {/* Timeline header
             <div className="px-4 md:px-6 py-3 md:py-4 border-b border-gray-200 flex items-center justify-between">
               <h2 className="text-lg md:text-xl font-bold text-gray-900">Daily Schedule</h2>
@@ -672,17 +682,15 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Bottom Navigation - Only visible on mobile */}
-      <div className="md:hidden border-t border-gray-200 bg-white">
-        <DayNavigation
-          currentDay={currentDay}
-          totalDays={trip.days.length}
-          onPrevious={() => setCurrentDayIndex(Math.max(0, currentDayIndex - 1))}
-          onNext={() => setCurrentDayIndex(Math.min(trip.days.length - 1, currentDayIndex + 1))}
-          canGoPrevious={currentDayIndex > 0}
-          canGoNext={currentDayIndex < trip.days.length - 1}
-        />
-      </div>
+      {/* Bottom Navigation */}
+      <DayNavigation
+        currentDay={currentDay}
+        onPrevious={() => setCurrentDayIndex(Math.max(0, currentDayIndex - 1))}
+        onNext={() => setCurrentDayIndex(Math.min(trip.days.length - 1, currentDayIndex + 1))}
+        canGoPrevious={currentDayIndex > 0}
+        canGoNext={currentDayIndex < trip.days.length - 1}
+        onHardRefresh={handleResetAll}
+      />
 
       {/* Edit modal */}
       <EditPlace
