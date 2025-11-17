@@ -19,6 +19,7 @@ export default function MapView({ places, onMarkerClick, highlightedPlaceId, cur
   const polylinesRef = useRef<google.maps.Polyline[]>([]);
   const directionsRendererRef = useRef<google.maps.DirectionsRenderer[]>([]);
   const currentLocationMarkerRef = useRef<google.maps.Marker | null>(null);
+  const routePathsRef = useRef<Map<string, google.maps.LatLng[]>>(new Map()); // Store route paths by route key
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Initialize map
@@ -157,9 +158,10 @@ export default function MapView({ places, onMarkerClick, highlightedPlaceId, cur
     markersRef.current.forEach(marker => marker.setMap(null));
     markersRef.current = [];
 
-    // Clear existing polylines
+    // Clear existing polylines and stored paths
     polylinesRef.current.forEach(polyline => polyline.setMap(null));
     polylinesRef.current = [];
+    routePathsRef.current.clear();
 
     // Clear existing direction renderers
     directionsRendererRef.current.forEach(renderer => renderer.setMap(null));
@@ -282,7 +284,7 @@ export default function MapView({ places, onMarkerClick, highlightedPlaceId, cur
     }
 
     // Draw routes between consecutive places using Routes API (newer than Directions API)
-    const drawRoute = async (startPlace: Place, endPlace: Place, transportMode: string, strokeColor: string, strokeWeight: number = 3, strokeOpacity: number = 0.8, zIndex: number = 100) => {
+    const drawRoute = async (startPlace: Place, endPlace: Place, transportMode: string, strokeColor: string, strokeWeight: number = 3, strokeOpacity: number = 0.8, zIndex: number = 100, routeKey?: string) => {
       try {
         // Map transport modes to Routes API travel modes
         let travelMode: string;
@@ -342,6 +344,11 @@ export default function MapView({ places, onMarkerClick, highlightedPlaceId, cur
           // Decode the polyline
           const path = google.maps.geometry.encoding.decodePath(data.routes[0].polyline.encodedPolyline);
           
+          // Store the path if routeKey is provided
+          if (routeKey) {
+            routePathsRef.current.set(routeKey, path);
+          }
+          
           const polyline = new google.maps.Polyline({
             path: path,
             geodesic: true,
@@ -360,9 +367,14 @@ export default function MapView({ places, onMarkerClick, highlightedPlaceId, cur
         // Fallback to straight line if Routes API fails
         console.warn(`Routes API failed, using straight line:`, error);
         const routePath = [
-          { lat: startPlace.lat, lng: startPlace.lng },
-          { lat: endPlace.lat, lng: endPlace.lng }
+          new google.maps.LatLng(startPlace.lat, startPlace.lng),
+          new google.maps.LatLng(endPlace.lat, endPlace.lng)
         ];
+
+        // Store the path if routeKey is provided
+        if (routeKey) {
+          routePathsRef.current.set(routeKey, routePath);
+        }
 
         const polyline = new google.maps.Polyline({
           path: routePath,
@@ -393,8 +405,11 @@ export default function MapView({ places, onMarkerClick, highlightedPlaceId, cur
       const strokeWeight = isHighlightedRoute ? 5 : 5;
       const strokeOpacity = isHighlightedRoute ? 1 : 1;
       const zIndex = isHighlightedRoute ? 1000 : 100; // Highlighted routes on top
+      
+      // Create a unique key for this route
+      const routeKey = `${start.id}-${end.id}`;
 
-      drawRoute(start, end, transportMode, strokeColor, strokeWeight, strokeOpacity, zIndex);
+      drawRoute(start, end, transportMode, strokeColor, strokeWeight, strokeOpacity, zIndex, routeKey);
     }
 
     // Fit map to show all markers or adjust zoom for highlighted location
@@ -409,17 +424,31 @@ export default function MapView({ places, onMarkerClick, highlightedPlaceId, cur
         if (highlightedPlace.category === 'hotel') {
           googleMapRef.current.fitBounds(bounds);
         } else {
-          // Regular location - zoom to route
+          // Regular location - zoom to route including the actual path
           const previousPlace = highlightedIndex > 0 ? places[highlightedIndex - 1] : null;
           
           // Create bounds for the highlighted route
           const routeBounds = new google.maps.LatLngBounds();
           
           if (previousPlace) {
-            // Include previous place and highlighted place
-            routeBounds.extend({ lat: previousPlace.lat, lng: previousPlace.lng });
+            // Get the stored route path
+            const routeKey = `${previousPlace.id}-${highlightedPlace.id}`;
+            const routePath = routePathsRef.current.get(routeKey);
+            
+            if (routePath && routePath.length > 0) {
+              // Include all points in the actual route path
+              routePath.forEach(point => {
+                routeBounds.extend(point);
+              });
+            } else {
+              // Fallback: just include start and end markers
+              routeBounds.extend({ lat: previousPlace.lat, lng: previousPlace.lng });
+              routeBounds.extend({ lat: highlightedPlace.lat, lng: highlightedPlace.lng });
+            }
+          } else {
+            // No previous place, just show the highlighted place
+            routeBounds.extend({ lat: highlightedPlace.lat, lng: highlightedPlace.lng });
           }
-          routeBounds.extend({ lat: highlightedPlace.lat, lng: highlightedPlace.lng });
           
           // Fit to the route bounds with some padding
           googleMapRef.current.fitBounds(routeBounds, { top: 80, bottom: 80, left: 80, right: 80 });
