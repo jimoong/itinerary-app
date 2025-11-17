@@ -41,7 +41,11 @@ export default function MapView({ places, onMarkerClick, highlightedPlaceId, cur
         await loader.load();
         
         if (mapRef.current && !googleMapRef.current) {
-          googleMapRef.current = new google.maps.Map(mapRef.current, {
+          // Detect dark mode preference
+          const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          
+          // Apply dark map theme if dark mode is enabled
+          const mapOptions: google.maps.MapOptions = {
             zoom: 13,
             center: places.length > 0 
               ? { lat: places[0].lat, lng: places[0].lng }
@@ -49,7 +53,92 @@ export default function MapView({ places, onMarkerClick, highlightedPlaceId, cur
             mapTypeControl: false,
             streetViewControl: false,
             fullscreenControl: true,
-          });
+          };
+          
+          if (isDarkMode) {
+            mapOptions.styles = [
+              { elementType: 'geometry', stylers: [{ color: '#242f3e' }] },
+              { elementType: 'labels.text.stroke', stylers: [{ color: '#242f3e' }] },
+              { elementType: 'labels.text.fill', stylers: [{ color: '#746855' }] },
+              {
+                featureType: 'administrative.locality',
+                elementType: 'labels.text.fill',
+                stylers: [{ color: '#d59563' }],
+              },
+              {
+                featureType: 'poi',
+                elementType: 'labels.text.fill',
+                stylers: [{ color: '#d59563' }],
+              },
+              {
+                featureType: 'poi.park',
+                elementType: 'geometry',
+                stylers: [{ color: '#263c3f' }],
+              },
+              {
+                featureType: 'poi.park',
+                elementType: 'labels.text.fill',
+                stylers: [{ color: '#6b9080' }],
+              },
+              {
+                featureType: 'road',
+                elementType: 'geometry',
+                stylers: [{ color: '#38414e' }],
+              },
+              {
+                featureType: 'road',
+                elementType: 'geometry.stroke',
+                stylers: [{ color: '#212a37' }],
+              },
+              {
+                featureType: 'road',
+                elementType: 'labels.text.fill',
+                stylers: [{ color: '#9ca5b3' }],
+              },
+              {
+                featureType: 'road.highway',
+                elementType: 'geometry',
+                stylers: [{ color: '#746855' }],
+              },
+              {
+                featureType: 'road.highway',
+                elementType: 'geometry.stroke',
+                stylers: [{ color: '#1f2835' }],
+              },
+              {
+                featureType: 'road.highway',
+                elementType: 'labels.text.fill',
+                stylers: [{ color: '#f3751ff' }],
+              },
+              {
+                featureType: 'transit',
+                elementType: 'geometry',
+                stylers: [{ color: '#38414e' }],
+              },
+              {
+                featureType: 'transit.station',
+                elementType: 'labels.text.fill',
+                stylers: [{ color: '#9ca5b3' }],
+              },
+              {
+                featureType: 'water',
+                elementType: 'geometry',
+                stylers: [{ color: '#17263c' }],
+              },
+              {
+                featureType: 'water',
+                elementType: 'labels.text.fill',
+                stylers: [{ color: '#515c6d' }],
+              },
+              {
+                featureType: 'water',
+                elementType: 'labels.text.stroke',
+                stylers: [{ color: '#17263c' }],
+              },
+            ];
+          }
+          
+          googleMapRef.current = new google.maps.Map(mapRef.current, mapOptions);
           setIsLoaded(true);
         }
       } catch (error) {

@@ -503,33 +503,33 @@ export default function Home() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-lg text-gray-600">Generating your personalized itinerary...</p>
-          <p className="text-sm text-gray-500 mt-2">This may take a minute</p>
-        </div>
-      </div>
-    );
-  }
+      if (isLoading) {
+        return (
+          <div className="h-screen flex items-center justify-center bg-white dark:bg-slate-950">
+            <div className="text-center">
+              <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
+              <p className="text-lg text-gray-600 dark:text-gray-400">Generating your personalized itinerary...</p>
+              <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">This may take a minute</p>
+            </div>
+          </div>
+        );
+      }
 
-  if (!trip) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <p className="text-lg text-gray-600">Failed to load itinerary</p>
-          <button
-            onClick={generateAllDays}
-            className="mt-4 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
-    );
-  }
+      if (!trip) {
+        return (
+          <div className="h-screen flex items-center justify-center bg-white dark:bg-slate-950">
+            <div className="text-center">
+              <p className="text-lg text-gray-600 dark:text-gray-400">Failed to load itinerary</p>
+              <button
+                onClick={generateAllDays}
+                className="mt-4 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        );
+      }
 
   const currentDay = trip.days[currentDayIndex];
 
@@ -541,10 +541,10 @@ export default function Home() {
 
   if (hasInvalidData) {
     return (
-      <div className="h-screen flex items-center justify-center bg-gray-50">
+      <div className="h-screen flex items-center justify-center bg-white dark:bg-slate-950">
         <div className="text-center max-w-md">
-          <p className="text-lg text-gray-600 mb-4">Invalid or corrupted itinerary data detected.</p>
-          <p className="text-sm text-gray-500 mb-6">This usually happens when the app structure has changed. Please reset your itinerary to continue.</p>
+          <p className="text-lg text-gray-600 dark:text-gray-400 mb-4">Invalid or corrupted itinerary data detected.</p>
+          <p className="text-sm text-gray-500 dark:text-gray-500 mb-6">This usually happens when the app structure has changed. Please reset your itinerary to continue.</p>
           <button
             onClick={() => {
               clearTrip();
@@ -561,22 +561,22 @@ export default function Home() {
 
   if (!currentDay) {
     return (
-      <div className="h-screen flex items-center justify-center bg-gray-50">
+      <div className="h-screen flex items-center justify-center bg-white dark:bg-slate-950">
         <div className="text-center">
           <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-lg text-gray-600">Loading day information...</p>
+          <p className="text-lg text-gray-600 dark:text-gray-400">Loading day information...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-screen flex flex-col bg-white dark:bg-slate-950">
       {/* Main content - responsive layout */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
         {/* Map panel - fixed height on mobile, flex on desktop */}
         <div className="flex-none md:flex-1 p-3 md:p-6 h-[45vh] md:h-auto min-h-0">
-          <div className="h-full bg-white rounded-lg overflow-hidden relative">
+          <div className="h-full bg-white dark:bg-slate-900 rounded-lg overflow-hidden relative">
             <MapView
               places={currentDay.places}
               onMarkerClick={setHighlightedPlaceId}
@@ -593,7 +593,7 @@ export default function Home() {
                   className={`px-4 py-2 rounded-lg shadow-lg text-sm font-medium transition-colors ${
                     showCurrentLocation 
                       ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                      : 'bg-white text-gray-700 hover:bg-gray-100'
+                      : 'bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700'
                   }`}
                   title={showCurrentLocation ? 'Hide current location' : 'Show current location'}
                 >
@@ -606,7 +606,7 @@ export default function Home() {
 
         {/* Timeline panel - flex to fill remaining space on mobile */}
         <div className="flex-1 p-3 pt-0 md:p-6 md:pl-3 flex flex-col min-h-0">
-          <div className="flex-1 bg-white rounded-lg overflow-hidden flex flex-col min-h-0">
+          <div className="flex-1 bg-white dark:bg-slate-900 rounded-lg overflow-hidden flex flex-col min-h-0">
             {/* Timeline header
             <div className="px-4 md:px-6 py-3 md:py-4 border-b border-gray-200 flex items-center justify-between">
               <h2 className="text-lg md:text-xl font-bold text-gray-900">Daily Schedule</h2>
