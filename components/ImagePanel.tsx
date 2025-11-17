@@ -15,12 +15,6 @@ interface Photo {
   attribution: string;
 }
 
-interface CategorizedPhotos {
-  food: Photo[];
-  interior: Photo[];
-  exterior: Photo[];
-}
-
 interface PlaceDetails {
   openingHours: string[] | null;
   isOpenNow?: boolean;
@@ -39,22 +33,17 @@ interface Review {
   profilePhotoUrl?: string;
 }
 
-type PhotoTab = 'food' | 'interior' | 'exterior';
 type MainTab = 'info' | 'reviews';
 
 export default function ImagePanel({ place, isOpen, onClose }: ImagePanelProps) {
-  const [photos, setPhotos] = useState<CategorizedPhotos>({ food: [], interior: [], exterior: [] });
+  const [photos, setPhotos] = useState<Photo[]>([]);
   const [details, setDetails] = useState<PlaceDetails | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [activePhotoTab, setActivePhotoTab] = useState<PhotoTab>('food');
   const [activeMainTab, setActiveMainTab] = useState<MainTab>('info');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
-  
-  // Check if place is a restaurant
-  const isRestaurant = place.category === 'restaurant';
 
   useEffect(() => {
     if (isOpen) {
@@ -91,28 +80,20 @@ export default function ImagePanel({ place, isOpen, onClose }: ImagePanelProps) 
       }
       
       const data = await response.json();
-      setPhotos(data.photos || { food: [], interior: [], exterior: [] });
+      
+      // Flatten categorized photos into a single array
+      let allPhotos: Photo[] = [];
+      if (data.photos) {
+        if (data.photos.food) allPhotos = [...allPhotos, ...data.photos.food];
+        if (data.photos.interior) allPhotos = [...allPhotos, ...data.photos.interior];
+        if (data.photos.exterior) allPhotos = [...allPhotos, ...data.photos.exterior];
+      }
+      
+      setPhotos(allPhotos);
       setDetails(data.details || null);
       setReviews(data.reviews || []);
       
-      // Set default active photo tab to the first category with photos
-      if (data.photos) {
-        if (data.photos.food?.length > 0) {
-          setActivePhotoTab('food');
-        } else if (data.photos.interior?.length > 0) {
-          setActivePhotoTab('interior');
-        } else if (data.photos.exterior?.length > 0) {
-          setActivePhotoTab('exterior');
-        }
-      }
-      
-      // Set default main tab based on available content
-      if (data.reviews?.length > 0) {
-        setActiveMainTab('info'); // Default to info, user can switch to reviews
-      }
-      
-      const hasPhotos = data.photos && (data.photos.food?.length > 0 || data.photos.interior?.length > 0 || data.photos.exterior?.length > 0);
-      if (!hasPhotos && !data.details && !data.reviews?.length) {
+      if (allPhotos.length === 0 && !data.details && !data.reviews?.length) {
         setError(true);
       }
     } catch (err) {
@@ -182,7 +163,7 @@ export default function ImagePanel({ place, isOpen, onClose }: ImagePanelProps) 
             </div>
           )}
 
-          {!loading && !error && (details || reviews.length > 0 || photos.food.length > 0 || photos.interior.length > 0 || photos.exterior.length > 0) && (
+          {!loading && !error && (details || reviews.length > 0 || photos.length > 0) && (
             <div className="flex flex-col h-full">
               {/* Main Tab Navigation */}
               <div className="flex-shrink-0 border-b border-gray-200 dark:border-slate-700 px-6">
@@ -290,71 +271,28 @@ export default function ImagePanel({ place, isOpen, onClose }: ImagePanelProps) 
                 </div>
               )}
 
-                    {/* Photos Section with Chip/Pill Filters */}
-                    {(photos.food.length > 0 || photos.interior.length > 0 || photos.exterior.length > 0) && (
+                    {/* Photos Section */}
+                    {photos.length > 0 && (
                       <div className="space-y-4">
-                        {/* Chip/Pill Filter Navigation - Only show food for restaurants */}
-                        <div className="flex gap-2 flex-wrap">
-                          {isRestaurant && photos.food.length > 0 && (
-                            <button
-                              onClick={() => setActivePhotoTab('food')}
-                              className={`px-4 py-1.5 text-sm font-medium rounded-full transition-colors ${
-                                activePhotoTab === 'food'
-                                  ? 'bg-blue-600 text-white dark:bg-blue-500'
-                                  : 'bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600'
-                              }`}
-                            >
-                              Food ({photos.food.length})
-                            </button>
-                          )}
-                          {photos.interior.length > 0 && (
-                            <button
-                              onClick={() => setActivePhotoTab('interior')}
-                              className={`px-4 py-1.5 text-sm font-medium rounded-full transition-colors ${
-                                activePhotoTab === 'interior'
-                                  ? 'bg-blue-600 text-white dark:bg-blue-500'
-                                  : 'bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600'
-                              }`}
-                            >
-                              Interior ({photos.interior.length})
-                            </button>
-                          )}
-                          {photos.exterior.length > 0 && (
-                            <button
-                              onClick={() => setActivePhotoTab('exterior')}
-                              className={`px-4 py-1.5 text-sm font-medium rounded-full transition-colors ${
-                                activePhotoTab === 'exterior'
-                                  ? 'bg-blue-600 text-white dark:bg-blue-500'
-                                  : 'bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600'
-                              }`}
-                            >
-                              Exterior ({photos.exterior.length})
-                            </button>
-                          )}
-                        </div>
-
-                        {/* Photos Grid */}
-                        <div className="space-y-4">
-                          {photos[activePhotoTab].map((photo, index) => (
-                            <div key={index} className="relative">
-                              {/* Placeholder with aspect ratio to prevent layout shift */}
-                              <div className="relative w-full" style={{ paddingBottom: '66.67%' }}>
-                                <img
-                                  src={photo.url}
-                                  alt={`${place.name} - ${activePhotoTab} ${index + 1}`}
-                                  className="absolute inset-0 w-full h-full object-cover rounded-lg shadow-md"
-                                  loading="lazy"
-                                />
-                              </div>
-                              {photo.attribution && (
-                                <div 
-                                  className="text-xs text-gray-500 dark:text-gray-400 mt-1"
-                                  dangerouslySetInnerHTML={{ __html: photo.attribution }}
-                                />
-                              )}
+                        {photos.map((photo, index) => (
+                          <div key={index} className="relative">
+                            {/* Placeholder with aspect ratio to prevent layout shift */}
+                            <div className="relative w-full" style={{ paddingBottom: '66.67%' }}>
+                              <img
+                                src={photo.url}
+                                alt={`${place.name} - Photo ${index + 1}`}
+                                className="absolute inset-0 w-full h-full object-cover rounded-lg shadow-md"
+                                loading="lazy"
+                              />
                             </div>
-                          ))}
-                        </div>
+                            {photo.attribution && (
+                              <div 
+                                className="text-xs text-gray-500 dark:text-gray-400 mt-1"
+                                dangerouslySetInnerHTML={{ __html: photo.attribution }}
+                              />
+                            )}
+                          </div>
+                        ))}
                       </div>
                     )}
                   </>
