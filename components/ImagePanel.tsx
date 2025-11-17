@@ -84,15 +84,15 @@ export default function ImagePanel({ place, isOpen, onClose }: ImagePanelProps) 
       
       {/* Panel */}
       <div className={`fixed z-50 bg-white dark:bg-slate-900 shadow-2xl flex flex-col
-                      md:right-0 md:top-0 md:bottom-16 md:w-[45%] md:max-w-[600px] md:h-auto
-                      bottom-0 left-0 right-0 h-[70vh] rounded-t-2xl md:rounded-none
+                      md:right-0 md:top-0 md:w-[45%] md:max-w-[600px] md:h-auto
+                      bottom-0 right-0 rounded-t-2xl md:rounded-none
                       transition-transform duration-300 ease-in-out
                       ${isAnimating 
                         ? 'translate-x-0 translate-y-0' 
-                        : 'md:translate-x-full translate-y-full'
+                        : 'md:translate-x-full'
                       }`}>
         {/* Header */}
-        <div className="flex-shrink-0 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700 px-6 py-4 flex items-center justify-between">
+        <div className="flex-shrink-0 bg-white dark:bg-slate-900 dark:border-slate-700 px-6 py-4 flex items-center justify-between">
           <div className="flex-1 min-w-0">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
               {place.name}
@@ -129,15 +129,18 @@ export default function ImagePanel({ place, isOpen, onClose }: ImagePanelProps) 
           )}
 
           {!loading && !error && photos.length > 0 && (
-            <div className="p-4 pb-8 space-y-4">
+            <div className="p-4 pb-8 pt-0 space-y-4">
               {photos.map((photo, index) => (
                 <div key={index} className="relative">
-                  <img
-                    src={photo.url}
-                    alt={`${place.name} - Photo ${index + 1}`}
-                    className="w-full h-auto rounded-lg shadow-md"
-                    loading="lazy"
-                  />
+                  {/* Placeholder with aspect ratio to prevent layout shift */}
+                  <div className="relative w-full" style={{ paddingBottom: '66.67%' }}>
+                    <img
+                      src={photo.url}
+                      alt={`${place.name} - Photo ${index + 1}`}
+                      className="absolute inset-0 w-full h-full object-cover rounded-lg shadow-md"
+                      loading="lazy"
+                    />
+                  </div>
                   {photo.attribution && (
                     <div 
                       className="text-xs text-gray-500 dark:text-gray-400 mt-1"
