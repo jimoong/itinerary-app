@@ -332,8 +332,11 @@ export default function Timeline({ places, onRemovePlace, onPlaceClick, onRefres
                     {/* <span className="text-blue-600 ml-auto">→</span> */}
                   </a>
                   
-                  {/* Uber button - show for taxi or if walking/transit is > 15 min */}
-                  {(place.transportToNext.mode === 'taxi' || place.transportToNext.duration > 15) && (
+                  {/* Uber button - show for: walking > 15min, all public transport, all taxi */}
+                  {((place.transportToNext.mode === 'walk' && place.transportToNext.duration > 15) ||
+                    place.transportToNext.mode === 'metro' ||
+                    place.transportToNext.mode === 'tram' ||
+                    place.transportToNext.mode === 'taxi') && (
                     <a
                       href={getUberUrl(place, places[index + 1])}
                       target="_blank"
