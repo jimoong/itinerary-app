@@ -13,6 +13,7 @@ interface DayNavigationProps {
   canGoNext: boolean;
   onHardRefresh: () => void;
   onRegenerateCurrentDay: () => void;
+  isRegenerating?: boolean;
 }
 
 export default function DayNavigation({
@@ -22,7 +23,8 @@ export default function DayNavigation({
   canGoPrevious,
   canGoNext,
   onHardRefresh,
-  onRegenerateCurrentDay
+  onRegenerateCurrentDay,
+  isRegenerating = false
 }: DayNavigationProps) {
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -93,14 +95,15 @@ export default function DayNavigation({
         <div className="flex items-right gap-2 absolute right-6" ref={menuRef}>
           <div className="relative">
             <button
-              onClick={() => setShowMenu(!showMenu)}
+              onClick={() => !isRegenerating && setShowMenu(!showMenu)}
+              disabled={isRegenerating}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                canGoNext
-                  ? 'text-gray-700 dark:text-gray-300 border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800'
-                  : 'text-gray-400 dark:text-gray-600 border-gray-100 dark:border-slate-800 cursor-not-allowed'
+                isRegenerating
+                  ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800'
               }`}
             >
-              <RotateCcw className="w-4 h-4" />
+              <RotateCcw className={`w-4 h-4 ${isRegenerating ? 'animate-spin' : ''}`} />
             </button>
 
             {/* Dropdown Menu */}

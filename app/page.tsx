@@ -739,6 +739,23 @@ export default function Home() {
 
   return (
     <div className="h-screen flex flex-col bg-white dark:bg-black pb-16">
+      {/* Regenerating overlay */}
+      {isRegenerating && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-2xl p-8 max-w-sm mx-4">
+            <div className="flex flex-col items-center">
+              <Loader2 className="w-16 h-16 animate-spin text-blue-600 dark:text-blue-400 mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                Regenerating Day {currentDayIndex + 1}
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
+                Creating a fresh itinerary with AI...
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main content - responsive layout */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0 md:pb-0">
         {/* Map panel - fixed height on mobile, flex on desktop */}
@@ -881,6 +898,7 @@ export default function Home() {
         canGoNext={currentDayIndex < trip.days.length - 1}
         onHardRefresh={handleResetAll}
         onRegenerateCurrentDay={regenerateCurrentDay}
+        isRegenerating={isRegenerating}
       />
 
       {/* Edit modal */}

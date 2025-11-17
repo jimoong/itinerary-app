@@ -135,8 +135,22 @@ export default function Timeline({ places, onRemovePlace, onPlaceClick, onRefres
         const isHighlighted = highlightedPlaceId === place.id;
         const isHotel = place.category === 'hotel';
         
+        const isRefreshing = refreshingPlaceIndex === index;
+        
         return (
-          <div key={place.id} className="timeline__item">
+          <div key={place.id} className="timeline__item relative">
+            {/* Refreshing overlay */}
+            {isRefreshing && (
+              <div className="absolute inset-0 bg-white/80 dark:bg-slate-900/80 z-10 rounded-lg flex items-center justify-center backdrop-blur-sm">
+                <div className="flex flex-col items-center gap-2">
+                  <RefreshCw className="w-6 h-6 animate-spin text-blue-600 dark:text-blue-400" />
+                  <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
+                    Getting new suggestion...
+                  </span>
+                </div>
+              </div>
+            )}
+            
             <div
               onClick={() => onPlaceClick?.(place.id)}
               className={`timeline__content ${isHighlighted ? 'timeline__item--highlighted' : ''}`}
