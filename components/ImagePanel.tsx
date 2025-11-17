@@ -64,11 +64,11 @@ export default function ImagePanel({ place, isOpen, onClose }: ImagePanelProps) 
       />
       
       {/* Panel */}
-      <div className="fixed z-50 bg-white dark:bg-slate-900 shadow-2xl transition-all duration-300 ease-out
+      <div className="fixed z-50 bg-white dark:bg-slate-900 shadow-2xl transition-all duration-300 ease-out flex flex-col
                       md:right-0 md:top-0 md:bottom-0 md:w-[500px]
-                      bottom-0 left-0 right-0 max-h-[70vh] rounded-t-2xl md:rounded-none">
+                      bottom-0 left-0 right-0 h-[70vh] rounded-t-2xl md:rounded-none">
         {/* Header */}
-        <div className="sticky top-0 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700 px-6 py-4 flex items-center justify-between z-10">
+        <div className="flex-shrink-0 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700 px-6 py-4 flex items-center justify-between">
           <div className="flex-1 min-w-0">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
               {place.name}
@@ -87,7 +87,7 @@ export default function ImagePanel({ place, isOpen, onClose }: ImagePanelProps) 
         </div>
 
         {/* Content */}
-        <div className="overflow-y-auto h-[calc(100%-80px)] md:h-[calc(100%-80px)]">
+        <div className="flex-1 overflow-y-auto overscroll-contain">
           {loading && (
             <div className="flex flex-col items-center justify-center py-20">
               <Loader2 className="w-12 h-12 animate-spin text-blue-600 mb-4" />
@@ -105,7 +105,7 @@ export default function ImagePanel({ place, isOpen, onClose }: ImagePanelProps) 
           )}
 
           {!loading && !error && photos.length > 0 && (
-            <div className="p-4 space-y-4">
+            <div className="p-4 pb-8 space-y-4">
               {photos.map((photo, index) => (
                 <div key={index} className="relative">
                   <img
