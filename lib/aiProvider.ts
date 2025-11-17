@@ -3,7 +3,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 type AIProvider = 'openai' | 'gemini';
 
-const AI_PROVIDER: AIProvider = (process.env.AI_PROVIDER as AIProvider) || 'openai';
+const AI_PROVIDER: AIProvider = (process.env.AI_PROVIDER as AIProvider) || 'openai'; // Note: If using Gemini, make sure your API key has the required permissions
 const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-3.5-turbo';
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-pro';
 
