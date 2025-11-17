@@ -102,7 +102,7 @@ async function callOpenAI(prompt: string): Promise<AIResponse> {
           }
         ],
         temperature: 0.7,
-        max_tokens: 2000,
+        max_tokens: 4096, // Increased from 2000 to 4096 for more detailed responses
       }),
       timeoutPromise
     ]);
@@ -162,7 +162,7 @@ async function callGemini(prompt: string): Promise<AIResponse> {
         ],
         generationConfig: {
           temperature: 0.7,
-          maxOutputTokens: 2000,
+          maxOutputTokens: 8192, // Increased from 2000 to 8192 for more detailed responses
         }
       }),
       timeoutPromise
