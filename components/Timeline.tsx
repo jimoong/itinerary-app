@@ -342,11 +342,10 @@ export default function Timeline({ places, onRemovePlace, onPlaceClick, onRefres
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-black hover:bg-gray-800 text-white rounded-md text-xs font-medium transition-colors"
+                      className="flex items-center p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors mt-4"
                       title="Book Uber"
                     >
-                      <Car className="w-3.5 h-3.5" />
-                      <span>Uber</span>
+                      <Car className="w-5 h-5" />
                     </a>
                   )}
                 </div>
