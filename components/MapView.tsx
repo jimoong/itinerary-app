@@ -456,8 +456,8 @@ export default function MapView({ places, onMarkerClick, highlightedPlaceId, cur
           // Cap max zoom level to prevent zooming in too much (e.g., when from/to are same location)
           const listener = google.maps.event.addListenerOnce(googleMapRef.current, 'bounds_changed', () => {
             const currentZoom = googleMapRef.current?.getZoom();
-            if (currentZoom && currentZoom > 16) {
-              googleMapRef.current?.setZoom(16);
+            if (currentZoom && currentZoom > 17) {
+              googleMapRef.current?.setZoom(17);
             }
           });
         }
