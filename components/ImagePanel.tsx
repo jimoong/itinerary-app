@@ -303,7 +303,7 @@ export default function ImagePanel({ place, isOpen, onClose }: ImagePanelProps) 
                   <div className="space-y-6">
                     {/* Rating Summary */}
                     {details?.rating && (
-                      <div className="pb-4 border-b border-gray-200 dark:border-slate-700">
+                      <div className="dark:border-slate-700">
                         <div className="flex items-center gap-2">
                           <div className="flex items-center gap-1">
                             <Star className="w-6 h-6 text-yellow-500 fill-yellow-500" />
