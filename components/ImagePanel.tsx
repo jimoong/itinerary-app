@@ -139,7 +139,7 @@ export default function ImagePanel({ place, isOpen, onClose }: ImagePanelProps) 
           )}
 
           {!loading && !error && (details || photos.length > 0) && (
-            <div className="p-4 pb-8 pt-4">
+            <div className="p-4 px-6 pb-8 pt-4">
               {/* Place Details Section - only show if there's at least one detail */}
               {details && (details.openingHours?.length || details.phoneNumber || details.website) && (
                 <div className="space-y-4 pb-4 mb-6 border-b border-gray-200 dark:border-slate-700">
@@ -147,7 +147,7 @@ export default function ImagePanel({ place, isOpen, onClose }: ImagePanelProps) 
                   {details.openingHours && details.openingHours.length > 0 && (
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                        <Clock className="w-4 h-4 text-slate-400 dark:text-slate-600" />
                         <h3 className="font-semibold text-gray-900 dark:text-white">Hours</h3>
                         {details.isOpenNow !== undefined && (
                           <span className={`text-xs px-2 py-0.5 rounded-full ${
@@ -173,7 +173,7 @@ export default function ImagePanel({ place, isOpen, onClose }: ImagePanelProps) 
                   {details.phoneNumber && (
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <Phone className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                        <Phone className="w-4 h-4 text-slate-400 dark:text-slate-600" />
                         <h3 className="font-semibold text-gray-900 dark:text-white">Phone</h3>
                       </div>
                       <a 
@@ -189,7 +189,7 @@ export default function ImagePanel({ place, isOpen, onClose }: ImagePanelProps) 
                   {details.website && (
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <Globe className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                        <Globe className="w-4 h-4 text-slate-400 dark:text-slate-600" />
                         <h3 className="font-semibold text-gray-900 dark:text-white">Website</h3>
                       </div>
                       <a 
@@ -198,8 +198,7 @@ export default function ImagePanel({ place, isOpen, onClose }: ImagePanelProps) 
                         rel="noopener noreferrer"
                         className="ml-7 text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
                       >
-                        Visit website
-                        <ExternalLink className="w-3 h-3" />
+                        {details.website}
                       </a>
                     </div>
                   )}
