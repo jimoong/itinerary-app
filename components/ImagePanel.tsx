@@ -212,7 +212,7 @@ export default function ImagePanel({ place, isOpen, onClose }: ImagePanelProps) 
                   {/* Opening Hours */}
                   {details.openingHours && details.openingHours.length > 0 && (
                     <div className="space-y-2">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-4">
                         <Clock className="w-4 h-4 text-slate-400 dark:text-slate-600" />
                         <h3 className="font-semibold text-gray-900 dark:text-white">Hours</h3>
                         {details.isOpenNow !== undefined && (
@@ -225,7 +225,7 @@ export default function ImagePanel({ place, isOpen, onClose }: ImagePanelProps) 
                           </span>
                         )}
                       </div>
-                      <div className="ml-7 space-y-1">
+                      <div className="ml-8 space-y-1">
                         {details.openingHours.map((hours, index) => (
                           <p key={index} className="text-sm text-gray-600 dark:text-gray-400">
                             {hours}
@@ -238,13 +238,13 @@ export default function ImagePanel({ place, isOpen, onClose }: ImagePanelProps) 
                   {/* Phone Number */}
                   {details.phoneNumber && (
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-4">
                         <Phone className="w-4 h-4 text-slate-400 dark:text-slate-600" />
                         <h3 className="font-semibold text-gray-900 dark:text-white">Phone</h3>
                       </div>
                       <a 
                         href={`tel:${details.phoneNumber}`}
-                        className="ml-7 text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                        className="ml-8 text-sm text-blue-600 dark:text-blue-400 hover:underline"
                       >
                         {details.phoneNumber}
                       </a>
@@ -254,7 +254,7 @@ export default function ImagePanel({ place, isOpen, onClose }: ImagePanelProps) 
                   {/* Website */}
                   {details.website && (
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-4">
                         <Globe className="w-4 h-4 text-slate-400 dark:text-slate-600" />
                         <h3 className="font-semibold text-gray-900 dark:text-white">Website</h3>
                       </div>
@@ -262,7 +262,7 @@ export default function ImagePanel({ place, isOpen, onClose }: ImagePanelProps) 
                         href={details.website}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="ml-7 text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                        className="ml-8 text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
                       >
                         {details.website}
                       </a>
