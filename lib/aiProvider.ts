@@ -7,6 +7,10 @@ const AI_PROVIDER: AIProvider = (process.env.AI_PROVIDER as AIProvider) || 'open
 const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-3.5-turbo';
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-pro';
 
+// Timeout settings (in milliseconds)
+const OPENAI_TIMEOUT = parseInt(process.env.OPENAI_TIMEOUT || '30000'); // 30 seconds
+const GEMINI_TIMEOUT = parseInt(process.env.GEMINI_TIMEOUT || '30000'); // 30 seconds
+
 console.log(`[aiProvider] Using AI provider: ${AI_PROVIDER}`);
 
 // Initialize OpenAI client
@@ -36,21 +40,31 @@ export async function callAI(prompt: string): Promise<AIResponse> {
 
 async function callOpenAI(prompt: string): Promise<AIResponse> {
   try {
-    const completion = await openai.chat.completions.create({
-      model: OPENAI_MODEL,
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a travel planning assistant. Always respond with valid JSON only, no additional text.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 2000,
+    console.log(`[aiProvider] OpenAI request with ${OPENAI_TIMEOUT}ms timeout`);
+    
+    // Create a timeout promise
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error(`OpenAI request timeout after ${OPENAI_TIMEOUT}ms`)), OPENAI_TIMEOUT);
     });
+
+    const completion = await Promise.race([
+      openai.chat.completions.create({
+        model: OPENAI_MODEL,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a travel planning assistant. Always respond with valid JSON only, no additional text.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 2000,
+      }),
+      timeoutPromise
+    ]);
 
     const content = completion.choices[0].message.content;
     if (!content) {
@@ -70,35 +84,49 @@ async function callGemini(prompt: string): Promise<AIResponse> {
       throw new Error('GOOGLE_GEMINI_API_KEY is not set');
     }
 
+    console.log(`[aiProvider] Gemini streaming request with ${GEMINI_TIMEOUT}ms timeout`);
+
     const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
     
-    const result = await model.generateContent({
-      contents: [
-        {
-          role: 'user',
-          parts: [
-            {
-              text: `You are a travel planning assistant. Always respond with valid JSON only, no additional text.\n\n${prompt}`
-            }
-          ]
-        }
-      ],
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 2000,
-      }
+    // Create a timeout promise
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error(`Gemini request timeout after ${GEMINI_TIMEOUT}ms`)), GEMINI_TIMEOUT);
     });
 
-    const response = result.response;
-    if (!response || !response.text) {
-      throw new Error('Invalid response from Gemini');
+    const streamResult = await Promise.race([
+      model.generateContentStream({
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              {
+                text: `You are a travel planning assistant. Always respond with valid JSON only, no additional text.\n\n${prompt}`
+              }
+            ]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 2000,
+        }
+      }),
+      timeoutPromise
+    ]);
+
+    // Collect the streamed content
+    let content = '';
+    for await (const chunk of streamResult.stream) {
+      const chunkText = chunk.text();
+      if (chunkText) {
+        content += chunkText;
+      }
     }
 
-    const content = response.text();
     if (!content) {
-      throw new Error('No response text from Gemini');
+      throw new Error('No response text from Gemini streaming');
     }
 
+    console.log(`[aiProvider] Gemini streaming completed, received ${content.length} characters`);
     return { content };
   } catch (error) {
     console.error('[aiProvider] Gemini error:', error);
