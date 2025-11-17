@@ -1,6 +1,26 @@
 import { DayItinerary, Place, TripDetails } from './types';
 import { callAI } from './aiProvider';
 
+// Helper function to clean JSON response from markdown code blocks
+function cleanJsonResponse(content: string): string {
+  // Remove markdown code blocks if present
+  let cleaned = content.trim();
+  
+  // Remove ```json or ``` at the start
+  if (cleaned.startsWith('```json')) {
+    cleaned = cleaned.substring(7);
+  } else if (cleaned.startsWith('```')) {
+    cleaned = cleaned.substring(3);
+  }
+  
+  // Remove ``` at the end
+  if (cleaned.endsWith('```')) {
+    cleaned = cleaned.substring(0, cleaned.length - 3);
+  }
+  
+  return cleaned.trim();
+}
+
 export async function generateDayItinerary(
   details: TripDetails,
   dayNumber: number,
@@ -144,7 +164,8 @@ Return ONLY a valid JSON object with this exact structure:
     const response = await callAI(prompt);
     console.log(`[generateDayItinerary] ✅ AI GENERATED - Day ${dayNumber} (${city}) from AI API`);
     
-    const parsed = JSON.parse(response.content);
+    const cleanedContent = cleanJsonResponse(response.content);
+    const parsed = JSON.parse(cleanedContent);
     const places: Place[] = parsed.places.map((p: any, idx: number) => ({
       id: `${dayNumber}-${idx}`,
       ...p
@@ -203,7 +224,8 @@ Return ONLY a valid JSON array with this structure:
     console.log(`[regenerateDayWithChanges] Calling AI to re-optimize day ${day.dayNumber}...`);
     const response = await callAI(prompt);
     console.log(`[regenerateDayWithChanges] ✅ AI GENERATED - Day ${day.dayNumber} re-optimized from AI API`);
-    const parsed = JSON.parse(response.content);
+    const cleanedContent = cleanJsonResponse(response.content);
+    const parsed = JSON.parse(cleanedContent);
     return parsed.map((p: any, idx: number) => ({
       id: places[idx]?.id || `${day.dayNumber}-${idx}`,
       ...p
@@ -323,7 +345,8 @@ Return ONLY a valid JSON object (NOT an array) with this structure:
   try {
     console.log(`[regenerateSinglePlace] Calling AI to regenerate place at index ${placeIndex} on day ${dayNumber}...`);
     const response = await callAI(prompt);
-    const parsed = JSON.parse(response.content);
+    const cleanedContent = cleanJsonResponse(response.content);
+    const parsed = JSON.parse(cleanedContent);
     
     // Validate that the new place is actually different
     if (parsed.name.toLowerCase() === currentPlace.name.toLowerCase()) {
@@ -332,7 +355,8 @@ Return ONLY a valid JSON object (NOT an array) with this structure:
       const retryPrompt = `You are a travel planning assistant. You MUST provide a different alternative location. Always respond with valid JSON only.\n\nURGENT: The previous suggestion "${parsed.name}" is the SAME as the current place. Please suggest a COMPLETELY DIFFERENT ${currentPlace.category} in ${city} for the same time slot (${suggestedStartTime}). Avoid these: ${placesToAvoid.join(', ')}`;
       
       const retryResponse = await callAI(retryPrompt);
-      const retryParsed = JSON.parse(retryResponse.content);
+      const retryCleanedContent = cleanJsonResponse(retryResponse.content);
+      const retryParsed = JSON.parse(retryCleanedContent);
       console.log(`[regenerateSinglePlace] ✅ AI GENERATED - Place regenerated (retry) from AI API: ${retryParsed.name}`);
       return {
         id: currentPlace.id,
