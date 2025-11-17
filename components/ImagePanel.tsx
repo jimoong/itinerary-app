@@ -187,14 +187,14 @@ export default function ImagePanel({ place, isOpen, onClose }: ImagePanelProps) 
                           : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                       }`}
                     >
-                      Reviews ({reviews.length})
+                      Reviews
                     </button>
                   )}
                 </div>
               </div>
 
               {/* Tab Content */}
-              <div className="flex-1 overflow-y-auto p-4 px-6 pb-8">
+              <div className="flex-1 overflow-y-auto p-6 pb-8">
                 {activeMainTab === 'info' && (
                   <>
                     {/* Editorial Summary */}
