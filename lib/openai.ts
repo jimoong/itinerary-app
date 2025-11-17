@@ -1,11 +1,5 @@
-import OpenAI from 'openai';
 import { DayItinerary, Place, TripDetails } from './types';
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-console.log('[openai.ts] OpenAI client initialized with API key:', process.env.OPENAI_API_KEY ? 'YES (present)' : 'NO (missing)');
+import { callAI } from './aiProvider';
 
 export async function generateDayItinerary(
   details: TripDetails,
@@ -146,30 +140,11 @@ Return ONLY a valid JSON object with this exact structure:
 }`;
 
   try {
-    console.log(`Calling OpenAI for ${city} on ${date}...`);
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a travel planning assistant. Always respond with valid JSON only, no additional text.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 2000,
-    });
-
-    console.log(`OpenAI response received for ${city}`);
-    const content = completion.choices[0].message.content;
-    if (!content) {
-      throw new Error('No response from OpenAI');
-    }
-
-    const parsed = JSON.parse(content);
+    console.log(`[generateDayItinerary] Calling AI for ${city} on ${date}...`);
+    const response = await callAI(prompt);
+    console.log(`[generateDayItinerary] AI response received for ${city}`);
+    
+    const parsed = JSON.parse(response.content);
     const places: Place[] = parsed.places.map((p: any, idx: number) => ({
       id: `${dayNumber}-${idx}`,
       ...p
@@ -223,28 +198,8 @@ Return ONLY a valid JSON array with this structure:
 ]`;
 
   try {
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a travel planning assistant. Always respond with valid JSON only.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 1500,
-    });
-
-    const content = completion.choices[0].message.content;
-    if (!content) {
-      throw new Error('No response from OpenAI');
-    }
-
-    const parsed = JSON.parse(content);
+    const response = await callAI(prompt);
+    const parsed = JSON.parse(response.content);
     return parsed.map((p: any, idx: number) => ({
       id: places[idx]?.id || `${day.dayNumber}-${idx}`,
       ...p
@@ -360,57 +315,21 @@ Return ONLY a valid JSON object (NOT an array) with this structure:
 }`;
 
   try {
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a travel planning assistant. Always respond with valid JSON only.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      temperature: 0.9, // Higher temperature for more variety
-      max_tokens: 800,
-    });
-
-    const content = completion.choices[0].message.content;
-    if (!content) {
-      throw new Error('No response from OpenAI');
-    }
-
-    const parsed = JSON.parse(content);
+    const response = await callAI(prompt);
+    const parsed = JSON.parse(response.content);
     
     // Validate that the new place is actually different
     if (parsed.name.toLowerCase() === currentPlace.name.toLowerCase()) {
       console.warn('AI returned the same place, retrying with more explicit prompt...');
       // Try one more time with even more emphasis
-      const retryCompletion = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a travel planning assistant. You MUST provide a different alternative location. Always respond with valid JSON only.'
-          },
-          {
-            role: 'user',
-            content: `URGENT: The previous suggestion "${parsed.name}" is the SAME as the current place. Please suggest a COMPLETELY DIFFERENT ${currentPlace.category} in ${city} for the same time slot (${suggestedStartTime}). Avoid these: ${placesToAvoid.join(', ')}`
-          }
-        ],
-        temperature: 1.0,
-        max_tokens: 800,
-      });
+      const retryPrompt = `You are a travel planning assistant. You MUST provide a different alternative location. Always respond with valid JSON only.\n\nURGENT: The previous suggestion "${parsed.name}" is the SAME as the current place. Please suggest a COMPLETELY DIFFERENT ${currentPlace.category} in ${city} for the same time slot (${suggestedStartTime}). Avoid these: ${placesToAvoid.join(', ')}`;
       
-      const retryContent = retryCompletion.choices[0].message.content;
-      if (retryContent) {
-        const retryParsed = JSON.parse(retryContent);
-        return {
-          id: currentPlace.id,
-          ...retryParsed
-        };
-      }
+      const retryResponse = await callAI(retryPrompt);
+      const retryParsed = JSON.parse(retryResponse.content);
+      return {
+        id: currentPlace.id,
+        ...retryParsed
+      };
     }
     
     return {
