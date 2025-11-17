@@ -40,10 +40,16 @@ export async function POST(request: NextRequest) {
             aiGeneratedCount++;
           }
           
-          // Add places to visited list
+          // Add places to visited list (excluding hotels)
           day.places.forEach(place => {
-            visitedPlaces.push(place.name);
+            if (!place.name.toLowerCase().includes('hotel') && 
+                !place.name.toLowerCase().includes('andaz') && 
+                !place.name.toLowerCase().includes('hyatt')) {
+              visitedPlaces.push(place.name);
+            }
           });
+          
+          console.log(`📝 Visited places so far: ${visitedPlaces.length}`);
           
           // Send the day as a Server-Sent Event
           const data = JSON.stringify({ 

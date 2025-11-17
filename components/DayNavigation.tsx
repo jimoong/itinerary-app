@@ -113,13 +113,9 @@ export default function DayNavigation({
                   }}
                   className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-3 border-b border-gray-100 dark:border-slate-700"
                 >
-                  <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   <div>
                     <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                       Regenerate This Day
-                    </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                      Get new suggestions for {format(new Date(currentDay.date.split('-').map(Number).slice(0, 3).join('-')), 'MMM d')}
                     </div>
                   </div>
                 </button>
@@ -131,13 +127,9 @@ export default function DayNavigation({
                   }}
                   className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-3"
                 >
-                  <CalendarRange className="w-5 h-5 text-red-600 dark:text-red-400" />
                   <div>
                     <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                       Regenerate All Days
-                    </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                      Start fresh with new itinerary
                     </div>
                   </div>
                 </button>
