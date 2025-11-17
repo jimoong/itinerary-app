@@ -118,6 +118,21 @@ export default function Timeline({ places, onRemovePlace, onPlaceClick, onRefres
     return `https://www.google.com/maps/dir/?api=1&origin=${originCoords}&destination=${destCoords}&travelmode=${travelMode}`;
   };
 
+  // Generate Uber deep link with pickup and dropoff
+  const getUberUrl = (origin: Place, destination: Place) => {
+    // Uber deep link format: uber://?action=setPickup&pickup[latitude]=...&dropoff[latitude]=...
+    const pickupLat = origin.lat;
+    const pickupLng = origin.lng;
+    const pickupName = encodeURIComponent(origin.name);
+    const dropoffLat = destination.lat;
+    const dropoffLng = destination.lng;
+    const dropoffName = encodeURIComponent(destination.name);
+    const dropoffAddress = encodeURIComponent(destination.address);
+    
+    // Try to open Uber app first, fallback to web
+    return `uber://?action=setPickup&pickup[latitude]=${pickupLat}&pickup[longitude]=${pickupLng}&pickup[nickname]=${pickupName}&dropoff[latitude]=${dropoffLat}&dropoff[longitude]=${dropoffLng}&dropoff[nickname]=${dropoffName}&dropoff[formatted_address]=${dropoffAddress}`;
+  };
+
   if (places.length === 0) {
     return (
       <div className="timeline__empty-state">
@@ -295,26 +310,43 @@ export default function Timeline({ places, onRemovePlace, onPlaceClick, onRefres
             {place.transportToNext && index < places.length - 1 && (
               <div className="timeline__transportation relative pb-4 pt-4">
                 {/* <div className="timeline__line" /> */}
-                <a
-                  href={getDirectionsUrl(place, places[index + 1], place.transportToNext.mode)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="timeline__transport transition-colors cursor-pointer"
-                  title="Get directions in Google Maps"
-                >
-                  {getTransportIcon(place.transportToNext.mode)}
-                  <span className="capitalize">{place.transportToNext.mode}</span>
-                  <span className="text-gray-400">•</span>
-                  <span>{formatDuration(place.transportToNext.duration)}</span>
-                  {place.transportToNext.distance && (
-                    <>
-                      <span className="text-gray-400">•</span>
-                      <span>{place.transportToNext.distance}</span>
-                    </>
+                <div className="flex items-center justify-between gap-2">
+                  <a
+                    href={getDirectionsUrl(place, places[index + 1], place.transportToNext.mode)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="timeline__transport transition-colors cursor-pointer flex-1"
+                    title="Get directions in Google Maps"
+                  >
+                    {getTransportIcon(place.transportToNext.mode)}
+                    <span className="capitalize">{place.transportToNext.mode}</span>
+                    <span className="text-gray-400">•</span>
+                    <span>{formatDuration(place.transportToNext.duration)}</span>
+                    {place.transportToNext.distance && (
+                      <>
+                        <span className="text-gray-400">•</span>
+                        <span>{place.transportToNext.distance}</span>
+                      </>
+                    )}
+                    {/* <span className="text-blue-600 ml-auto">→</span> */}
+                  </a>
+                  
+                  {/* Uber button - show for taxi or if walking/transit is > 15 min */}
+                  {(place.transportToNext.mode === 'taxi' || place.transportToNext.duration > 15) && (
+                    <a
+                      href={getUberUrl(place, places[index + 1])}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-black hover:bg-gray-800 text-white rounded-md text-xs font-medium transition-colors"
+                      title="Book Uber"
+                    >
+                      <Car className="w-3.5 h-3.5" />
+                      <span>Uber</span>
+                    </a>
                   )}
-                  {/* <span className="text-blue-600 ml-auto">→</span> */}
-                </a>
+                </div>
               </div>
             )}
           </div>
