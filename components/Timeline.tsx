@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Place } from '@/lib/types';
-import { Clock, MapPin, Trash2, Coffee, Building2, TreePine, Landmark, ShoppingBag, Ticket, Navigation, Car, Train, TramFront, Heart, RefreshCw, Hotel, Image } from 'lucide-react';
+import { Clock, MapPin, Trash2, Coffee, Building2, TreePine, Landmark, ShoppingBag, Ticket, Navigation, Car, Train, TramFront, Heart, RefreshCw, Hotel, Image, MoreVertical } from 'lucide-react';
 import ImagePanel from './ImagePanel';
 
 interface TimelineProps {
@@ -18,12 +18,28 @@ interface TimelineProps {
 export default function Timeline({ places, onRemovePlace, onPlaceClick, onRefreshPlace, highlightedPlaceId, refreshingPlaceIndex, nextPlaceIndex }: TimelineProps) {
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const [isImagePanelOpen, setIsImagePanelOpen] = useState(false);
+  const [openMenuIndex, setOpenMenuIndex] = useState<number | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const handleImageClick = (place: Place, e: React.MouseEvent) => {
     e.stopPropagation();
     setSelectedPlace(place);
     setIsImagePanelOpen(true);
   };
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setOpenMenuIndex(null);
+      }
+    };
+
+    if (openMenuIndex !== null) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [openMenuIndex]);
 
   const getCategoryIcon = (category: string) => {
     switch (category.toLowerCase()) {
@@ -161,32 +177,53 @@ export default function Timeline({ places, onRemovePlace, onPlaceClick, onRefres
                         <Image className="w-4 h-4" />
                       </button>
 
-                      {/* Refresh button */}
-                      {onRefreshPlace && (
+                      {/* More menu button */}
+                      <div className="relative" ref={openMenuIndex === index ? menuRef : null}>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            onRefreshPlace(index);
+                            setOpenMenuIndex(openMenuIndex === index ? null : index);
                           }}
-                          disabled={refreshingPlaceIndex === index}
-                          className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          title="Get AI suggestion for alternative place"
+                          className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                          title="More options"
                         >
-                          <RefreshCw className={`w-4 h-4 ${refreshingPlaceIndex === index ? 'animate-spin' : ''}`} />
+                          <MoreVertical className="w-4 h-4" />
                         </button>
-                      )}
-                      
-                      {/* Remove button */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onRemovePlace(place.id);
-                        }}
-                        className="timeline__remove-button"
-                        title="Remove place"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+
+                        {/* Dropdown menu */}
+                        {openMenuIndex === index && (
+                          <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-gray-200 dark:border-slate-700 overflow-hidden z-50">
+                            {/* Refresh option */}
+                            {onRefreshPlace && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenMenuIndex(null);
+                                  onRefreshPlace(index);
+                                }}
+                                disabled={refreshingPlaceIndex === index}
+                                className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-3 border-b border-gray-100 dark:border-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <RefreshCw className={`w-4 h-4 text-blue-600 dark:text-blue-400 ${refreshingPlaceIndex === index ? 'animate-spin' : ''}`} />
+                                <span className="text-sm text-gray-700 dark:text-gray-300">Refresh suggestion</span>
+                              </button>
+                            )}
+                            
+                            {/* Remove option */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenMenuIndex(null);
+                                onRemovePlace(place.id);
+                              }}
+                              className="w-full px-4 py-3 text-left hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-3"
+                            >
+                              <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
+                              <span className="text-sm text-red-600 dark:text-red-400">Remove place</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
