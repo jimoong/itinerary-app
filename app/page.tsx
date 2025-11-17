@@ -309,11 +309,10 @@ export default function Home() {
   const generateAllDays = async () => {
     setIsLoading(true);
     try {
-      console.log('Fetching itinerary from API...');
-      const response = await fetch('/api/generate-itinerary', {
+      console.log('🚀 Starting streaming itinerary generation...');
+      const response = await fetch('/api/generate-itinerary-stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'generate-all' }),
       });
 
       console.log('Response status:', response.status);
@@ -324,37 +323,95 @@ export default function Home() {
         throw new Error(`Failed to generate itinerary: ${response.status}`);
       }
 
-      const data = await response.json();
-      console.log('Received data:', data);
-      console.log('Number of days:', data.days?.length);
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
       
-      if (!data.days || data.days.length !== 9) {
-        console.error('Invalid number of days received:', data.days?.length);
-        alert(`Error: Expected 9 days but got ${data.days?.length || 0}. Check API configuration.`);
+      if (!reader) {
+        throw new Error('Response body is not readable');
+      }
+
+      const allDays: DayItinerary[] = [];
+      let buffer = '';
+
+      // Read the stream
+      while (true) {
+        const { done, value } = await reader.read();
+        
+        if (done) {
+          console.log('✅ Stream complete');
+          break;
+        }
+
+        // Decode the chunk and add to buffer
+        buffer += decoder.decode(value, { stream: true });
+        
+        // Process complete messages (separated by \n\n)
+        const messages = buffer.split('\n\n');
+        buffer = messages.pop() || ''; // Keep incomplete message in buffer
+        
+        for (const message of messages) {
+          if (message.startsWith('data: ')) {
+            const jsonStr = message.substring(6);
+            try {
+              const event = JSON.parse(jsonStr);
+              
+              if (event.type === 'day') {
+                console.log(`📅 Received day ${event.progress.current}/${event.progress.total}`);
+                
+                // Add hotels to the day
+                const dayWithHotels = await addHotelsToDay(event.day);
+                allDays.push(dayWithHotels);
+                
+                // Update trip progressively
+                const progressTrip: Trip = {
+                  travelers: [
+                    { role: "Dad", age: 46 },
+                    { role: "Mom", age: 39 },
+                    { role: "Girl", age: 9 },
+                    { role: "Boy", age: 6 }
+                  ],
+                  days: [...allDays],
+                  startDate: allDays[0].date,
+                  endDate: allDays[allDays.length - 1].date,
+                };
+                
+                setTrip(progressTrip);
+                console.log(`✨ UI updated with ${allDays.length} days`);
+              } else if (event.type === 'complete') {
+                console.log('✅ Generation complete:', event.summary);
+              } else if (event.type === 'error') {
+                console.error('❌ Stream error:', event.error);
+                throw new Error(event.error);
+              }
+            } catch (parseError) {
+              console.error('Error parsing SSE message:', parseError);
+            }
+          }
+        }
+      }
+      
+      if (allDays.length !== 9) {
+        console.error('Invalid number of days received:', allDays.length);
+        alert(`Error: Expected 9 days but got ${allDays.length}. Check API configuration.`);
         setIsLoading(false);
         return;
       }
       
-      // Add hotels to each day with calculated routes (async)
-      const daysWithHotels = await Promise.all(
-        data.days.map((day: DayItinerary) => addHotelsToDay(day))
-      );
-      
-      const newTrip: Trip = {
+      const finalTrip: Trip = {
         travelers: [
           { role: "Dad", age: 46 },
           { role: "Mom", age: 39 },
           { role: "Girl", age: 9 },
           { role: "Boy", age: 6 }
         ],
-        days: daysWithHotels,
-        startDate: data.days[0].date,
-        endDate: data.days[data.days.length - 1].date,
+        days: allDays,
+        startDate: allDays[0].date,
+        endDate: allDays[allDays.length - 1].date,
       };
       
-      console.log('Setting new trip:', newTrip);
-      setTrip(newTrip);
-      console.log('Trip generated successfully');
+      console.log('💾 Saving final trip to localStorage');
+      saveTrip(finalTrip);
+      console.log('🎉 Trip generation complete!');
     } catch (error) {
       console.error('Error generating trip:', error);
       alert('Failed to generate itinerary. Check console for details. Make sure API keys are set in .env.local');
