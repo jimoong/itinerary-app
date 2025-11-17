@@ -5,12 +5,16 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+console.log('[openai.ts] OpenAI client initialized with API key:', process.env.OPENAI_API_KEY ? 'YES (present)' : 'NO (missing)');
+
 export async function generateDayItinerary(
   details: TripDetails,
   dayNumber: number,
   totalDays: number,
   previousPlaces?: string[]
 ): Promise<DayItinerary> {
+  console.log(`[generateDayItinerary] Starting generation for day ${dayNumber}/${totalDays}`);
+  
   // Handle date assignment for 9 days with overlap on Nov 25
   let date: string;
   let city: string;
