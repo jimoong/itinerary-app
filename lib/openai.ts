@@ -148,7 +148,7 @@ Return ONLY a valid JSON object with this exact structure:
   try {
     console.log(`Calling OpenAI for ${city} on ${date}...`);
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: 'gpt-3.5-turbo',
       messages: [
         {
           role: 'system',
@@ -224,7 +224,7 @@ Return ONLY a valid JSON array with this structure:
 
   try {
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: 'gpt-3.5-turbo',
       messages: [
         {
           role: 'system',
@@ -361,7 +361,7 @@ Return ONLY a valid JSON object (NOT an array) with this structure:
 
   try {
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: 'gpt-3.5-turbo',
       messages: [
         {
           role: 'system',
@@ -388,7 +388,7 @@ Return ONLY a valid JSON object (NOT an array) with this structure:
       console.warn('AI returned the same place, retrying with more explicit prompt...');
       // Try one more time with even more emphasis
       const retryCompletion = await openai.chat.completions.create({
-        model: 'gpt-4',
+        model: 'gpt-3.5-turbo',
         messages: [
           {
             role: 'system',
