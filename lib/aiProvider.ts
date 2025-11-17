@@ -66,6 +66,10 @@ async function callOpenAI(prompt: string): Promise<AIResponse> {
 
 async function callGemini(prompt: string): Promise<AIResponse> {
   try {
+    if (!process.env.GOOGLE_GEMINI_API_KEY) {
+      throw new Error('GOOGLE_GEMINI_API_KEY is not set');
+    }
+
     const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
     
     const result = await model.generateContent({
@@ -85,9 +89,14 @@ async function callGemini(prompt: string): Promise<AIResponse> {
       }
     });
 
-    const content = result.response.text();
+    const response = result.response;
+    if (!response || !response.text) {
+      throw new Error('Invalid response from Gemini');
+    }
+
+    const content = response.text();
     if (!content) {
-      throw new Error('No response from Gemini');
+      throw new Error('No response text from Gemini');
     }
 
     return { content };
