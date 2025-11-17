@@ -236,7 +236,7 @@ export default function MapView({ places, onMarkerClick, highlightedPlaceId, cur
         title: place.name,
         label: markerLabel,
         icon: markerIcon,
-        zIndex: isHighlighted ? 2000 : (isHotel ? 1500 : 1000), // Hotel markers have medium priority
+        zIndex: isHighlighted ? 10000 : (isHotel ? 1500 : 1000), // Highlighted markers on top, hotels medium, regular low
       });
 
       marker.addListener('click', () => {
@@ -282,7 +282,7 @@ export default function MapView({ places, onMarkerClick, highlightedPlaceId, cur
     }
 
     // Draw routes between consecutive places using Routes API (newer than Directions API)
-    const drawRoute = async (startPlace: Place, endPlace: Place, transportMode: string, strokeColor: string, strokeWeight: number = 3, strokeOpacity: number = 0.8) => {
+    const drawRoute = async (startPlace: Place, endPlace: Place, transportMode: string, strokeColor: string, strokeWeight: number = 3, strokeOpacity: number = 0.8, zIndex: number = 100) => {
       try {
         // Map transport modes to Routes API travel modes
         let travelMode: string;
@@ -348,6 +348,7 @@ export default function MapView({ places, onMarkerClick, highlightedPlaceId, cur
             strokeColor: strokeColor,
             strokeOpacity: strokeOpacity,
             strokeWeight: strokeWeight,
+            zIndex: zIndex,
             map: googleMapRef.current,
           });
 
@@ -369,6 +370,7 @@ export default function MapView({ places, onMarkerClick, highlightedPlaceId, cur
           strokeColor: strokeColor,
           strokeOpacity: strokeOpacity,
           strokeWeight: strokeWeight,
+          zIndex: zIndex,
           map: googleMapRef.current,
         });
 
@@ -390,8 +392,9 @@ export default function MapView({ places, onMarkerClick, highlightedPlaceId, cur
       const strokeColor = isHighlightedRoute ? '#00A4A7' : '#134686'; // Cyan or brand blue
       const strokeWeight = isHighlightedRoute ? 5 : 5;
       const strokeOpacity = isHighlightedRoute ? 1 : 1;
+      const zIndex = isHighlightedRoute ? 1000 : 100; // Highlighted routes on top
 
-      drawRoute(start, end, transportMode, strokeColor, strokeWeight, strokeOpacity);
+      drawRoute(start, end, transportMode, strokeColor, strokeWeight, strokeOpacity, zIndex);
     }
 
     // Fit map to show all markers or adjust zoom for highlighted location
