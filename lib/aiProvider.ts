@@ -29,22 +29,63 @@ export interface AIResponse {
 }
 
 export async function callAI(prompt: string): Promise<AIResponse> {
-  console.log(`[aiProvider] Calling ${AI_PROVIDER} with model: ${AI_PROVIDER === 'openai' ? OPENAI_MODEL : GEMINI_MODEL}`);
+  // Comprehensive logging
+  console.log(`[aiProvider] ========== AI Request Start ==========`);
+  console.log(`[aiProvider] Prompt length: ${prompt.length} characters`);
+  console.log(`[aiProvider] Primary provider: ${AI_PROVIDER}`);
+  console.log(`[aiProvider] Model: ${AI_PROVIDER === 'openai' ? OPENAI_MODEL : GEMINI_MODEL}`);
+  console.log(`[aiProvider] Timeout: ${AI_PROVIDER === 'openai' ? OPENAI_TIMEOUT : GEMINI_TIMEOUT}ms`);
+  console.log(`[aiProvider] OpenAI key available: ${process.env.OPENAI_API_KEY ? 'YES' : 'NO'}`);
+  console.log(`[aiProvider] Gemini key available: ${process.env.GOOGLE_GEMINI_API_KEY ? 'YES' : 'NO'}`);
 
-  if (AI_PROVIDER === 'gemini') {
-    return callGemini(prompt);
-  } else {
-    return callOpenAI(prompt);
+  try {
+    if (AI_PROVIDER === 'gemini') {
+      const result = await callGemini(prompt);
+      console.log(`[aiProvider] ========== AI Request Success (Gemini) ==========`);
+      return result;
+    } else {
+      const result = await callOpenAI(prompt);
+      console.log(`[aiProvider] ========== AI Request Success (OpenAI) ==========`);
+      return result;
+    }
+  } catch (error) {
+    console.error(`[aiProvider] ========== AI Request Failed ==========`);
+    console.error(`[aiProvider] Primary provider (${AI_PROVIDER}) failed:`, error);
+    
+    // Auto-fallback: If Gemini fails and OpenAI key exists, try OpenAI
+    if (AI_PROVIDER === 'gemini' && process.env.OPENAI_API_KEY) {
+      console.log('[aiProvider] ========== Attempting Automatic Fallback to OpenAI ==========');
+      console.log(`[aiProvider] Fallback model: ${OPENAI_MODEL}`);
+      console.log(`[aiProvider] Fallback timeout: ${OPENAI_TIMEOUT}ms`);
+      
+      try {
+        const result = await callOpenAI(prompt);
+        console.log('[aiProvider] ========== Fallback Success (OpenAI) ==========');
+        return result;
+      } catch (fallbackError) {
+        console.error('[aiProvider] ========== Fallback Failed ==========');
+        console.error('[aiProvider] OpenAI fallback also failed:', fallbackError);
+        console.error('[aiProvider] Throwing original Gemini error');
+        throw error; // Throw original Gemini error
+      }
+    }
+    
+    throw error;
   }
 }
 
 async function callOpenAI(prompt: string): Promise<AIResponse> {
   try {
-    console.log(`[aiProvider] OpenAI request with ${OPENAI_TIMEOUT}ms timeout`);
+    console.log(`[aiProvider] OpenAI: Starting request`);
+    console.log(`[aiProvider] OpenAI: Model=${OPENAI_MODEL}, Timeout=${OPENAI_TIMEOUT}ms`);
     
     // Create a timeout promise
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error(`OpenAI request timeout after ${OPENAI_TIMEOUT}ms`)), OPENAI_TIMEOUT);
+      setTimeout(() => {
+        const timeoutError = new Error(`OpenAI request timeout after ${OPENAI_TIMEOUT}ms`);
+        timeoutError.name = 'TimeoutError';
+        reject(timeoutError);
+      }, OPENAI_TIMEOUT);
     });
 
     const completion = await Promise.race([
@@ -68,29 +109,43 @@ async function callOpenAI(prompt: string): Promise<AIResponse> {
 
     const content = completion.choices[0].message.content;
     if (!content) {
-      throw new Error('No response from OpenAI');
+      const emptyError = new Error(`No response from OpenAI (model: ${OPENAI_MODEL}, timeout: ${OPENAI_TIMEOUT}ms)`);
+      emptyError.name = 'EmptyResponseError';
+      throw emptyError;
     }
 
+    console.log(`[aiProvider] OpenAI: Request completed successfully`);
+    console.log(`[aiProvider] OpenAI: Response length=${content.length} characters`);
     return { content };
   } catch (error) {
-    console.error('[aiProvider] OpenAI error:', error);
+    console.error('[aiProvider] OpenAI: Error occurred');
+    console.error(`[aiProvider] OpenAI: Error type: ${error instanceof Error ? error.name : 'Unknown'}`);
+    console.error(`[aiProvider] OpenAI: Error message:`, error instanceof Error ? error.message : error);
     throw error;
   }
 }
 
 async function callGemini(prompt: string): Promise<AIResponse> {
+  let partialContent = '';
+  let chunkCount = 0;
+  
   try {
     if (!process.env.GOOGLE_GEMINI_API_KEY) {
       throw new Error('GOOGLE_GEMINI_API_KEY is not set');
     }
 
-    console.log(`[aiProvider] Gemini streaming request with ${GEMINI_TIMEOUT}ms timeout`);
+    console.log(`[aiProvider] Gemini: Starting streaming request`);
+    console.log(`[aiProvider] Gemini: Model=${GEMINI_MODEL}, Timeout=${GEMINI_TIMEOUT}ms`);
 
     const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
     
     // Create a timeout promise
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error(`Gemini request timeout after ${GEMINI_TIMEOUT}ms`)), GEMINI_TIMEOUT);
+      setTimeout(() => {
+        const timeoutError = new Error(`Gemini request timeout after ${GEMINI_TIMEOUT}ms (received ${chunkCount} chunks, ${partialContent.length} chars so far)`);
+        timeoutError.name = 'TimeoutError';
+        reject(timeoutError);
+      }, GEMINI_TIMEOUT);
     });
 
     const streamResult = await Promise.race([
@@ -114,22 +169,37 @@ async function callGemini(prompt: string): Promise<AIResponse> {
     ]);
 
     // Collect the streamed content
-    let content = '';
+    console.log(`[aiProvider] Gemini: Stream started, collecting chunks...`);
     for await (const chunk of streamResult.stream) {
       const chunkText = chunk.text();
       if (chunkText) {
-        content += chunkText;
+        partialContent += chunkText;
+        chunkCount++;
+        if (chunkCount % 5 === 0) {
+          console.log(`[aiProvider] Gemini: Received ${chunkCount} chunks, ${partialContent.length} chars so far`);
+        }
       }
     }
 
-    if (!content) {
-      throw new Error('No response text from Gemini streaming');
+    if (!partialContent) {
+      const emptyError = new Error(`No response text from Gemini streaming (model: ${GEMINI_MODEL}, timeout: ${GEMINI_TIMEOUT}ms)`);
+      emptyError.name = 'EmptyResponseError';
+      throw emptyError;
     }
 
-    console.log(`[aiProvider] Gemini streaming completed, received ${content.length} characters`);
-    return { content };
+    console.log(`[aiProvider] Gemini: Streaming completed successfully`);
+    console.log(`[aiProvider] Gemini: Total chunks=${chunkCount}, Total characters=${partialContent.length}`);
+    return { content: partialContent };
   } catch (error) {
-    console.error('[aiProvider] Gemini error:', error);
+    console.error('[aiProvider] Gemini: Error occurred');
+    console.error(`[aiProvider] Gemini: Error type: ${error instanceof Error ? error.name : 'Unknown'}`);
+    console.error(`[aiProvider] Gemini: Error message:`, error instanceof Error ? error.message : error);
+    console.error(`[aiProvider] Gemini: Partial content received: ${partialContent.length} characters in ${chunkCount} chunks`);
+    
+    if (partialContent.length > 0) {
+      console.error(`[aiProvider] Gemini: First 200 chars of partial content: ${partialContent.substring(0, 200)}`);
+    }
+    
     throw error;
   }
 }
