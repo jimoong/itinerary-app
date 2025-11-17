@@ -84,12 +84,15 @@ async function fetchRoute(
       const distanceMeters = route.distanceMeters || 0;
       const distanceKm = (distanceMeters / 1000).toFixed(1);
 
+      console.log(`[fetchRoute] ${mode} route: ${durationMinutes} min, ${distanceKm} km (raw: ${durationSeconds}s, ${distanceMeters}m)`);
+
       return {
         duration: durationMinutes,
         distance: `${distanceKm} km`
       };
     }
 
+    console.log(`[fetchRoute] No routes found for ${mode}`);
     return null;
   } catch (error) {
     console.error('Error calculating route:', error);
@@ -102,17 +105,37 @@ async function calculateSmartRoute(
   from: { lat: number; lng: number },
   to: { lat: number; lng: number }
 ): Promise<{ duration: number; distance: string; mode: TransportMode } | null> {
+  console.log(`[calculateSmartRoute] Calculating route from (${from.lat}, ${from.lng}) to (${to.lat}, ${to.lng})`);
+  
   const walkRoute = await fetchRoute(from, to, 'walk');
+  console.log(`[calculateSmartRoute] Walking route:`, walkRoute);
 
   if (walkRoute && walkRoute.duration <= 20) {
+    console.log(`[calculateSmartRoute] ✅ Using WALK (${walkRoute.duration} min <= 20 min)`);
     return { ...walkRoute, mode: 'walk' };
   }
 
+  console.log(`[calculateSmartRoute] Walking is ${walkRoute?.duration || 'N/A'} min (> 20 min), trying transit...`);
   const transitRoute = await fetchRoute(from, to, 'metro');
+  console.log(`[calculateSmartRoute] Transit route:`, transitRoute);
+  
   if (transitRoute) {
+    console.log(`[calculateSmartRoute] ✅ Using METRO (${transitRoute.duration} min)`);
     return { ...transitRoute, mode: 'metro' };
   }
 
+  // If transit fails and walking is > 20 min, use taxi as fallback
+  if (walkRoute && walkRoute.duration > 20) {
+    console.log(`[calculateSmartRoute] Transit unavailable, using TAXI as fallback`);
+    const taxiRoute = await fetchRoute(from, to, 'taxi');
+    if (taxiRoute) {
+      console.log(`[calculateSmartRoute] ✅ Using TAXI (${taxiRoute.duration} min)`);
+      return { ...taxiRoute, mode: 'taxi' };
+    }
+  }
+
+  // Last resort: return walking route even if > 20 min
+  console.log(`[calculateSmartRoute] ⚠️ Fallback to WALK (${walkRoute?.duration || 'N/A'} min)`);
   return walkRoute ? { ...walkRoute, mode: 'walk' } : null;
 }
 

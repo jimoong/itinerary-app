@@ -60,11 +60,11 @@ export default function DayNavigation({
     <div className="bg-white dark:bg-black border-t border-gray-200 dark:border-slate-700 shadow-lg px-6 py-4 safe-area-inset-bottom fixed bottom-0 left-0 right-0 z-40 h-16 pb-16">
       <div className="mx-auto flex items-center justify-center gap-4 pb-safe">
 
-        <div className="flex items-left gap-2 absolute left-6">
+        <div className="flex items-center gap-4">
           <button
               onClick={onPrevious}
               disabled={!canGoPrevious}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                 canGoPrevious
                   ? 'text-gray-700 dark:text-gray-300 border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800'
                   : 'text-gray-400 dark:text-gray-600 border-gray-100 dark:border-slate-800 cursor-not-allowed'
@@ -73,10 +73,14 @@ export default function DayNavigation({
               <ChevronLeft className="w-4 h-4" />
             </button>
 
-            <button
+          <div>
+            <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{formattedDate}</p>
+          </div>
+
+          <button
               onClick={onNext}
               disabled={!canGoNext}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                 canGoNext
                   ? 'text-gray-700 dark:text-gray-300 border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800'
                   : 'text-gray-400 dark:text-gray-600 border-gray-100 dark:border-slate-800 cursor-not-allowed'
@@ -84,21 +88,17 @@ export default function DayNavigation({
             >
               <ChevronRight className="w-4 h-4" />
             </button>
-
-        </div>
-
-        <div className="flex items-center">
-          <div>
-            <p className="text-xl font-semibold text-gray-900 dark:text-gray-100">{formattedDate}</p>
-          </div>
-
         </div>
 
         <div className="flex items-right gap-2 absolute right-6" ref={menuRef}>
           <div className="relative">
             <button
               onClick={() => setShowMenu(!showMenu)}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors dark:bg-blue-700 dark:hover:bg-blue-800"
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                canGoNext
+                  ? 'text-gray-700 dark:text-gray-300 border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800'
+                  : 'text-gray-400 dark:text-gray-600 border-gray-100 dark:border-slate-800 cursor-not-allowed'
+              }`}
             >
               <RotateCcw className="w-4 h-4" />
             </button>
