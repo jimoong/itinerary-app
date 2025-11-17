@@ -1,7 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateDayItinerary, regenerateDayWithChanges, regenerateSinglePlace } from '@/lib/openai';
 import { TRIP_DETAILS } from '@/lib/constants';
-import { Place } from '@/lib/types';
+import { Place, DayItinerary } from '@/lib/types';
+
+// Helper function to check for duplicate locations across days
+function checkForDuplicates(allDays: DayItinerary[]) {
+  const locationMap = new Map<string, number[]>(); // location name -> array of day numbers
+  
+  allDays.forEach((day, dayIndex) => {
+    day.places.forEach(place => {
+      const placeName = place.name.toLowerCase();
+      // Skip hotels
+      if (placeName.includes('hotel') || placeName.includes('andaz') || placeName.includes('hyatt')) {
+        return;
+      }
+      
+      if (!locationMap.has(placeName)) {
+        locationMap.set(placeName, []);
+      }
+      locationMap.get(placeName)!.push(dayIndex + 1);
+    });
+  });
+  
+  // Find duplicates
+  const duplicates: Array<{ location: string; days: number[] }> = [];
+  locationMap.forEach((days, location) => {
+    if (days.length > 1) {
+      duplicates.push({ location, days });
+    }
+  });
+  
+  if (duplicates.length > 0) {
+    console.warn('⚠️ DUPLICATE LOCATIONS DETECTED:');
+    duplicates.forEach(({ location, days }) => {
+      console.warn(`   - "${location}" appears on days: ${days.join(', ')}`);
+    });
+    return duplicates;
+  } else {
+    console.log('✅ No duplicate locations found across days');
+    return [];
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -60,11 +99,20 @@ export async function POST(request: NextRequest) {
         console.log(`📝 Visited places so far: ${visitedPlaces.length}`);
       }
       
+      // Check for duplicates
+      console.log('\n========================================');
+      console.log('🔍 CHECKING FOR DUPLICATE LOCATIONS');
+      console.log('========================================');
+      const duplicates = checkForDuplicates(allDays);
+      
       console.log('\n========================================');
       console.log('✅ ITINERARY GENERATION COMPLETE');
       console.log(`📊 Summary: ${aiGeneratedCount} days from AI, ${fallbackCount} days from fallback`);
+      if (duplicates.length > 0) {
+        console.log(`⚠️ Warning: ${duplicates.length} duplicate location(s) found`);
+      }
       console.log('========================================\n');
-      return NextResponse.json({ days: allDays });
+      return NextResponse.json({ days: allDays, duplicates });
     }
 
     if (action === 'regenerate-day' && dayNumber) {

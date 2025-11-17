@@ -1,11 +1,51 @@
 import { NextRequest } from 'next/server';
 import { generateDayItinerary } from '@/lib/openai';
 import { TRIP_DETAILS } from '@/lib/constants';
+import { DayItinerary } from '@/lib/types';
 
 // Configure for streaming on Vercel
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5 minutes max
+
+// Helper function to check for duplicate locations across days
+function checkForDuplicates(allDays: DayItinerary[]) {
+  const locationMap = new Map<string, number[]>(); // location name -> array of day numbers
+  
+  allDays.forEach((day, dayIndex) => {
+    day.places.forEach(place => {
+      const placeName = place.name.toLowerCase();
+      // Skip hotels
+      if (placeName.includes('hotel') || placeName.includes('andaz') || placeName.includes('hyatt')) {
+        return;
+      }
+      
+      if (!locationMap.has(placeName)) {
+        locationMap.set(placeName, []);
+      }
+      locationMap.get(placeName)!.push(dayIndex + 1);
+    });
+  });
+  
+  // Find duplicates
+  const duplicates: Array<{ location: string; days: number[] }> = [];
+  locationMap.forEach((days, location) => {
+    if (days.length > 1) {
+      duplicates.push({ location, days });
+    }
+  });
+  
+  if (duplicates.length > 0) {
+    console.warn('⚠️ DUPLICATE LOCATIONS DETECTED:');
+    duplicates.forEach(({ location, days }) => {
+      console.warn(`   - "${location}" appears on days: ${days.join(', ')}`);
+    });
+    return duplicates;
+  } else {
+    console.log('✅ No duplicate locations found across days');
+    return [];
+  }
+}
 
 export async function POST(request: NextRequest) {
   console.log('========================================');
@@ -19,6 +59,7 @@ export async function POST(request: NextRequest) {
     async start(controller) {
       try {
         const visitedPlaces: string[] = [];
+        const allDays: DayItinerary[] = [];
         let aiGeneratedCount = 0;
         let fallbackCount = 0;
 
@@ -27,6 +68,7 @@ export async function POST(request: NextRequest) {
           
           // Generate the day
           const day = await generateDayItinerary(TRIP_DETAILS, i, 9, visitedPlaces);
+          allDays.push(day);
           
           // Track AI vs fallback
           const isLikelyFallback = day.places.some(p => 
@@ -62,15 +104,24 @@ export async function POST(request: NextRequest) {
           console.log(`✅ Day ${i} sent to client`);
         }
         
+        // Check for duplicates
+        console.log('\n========================================');
+        console.log('🔍 CHECKING FOR DUPLICATE LOCATIONS');
+        console.log('========================================');
+        const duplicates = checkForDuplicates(allDays);
+        
         // Send completion event
         console.log('\n========================================');
         console.log('✅ ITINERARY GENERATION COMPLETE');
         console.log(`📊 Summary: ${aiGeneratedCount} days from AI, ${fallbackCount} days from fallback`);
+        if (duplicates.length > 0) {
+          console.log(`⚠️ Warning: ${duplicates.length} duplicate location(s) found`);
+        }
         console.log('========================================\n');
         
         const completionData = JSON.stringify({ 
           type: 'complete',
-          summary: { aiGeneratedCount, fallbackCount }
+          summary: { aiGeneratedCount, fallbackCount, duplicates }
         });
         controller.enqueue(encoder.encode(`data: ${completionData}\n\n`));
         
