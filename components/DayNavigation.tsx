@@ -57,8 +57,8 @@ export default function DayNavigation({
   }
   
   return (
-    <div className="bg-white dark:bg-black dark:border-slate-700 shadow-lg px-6 py-4 safe-area-inset-bottom fixed bottom-0 left-0 right-0 z-40 h-16 pb-16">
-      <div className="mx-auto flex items-center justify-center gap-4">
+    <div className="bg-white dark:bg-black dark:border-slate-700 shadow-lg px-6 fixed bottom-0 left-0 right-0 z-40">
+      <div className="mx-auto flex items-center justify-center gap-4 h-16 pb-safe">
 
         <div className="flex items-center gap-4">
           <button
