@@ -19,10 +19,27 @@ export default function ImagePanel({ place, isOpen, onClose }: ImagePanelProps) 
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [shouldRender, setShouldRender] = useState(false);
 
   useEffect(() => {
-    if (isOpen && place) {
-      fetchPhotos();
+    if (isOpen) {
+      setShouldRender(true);
+      // Trigger animation after render
+      requestAnimationFrame(() => {
+        setIsAnimating(true);
+      });
+      if (place) {
+        fetchPhotos();
+      }
+    } else {
+      // Start closing animation
+      setIsAnimating(false);
+      // Wait for animation to complete before unmounting
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+      }, 300); // Match transition duration
+      return () => clearTimeout(timer);
     }
   }, [isOpen, place]);
 
@@ -53,20 +70,26 @@ export default function ImagePanel({ place, isOpen, onClose }: ImagePanelProps) 
     }
   };
 
-  if (!isOpen) return null;
+  if (!shouldRender) return null;
 
   return (
     <>
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black/50 z-50 transition-opacity"
+        className={`fixed inset-0 bg-black/50 z-50 transition-opacity duration-300 ${
+          isAnimating ? 'opacity-100' : 'opacity-0'
+        }`}
         onClick={onClose}
       />
       
       {/* Panel */}
-      <div className="fixed z-50 bg-white dark:bg-slate-900 shadow-2xl transition-all duration-300 ease-out flex flex-col
+      <div className={`fixed z-50 bg-white dark:bg-slate-900 shadow-2xl transition-all duration-300 ease-out flex flex-col
                       md:right-0 md:top-0 md:bottom-0 md:w-[500px]
-                      bottom-0 left-0 right-0 h-[70vh] rounded-t-2xl md:rounded-none">
+                      bottom-0 left-0 right-0 h-[70vh] rounded-t-2xl md:rounded-none
+                      ${isAnimating 
+                        ? 'md:translate-x-0 translate-y-0' 
+                        : 'md:translate-x-full translate-y-full'
+                      }`}>
         {/* Header */}
         <div className="flex-shrink-0 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700 px-6 py-4 flex items-center justify-between">
           <div className="flex-1 min-w-0">
