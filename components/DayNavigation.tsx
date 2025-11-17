@@ -1,8 +1,9 @@
 'use client';
 
 import { DayItinerary } from '@/lib/types';
-import { ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react';
+import { ChevronLeft, ChevronRight, RotateCcw, Calendar, CalendarRange } from 'lucide-react';
 import { format } from 'date-fns';
+import { useState, useRef, useEffect } from 'react';
 
 interface DayNavigationProps {
   currentDay: DayItinerary;
@@ -11,6 +12,7 @@ interface DayNavigationProps {
   canGoPrevious: boolean;
   canGoNext: boolean;
   onHardRefresh: () => void;
+  onRegenerateCurrentDay: () => void;
 }
 
 export default function DayNavigation({
@@ -19,8 +21,28 @@ export default function DayNavigation({
   onNext,
   canGoPrevious,
   canGoNext,
-  onHardRefresh
+  onHardRefresh,
+  onRegenerateCurrentDay
 }: DayNavigationProps) {
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+
+    if (showMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showMenu]);
   let formattedDate = 'Invalid Date';
   
   try {
@@ -72,13 +94,56 @@ export default function DayNavigation({
 
         </div>
 
-        <div className="flex items-right gap-2 absolute right-6">
-          <button
-            onClick={onHardRefresh}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors dark:bg-red-700 dark:hover:bg-red-800"
-          >
-            <RotateCcw className="w-4 h-4" />
-          </button>
+        <div className="flex items-right gap-2 absolute right-6" ref={menuRef}>
+          <div className="relative">
+            <button
+              onClick={() => setShowMenu(!showMenu)}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors dark:bg-blue-700 dark:hover:bg-blue-800"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
+
+            {/* Dropdown Menu */}
+            {showMenu && (
+              <div className="absolute right-0 bottom-full mb-2 w-56 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-gray-200 dark:border-slate-700 overflow-hidden z-50">
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    onRegenerateCurrentDay();
+                  }}
+                  className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-3 border-b border-gray-100 dark:border-slate-700"
+                >
+                  <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  <div>
+                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                      Regenerate This Day
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Get new suggestions for {format(new Date(currentDay.date.split('-').map(Number).slice(0, 3).join('-')), 'MMM d')}
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    onHardRefresh();
+                  }}
+                  className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-3"
+                >
+                  <CalendarRange className="w-5 h-5 text-red-600 dark:text-red-400" />
+                  <div>
+                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                      Regenerate All Days
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Start fresh with new itinerary
+                    </div>
+                  </div>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

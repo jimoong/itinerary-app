@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
   try {
     console.log('API route called');
     const body = await request.json();
-    const { action, dayNumber, places, placeIndex } = body;
+    const { action, dayNumber, places, placeIndex, avoidPlaces } = body;
     
     console.log('Action:', action);
 
@@ -64,7 +64,10 @@ export async function POST(request: NextRequest) {
     if (action === 'regenerate-day' && dayNumber) {
       // Regenerate a specific day
       console.log(`Regenerating day ${dayNumber}...`);
-      const day = await generateDayItinerary(TRIP_DETAILS, dayNumber, 9);
+      if (avoidPlaces && avoidPlaces.length > 0) {
+        console.log(`Avoiding ${avoidPlaces.length} places from other days`);
+      }
+      const day = await generateDayItinerary(TRIP_DETAILS, dayNumber, 9, avoidPlaces || []);
       return NextResponse.json({ day });
     }
 

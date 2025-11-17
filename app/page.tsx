@@ -475,12 +475,27 @@ export default function Home() {
 
     setIsRegenerating(true);
     try {
+      // Collect all place names from OTHER days to avoid duplicates
+      const placesToAvoid: string[] = [];
+      trip.days.forEach((day, idx) => {
+        if (idx !== currentDayIndex) {
+          day.places.forEach(place => {
+            if (!place.name.toLowerCase().includes('hotel')) {
+              placesToAvoid.push(place.name);
+            }
+          });
+        }
+      });
+
+      console.log(`Regenerating day ${currentDayIndex + 1}, avoiding ${placesToAvoid.length} places from other days`);
+
       const response = await fetch('/api/generate-itinerary', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'regenerate-day',
           dayNumber: currentDayIndex + 1,
+          avoidPlaces: placesToAvoid,
         }),
       });
 
@@ -490,12 +505,25 @@ export default function Home() {
 
       const data = await response.json();
       
+      // Add hotels to the regenerated day
+      const dayWithHotels = await addHotelsToDay(data.day);
+      
       setTrip({
         ...trip,
-        days: trip.days.map((d, i) => i === currentDayIndex ? data.day : d)
+        days: trip.days.map((d, i) => i === currentDayIndex ? dayWithHotels : d)
       });
+      
+      // Save to localStorage
+      const updatedTrip = {
+        ...trip,
+        days: trip.days.map((d, i) => i === currentDayIndex ? dayWithHotels : d)
+      };
+      saveTrip(updatedTrip);
+      
+      console.log('✅ Day regenerated successfully');
     } catch (error) {
       console.error('Error regenerating day:', error);
+      alert('Failed to regenerate day. Please try again.');
     } finally {
       setIsRegenerating(false);
     }
@@ -829,6 +857,7 @@ export default function Home() {
         canGoPrevious={currentDayIndex > 0}
         canGoNext={currentDayIndex < trip.days.length - 1}
         onHardRefresh={handleResetAll}
+        onRegenerateCurrentDay={regenerateCurrentDay}
       />
 
       {/* Edit modal */}
