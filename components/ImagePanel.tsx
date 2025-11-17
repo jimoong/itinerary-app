@@ -84,7 +84,7 @@ export default function ImagePanel({ place, isOpen, onClose }: ImagePanelProps) 
       
       {/* Panel */}
       <div className={`fixed z-50 bg-white dark:bg-slate-900 shadow-2xl transition-all duration-300 ease-out flex flex-col
-                      md:right-0 md:top-0 md:bottom-0 md:w-[500px]
+                      md:right-0 md:top-0 md:bottom-0 md:w-[500px] md:h-auto
                       bottom-0 left-0 right-0 h-[70vh] rounded-t-2xl md:rounded-none
                       ${isAnimating 
                         ? 'md:translate-x-0 translate-y-0' 
