@@ -162,6 +162,13 @@ Requirements:
 - Plan locations in a logical geographical route to minimize travel time
 - Keep consecutive places close together when possible (walking distance preferred)
 
+CRITICAL - DO NOT SUGGEST TRANSPORTATION AS ACTIVITIES:
+- Each place MUST be a specific Point of Interest (POI), attraction, restaurant, or venue
+- DO NOT include activities like "Walk to hotel", "Stroll back", "Travel to", "Return to hotel"
+- DO NOT include generic walking/transit activities as timeline items
+- Transportation between places will be calculated automatically
+- Focus ONLY on actual destinations and activities
+
 PRAGUE-SPECIFIC RECOMMENDATIONS (if applicable):
 - Prague Castle area: Include Toy Museum for kids
 - Old Town Square: Astronomical Clock (watch figurines move on the hour)
@@ -398,6 +405,11 @@ Requirements:
 - Must be family-friendly for kids aged 6 and 9
 - Similar category to original: ${currentPlace.category}
 - Provide variety - suggest something the family hasn't seen yet
+
+CRITICAL - MUST BE A SPECIFIC PLACE:
+- Suggest a specific Point of Interest (POI), attraction, restaurant, or venue
+- DO NOT suggest transportation activities like "Walk to", "Stroll", "Travel to"
+- Must be an actual destination with a real address and coordinates
 
 ${city === 'Prague' ? `
 PRAGUE ALTERNATIVES (choose ONE that's NOT in the avoid list):
