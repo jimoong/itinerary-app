@@ -114,7 +114,7 @@ export default function DayNavigation({
                   className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-3 border-b border-gray-100 dark:border-slate-700"
                 >
                   <div>
-                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    <div className="font-medium text-gray-900 dark:text-gray-100">
                       Regenerate This Day
                     </div>
                   </div>
@@ -128,7 +128,7 @@ export default function DayNavigation({
                   className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-3"
                 >
                   <div>
-                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    <div className="font-medium text-gray-900 dark:text-gray-100">
                       Regenerate All Days
                     </div>
                   </div>
