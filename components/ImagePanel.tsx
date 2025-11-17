@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Loader2, ImageOff, Clock, Phone, Globe, ExternalLink } from 'lucide-react';
+import { X, Loader2, ImageOff, Clock, Phone, Globe, Star, User } from 'lucide-react';
 import { Place } from '@/lib/types';
 
 interface ImagePanelProps {
@@ -15,20 +15,46 @@ interface Photo {
   attribution: string;
 }
 
+interface CategorizedPhotos {
+  food: Photo[];
+  interior: Photo[];
+  exterior: Photo[];
+}
+
 interface PlaceDetails {
   openingHours: string[] | null;
   isOpenNow?: boolean;
   phoneNumber: string | null;
   website: string | null;
+  rating: number | null;
+  userRatingsTotal: number | null;
+  editorialSummary: string | null;
 }
 
+interface Review {
+  authorName: string;
+  rating: number;
+  text: string;
+  relativeTimeDescription: string;
+  profilePhotoUrl?: string;
+}
+
+type PhotoTab = 'food' | 'interior' | 'exterior';
+type MainTab = 'info' | 'reviews';
+
 export default function ImagePanel({ place, isOpen, onClose }: ImagePanelProps) {
-  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [photos, setPhotos] = useState<CategorizedPhotos>({ food: [], interior: [], exterior: [] });
   const [details, setDetails] = useState<PlaceDetails | null>(null);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [activePhotoTab, setActivePhotoTab] = useState<PhotoTab>('food');
+  const [activeMainTab, setActiveMainTab] = useState<MainTab>('info');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
+  
+  // Check if place is a restaurant
+  const isRestaurant = place.category === 'restaurant';
 
   useEffect(() => {
     if (isOpen) {
@@ -65,10 +91,28 @@ export default function ImagePanel({ place, isOpen, onClose }: ImagePanelProps) 
       }
       
       const data = await response.json();
-      setPhotos(data.photos || []);
+      setPhotos(data.photos || { food: [], interior: [], exterior: [] });
       setDetails(data.details || null);
+      setReviews(data.reviews || []);
       
-      if (data.photos.length === 0 && !data.details) {
+      // Set default active photo tab to the first category with photos
+      if (data.photos) {
+        if (data.photos.food?.length > 0) {
+          setActivePhotoTab('food');
+        } else if (data.photos.interior?.length > 0) {
+          setActivePhotoTab('interior');
+        } else if (data.photos.exterior?.length > 0) {
+          setActivePhotoTab('exterior');
+        }
+      }
+      
+      // Set default main tab based on available content
+      if (data.reviews?.length > 0) {
+        setActiveMainTab('info'); // Default to info, user can switch to reviews
+      }
+      
+      const hasPhotos = data.photos && (data.photos.food?.length > 0 || data.photos.interior?.length > 0 || data.photos.exterior?.length > 0);
+      if (!hasPhotos && !data.details && !data.reviews?.length) {
         setError(true);
       }
     } catch (err) {
@@ -138,8 +182,49 @@ export default function ImagePanel({ place, isOpen, onClose }: ImagePanelProps) 
             </div>
           )}
 
-          {!loading && !error && (details || photos.length > 0) && (
-            <div className="p-4 px-6 pb-8 pt-4">
+          {!loading && !error && (details || reviews.length > 0 || photos.food.length > 0 || photos.interior.length > 0 || photos.exterior.length > 0) && (
+            <div className="flex flex-col h-full">
+              {/* Main Tab Navigation */}
+              <div className="flex-shrink-0 border-b border-gray-200 dark:border-slate-700 px-6">
+                <div className="flex gap-6">
+                  <button
+                    onClick={() => setActiveMainTab('info')}
+                    className={`py-3 text-sm font-medium border-b-2 transition-colors ${
+                      activeMainTab === 'info'
+                        ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
+                        : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                    }`}
+                  >
+                    Info
+                  </button>
+                  {reviews.length > 0 && (
+                    <button
+                      onClick={() => setActiveMainTab('reviews')}
+                      className={`py-3 text-sm font-medium border-b-2 transition-colors ${
+                        activeMainTab === 'reviews'
+                          ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
+                          : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                      }`}
+                    >
+                      Reviews ({reviews.length})
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Tab Content */}
+              <div className="flex-1 overflow-y-auto p-4 px-6 pb-8">
+                {activeMainTab === 'info' && (
+                  <>
+                    {/* Editorial Summary */}
+                    {details?.editorialSummary && (
+                      <div className="mb-6 pb-4 border-b border-gray-200 dark:border-slate-700">
+                        <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                          {details.editorialSummary}
+                        </p>
+                      </div>
+                    )}
+
               {/* Place Details Section - only show if there's at least one detail */}
               {details && (details.openingHours?.length || details.phoneNumber || details.website) && (
                 <div className="space-y-4 pb-4 mb-6 border-b border-gray-200 dark:border-slate-700">
@@ -205,30 +290,146 @@ export default function ImagePanel({ place, isOpen, onClose }: ImagePanelProps) 
                 </div>
               )}
 
-              {/* Photos Section */}
-              {photos.length > 0 && (
-                <div className="space-y-4">
-                  {photos.map((photo, index) => (
-                    <div key={index} className="relative">
-                      {/* Placeholder with aspect ratio to prevent layout shift */}
-                      <div className="relative w-full" style={{ paddingBottom: '66.67%' }}>
-                        <img
-                          src={photo.url}
-                          alt={`${place.name} - Photo ${index + 1}`}
-                          className="absolute inset-0 w-full h-full object-cover rounded-lg shadow-md"
-                          loading="lazy"
-                        />
+                    {/* Photos Section with Chip/Pill Filters */}
+                    {(photos.food.length > 0 || photos.interior.length > 0 || photos.exterior.length > 0) && (
+                      <div className="space-y-4">
+                        {/* Chip/Pill Filter Navigation - Only show food for restaurants */}
+                        <div className="flex gap-2 flex-wrap">
+                          {isRestaurant && photos.food.length > 0 && (
+                            <button
+                              onClick={() => setActivePhotoTab('food')}
+                              className={`px-4 py-1.5 text-sm font-medium rounded-full transition-colors ${
+                                activePhotoTab === 'food'
+                                  ? 'bg-blue-600 text-white dark:bg-blue-500'
+                                  : 'bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600'
+                              }`}
+                            >
+                              Food ({photos.food.length})
+                            </button>
+                          )}
+                          {photos.interior.length > 0 && (
+                            <button
+                              onClick={() => setActivePhotoTab('interior')}
+                              className={`px-4 py-1.5 text-sm font-medium rounded-full transition-colors ${
+                                activePhotoTab === 'interior'
+                                  ? 'bg-blue-600 text-white dark:bg-blue-500'
+                                  : 'bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600'
+                              }`}
+                            >
+                              Interior ({photos.interior.length})
+                            </button>
+                          )}
+                          {photos.exterior.length > 0 && (
+                            <button
+                              onClick={() => setActivePhotoTab('exterior')}
+                              className={`px-4 py-1.5 text-sm font-medium rounded-full transition-colors ${
+                                activePhotoTab === 'exterior'
+                                  ? 'bg-blue-600 text-white dark:bg-blue-500'
+                                  : 'bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600'
+                              }`}
+                            >
+                              Exterior ({photos.exterior.length})
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Photos Grid */}
+                        <div className="space-y-4">
+                          {photos[activePhotoTab].map((photo, index) => (
+                            <div key={index} className="relative">
+                              {/* Placeholder with aspect ratio to prevent layout shift */}
+                              <div className="relative w-full" style={{ paddingBottom: '66.67%' }}>
+                                <img
+                                  src={photo.url}
+                                  alt={`${place.name} - ${activePhotoTab} ${index + 1}`}
+                                  className="absolute inset-0 w-full h-full object-cover rounded-lg shadow-md"
+                                  loading="lazy"
+                                />
+                              </div>
+                              {photo.attribution && (
+                                <div 
+                                  className="text-xs text-gray-500 dark:text-gray-400 mt-1"
+                                  dangerouslySetInnerHTML={{ __html: photo.attribution }}
+                                />
+                              )}
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      {photo.attribution && (
-                        <div 
-                          className="text-xs text-gray-500 dark:text-gray-400 mt-1"
-                          dangerouslySetInnerHTML={{ __html: photo.attribution }}
-                        />
-                      )}
+                    )}
+                  </>
+                )}
+
+                {/* Reviews Tab Content */}
+                {activeMainTab === 'reviews' && (
+                  <div className="space-y-6">
+                    {/* Rating Summary */}
+                    {details?.rating && (
+                      <div className="pb-4 border-b border-gray-200 dark:border-slate-700">
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1">
+                            <Star className="w-6 h-6 text-yellow-500 fill-yellow-500" />
+                            <span className="text-2xl font-semibold text-gray-900 dark:text-white">
+                              {details.rating.toFixed(1)}
+                            </span>
+                          </div>
+                          {details.userRatingsTotal && (
+                            <span className="text-sm text-gray-500 dark:text-gray-400">
+                              ({details.userRatingsTotal.toLocaleString()} reviews)
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* User Reviews */}
+                    <div className="space-y-4">
+                      {reviews.map((review, index) => (
+                        <div key={index} className="pb-4 border-b border-gray-200 dark:border-slate-700 last:border-0 last:pb-0">
+                          <div className="flex items-start gap-3">
+                            {review.profilePhotoUrl ? (
+                              <img 
+                                src={review.profilePhotoUrl} 
+                                alt={review.authorName}
+                                className="w-10 h-10 rounded-full flex-shrink-0"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0">
+                                <User className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-medium text-sm text-gray-900 dark:text-white">
+                                  {review.authorName}
+                                </span>
+                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                  {review.relativeTimeDescription}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-0.5 mb-2">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star 
+                                    key={i} 
+                                    className={`w-4 h-4 ${
+                                      i < review.rating 
+                                        ? 'text-yellow-500 fill-yellow-500' 
+                                        : 'text-gray-300 dark:text-gray-600'
+                                    }`}
+                                  />
+                                ))}
+                              </div>
+                              <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                                {review.text}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              )}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
