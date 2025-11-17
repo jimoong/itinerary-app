@@ -687,7 +687,7 @@ export default function Home() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-white dark:bg-black">
+    <div className="h-screen flex flex-col bg-white dark:bg-black pb-16">
       {/* Main content - responsive layout */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0 md:pb-0">
         {/* Map panel - fixed height on mobile, flex on desktop */}
