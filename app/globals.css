@@ -15,7 +15,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0f172a;
+    --background: #000;
     --foreground: #ededed;
     --map-background: #1e293b;
     --card-background: #1e293b;

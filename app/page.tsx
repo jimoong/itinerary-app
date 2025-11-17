@@ -576,7 +576,7 @@ export default function Home() {
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
         {/* Map panel - fixed height on mobile, flex on desktop */}
         <div className="flex-none md:flex-1 p-3 md:p-6 h-[45vh] md:h-auto min-h-0">
-          <div className="h-full bg-white dark:bg-slate-900 rounded-lg overflow-hidden relative">
+          <div className="h-full bg-white dark:bg-black rounded-lg overflow-hidden relative">
             <MapView
               places={currentDay.places}
               onMarkerClick={setHighlightedPlaceId}
@@ -606,7 +606,7 @@ export default function Home() {
 
         {/* Timeline panel - flex to fill remaining space on mobile */}
         <div className="flex-1 p-3 pt-0 md:p-6 md:pl-3 flex flex-col min-h-0">
-          <div className="flex-1 bg-white dark:bg-slate-900 rounded-lg overflow-hidden flex flex-col min-h-0">
+          <div className="flex-1 bg-white dark:bg-black rounded-lg overflow-hidden flex flex-col min-h-0">
             {/* Timeline header
             <div className="px-4 md:px-6 py-3 md:py-4 border-b border-gray-200 flex items-center justify-between">
               <h2 className="text-lg md:text-xl font-bold text-gray-900">Daily Schedule</h2>
