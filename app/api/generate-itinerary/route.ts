@@ -76,7 +76,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   } catch (error) {
     console.error('API Error:', error);
+    if (error instanceof Error) {
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Returning error response:', errorMessage);
     return NextResponse.json(
       { error: 'Failed to generate itinerary', details: errorMessage },
       { status: 500 }

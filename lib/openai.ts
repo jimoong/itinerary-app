@@ -180,7 +180,11 @@ Return ONLY a valid JSON object with this exact structure:
     };
   } catch (error) {
     console.error('Error generating itinerary:', error);
-    console.log('Using fallback itinerary');
+    if (error instanceof Error) {
+      console.error('Error details:', error.message);
+      console.error('Error stack:', error.stack);
+    }
+    console.log('Using fallback itinerary for day', dayNumber, 'in', city);
     // Return fallback itinerary
     return generateFallbackItinerary(date, dayNumber, city, hotel);
   }
