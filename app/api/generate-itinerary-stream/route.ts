@@ -279,11 +279,13 @@ export async function POST(request: NextRequest) {
         }
         
         // Check for duplicates (only for old method, two-phase shouldn't have duplicates)
+        let duplicates: Array<{ location: string; days: number[] }> = [];
+        
         if (!useTwoPhase || smartRegeneration) {
           console.log('\n========================================');
           console.log('🔍 CHECKING FOR DUPLICATE LOCATIONS');
           console.log('========================================');
-          let duplicates = checkForDuplicates(allDays);
+          duplicates = checkForDuplicates(allDays);
           
           // Auto-replace duplicates if found
           if (duplicates.length > 0) {
@@ -310,7 +312,7 @@ export async function POST(request: NextRequest) {
           console.log('\n========================================');
           console.log('🔍 VERIFYING NO DUPLICATES (Two-Phase)');
           console.log('========================================');
-          checkForDuplicates(allDays);
+          duplicates = checkForDuplicates(allDays);
         }
         
         // Send completion event
