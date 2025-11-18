@@ -91,7 +91,7 @@ async function distributeCityPOIs(
   
   try {
     console.log(`  Calling AI for ${city} distribution...`);
-    const response = await callAI(prompt, 4000);
+    const response = await callAI(prompt);
     
     if (!response.success || !response.content) {
       throw new Error('AI response failed or empty');

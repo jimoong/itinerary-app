@@ -45,7 +45,7 @@ export async function generateMasterPOIList(
   
   try {
     console.log('[generateMasterPOIList] Calling AI for master POI list...');
-    const response = await callAI(prompt, 4000); // Higher token limit for comprehensive list
+    const response = await callAI(prompt);
     
     if (!response.success || !response.content) {
       throw new Error('AI response failed or empty');
