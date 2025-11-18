@@ -92,6 +92,23 @@ export const FIXED_SCHEDULES: FixedSchedule[] = [
   // ADD YOUR FIXED SCHEDULES HERE:
   // Copy one of the examples above and modify the details
   
+  // The Lion King Musical - Pre-booked
+  {
+    id: 'lion-king-musical',
+    date: '2025-11-26', // Wed 26 Nov 2025
+    startTime: '19:30', // 7:30 PM
+    duration: 165, // Approximately 2 hours 45 minutes (including interval)
+    name: 'The Lion King Musical',
+    address: 'Lyceum Theatre, 21 Wellington St, London WC2E 7RQ, United Kingdom',
+    lat: 51.5117,
+    lng: -0.1204,
+    description: 'Award-winning West End musical production of The Lion King. Perfect for families with spectacular costumes, music, and storytelling.',
+    category: 'show',
+    bookingReference: 'LION-KING-2025-1126',
+    requiresEarlyArrival: true,
+    bufferMinutes: 30, // Arrive 30 minutes early for seating
+    notes: 'Doors open at 19:00. Show starts at 19:30. Located in Covent Garden area. Plan dinner before or after the show.'
+  }
 ];
 
 /**
