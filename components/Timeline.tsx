@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Place, Flight } from '@/lib/types';
-import { Clock, MapPin, Trash2, Coffee, Building2, TreePine, Landmark, ShoppingBag, Ticket, Navigation, Car, Train, TramFront, Heart, RefreshCw, Hotel, Info, MoreVertical, Plane } from 'lucide-react';
+import { Clock, MapPin, Trash2, Coffee, Building2, TreePine, Landmark, ShoppingBag, Ticket, Navigation, Car, Train, TramFront, Heart, RefreshCw, Hotel, Info, MoreVertical } from 'lucide-react';
 import ImagePanel from './ImagePanel';
 
 interface TimelineProps {
@@ -147,42 +147,6 @@ export default function Timeline({ places, flight, onRemovePlace, onPlaceClick, 
   return (
     <>
       <div className="timeline">
-        {/* Flight Information */}
-        {flight && (
-          <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-lg">
-            <div className="flex items-start gap-3">
-              <div className="p-2 bg-blue-600 dark:bg-blue-500 rounded-lg">
-                <Plane className="w-5 h-5 text-white" />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <h3 className="font-semibold text-gray-900 dark:text-white">Flight {flight.flightNumber}</h3>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">
-                    British Airways
-                  </span>
-                </div>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-gray-700 dark:text-gray-300">{flight.departure.time}</span>
-                    <span className="text-gray-500 dark:text-gray-400">{flight.departure.city} ({flight.departure.airport})</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500">
-                    <div className="w-full h-px bg-gray-300 dark:bg-gray-600 relative">
-                      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                        <Plane className="w-3 h-3 rotate-90" />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-gray-700 dark:text-gray-300">{flight.arrival.time}</span>
-                    <span className="text-gray-500 dark:text-gray-400">{flight.arrival.city} ({flight.arrival.airport})</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        
         {places.map((place, index) => {
         const isHighlighted = highlightedPlaceId === place.id;
         const isHotel = place.category === 'hotel';

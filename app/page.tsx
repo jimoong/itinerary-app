@@ -262,12 +262,11 @@ async function addFlightToDay(day: DayItinerary): Promise<DayItinerary> {
     address: 'Aviatická 1019/8, 161 00 Praha 6, Czechia'
   };
 
-  // Find the last activity (before checkout)
-  const lastActivityIndex = day.places.findIndex(p => p.category === 'hotel' && p.id.includes('end'));
-  const insertIndex = lastActivityIndex > 0 ? lastActivityIndex : day.places.length;
+  // Remove any end hotel if it exists (shouldn't be there for Day 5)
+  let placesWithoutEndHotel = day.places.filter(p => !(p.category === 'hotel' && p.id.includes('end')));
 
-  // Get the last place before hotel checkout
-  const lastPlace = day.places[insertIndex - 1];
+  // Get the last place (should be the last activity)
+  const lastPlace = placesWithoutEndHotel[placesWithoutEndHotel.length - 1];
 
   // Calculate route from last place to hotel (for checkout)
   let lastToHotelRoute = null;
@@ -291,9 +290,11 @@ async function addFlightToDay(day: DayItinerary): Promise<DayItinerary> {
   }
 
   // Update last place with transport to hotel
-  const updatedPlaces = [...day.places];
+  const updatedPlaces = [...placesWithoutEndHotel];
+  const lastPlaceIndex = updatedPlaces.length - 1;
+  
   if (lastPlace && lastPlace.category !== 'hotel' && lastToHotelRoute) {
-    updatedPlaces[insertIndex - 1] = {
+    updatedPlaces[lastPlaceIndex] = {
       ...lastPlace,
       transportToNext: {
         mode: lastToHotelRoute.mode,
@@ -321,7 +322,7 @@ async function addFlightToDay(day: DayItinerary): Promise<DayItinerary> {
     }
   };
 
-  // Add airport place
+  // Add airport place (final destination - no hotel after)
   const airportPlace: Place = {
     id: `airport-${day.dayNumber}`,
     name: pragueAirport.name,
@@ -334,8 +335,8 @@ async function addFlightToDay(day: DayItinerary): Promise<DayItinerary> {
     startTime: '12:00', // Arrive at airport by 12:00 for 14:50 flight
   };
 
-  // Insert checkout hotel and airport
-  updatedPlaces.splice(insertIndex, 0, checkoutHotel, airportPlace);
+  // Add checkout hotel and airport at the end (no return hotel)
+  updatedPlaces.push(checkoutHotel, airportPlace);
 
   return {
     ...day,
