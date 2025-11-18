@@ -237,24 +237,24 @@ CRITICAL - DO NOT SUGGEST TRANSPORTATION AS ACTIVITIES:
 - Focus ONLY on actual destinations and activities
 
 PARIS-SPECIFIC RECOMMENDATIONS (if applicable):
-- Musée d'Orsay: MUST-VISIT! Impressionist masterpieces (Monet, Van Gogh, Renoir) in stunning Beaux-Arts railway station. Kids enjoy the giant clock and colorful paintings
-- Eiffel Tower: Book skip-the-line tickets, go at sunset
-- Louvre Museum: Focus on highlights (Mona Lisa, Egyptian wing) - kids love mummies
+- Jardin du Luxembourg: BEST FOR AGES 6-9! Giant playground with zipline, climbing, trampolines (small fee). Add puppet theater and toy sailboats in pond
+- Musée d'Orsay: MUST-VISIT! Shorter & manageable. Kids love giant clock + animal sculptures. Impressionist art in beautiful railway station
+- Eiffel Tower: Go early! Kids love elevator ride and shaking walkways. Book skip-the-line tickets
+- Seine River Cruise: Do at NIGHT for lights! Warm indoor seats (weather-proof). Surprisingly fun for kids
+- Louvre Museum: 1.5-2 hours MAX! Focus on: Egyptian mummies, Greek sculptures, Winged Victory, Napoleon III apartments. Don't do full museum day
+- Montmartre Funicular: Kids LOVE this mini cable-car! Quick reward: crêpes at the top. Visit Sacré-Cœur and artists' square
+- Angelina Tea House: Over-the-top hot chocolate - kids think it's amazing!
+- Paris Aquarium (Trocadéro): Perfect rainy-day activity, near Eiffel Tower
 - Arc de Triomphe: Climb to top for panoramic views
-- Jardin du Luxembourg: Playground, puppet theater, toy sailboats in pond
-- Disneyland Paris: Full day trip (30min train from city center)
-- Seine River Cruise: Evening boat ride with city lights
 - Musée Grévin: Wax museum (interactive for kids)
 - Champs-Élysées: Christmas lights and decorations
-- Crêpes and macarons: Kid-friendly French treats
-- Montmartre: Sacré-Cœur, artists' square, funicular ride
 
 PARIS CLUSTERING EXAMPLES:
-- Cluster 1 (Eiffel Area): Metro → Eiffel Tower → Trocadéro Gardens → Seine cruise (walkable)
-- Cluster 2 (Louvre/Tuileries): Metro → Louvre Museum → Tuileries Garden → lunch nearby (walkable)
-- Cluster 3 (Orsay/Left Bank): Metro → Musée d'Orsay → Seine walk → nearby café (walkable)
-- Cluster 4 (Montmartre): Metro → Sacré-Cœur → Place du Tertre → crêpe café (walkable)
-- Cluster 5 (Latin Quarter): Metro → Notre-Dame area → Luxembourg Gardens → toy sailboats (walkable)
+- Cluster 1 (Eiffel/Trocadéro): Metro → Eiffel Tower (go early!) → Paris Aquarium → Seine night cruise (walkable)
+- Cluster 2 (Louvre/Angelina): Metro → Louvre (1.5-2hrs: mummies, sculptures) → Angelina hot chocolate → Tuileries Garden (walkable)
+- Cluster 3 (Orsay/Left Bank): Metro → Musée d'Orsay (giant clock!) → Seine walk → nearby café (walkable)
+- Cluster 4 (Montmartre): Metro → Montmartre funicular (kids love it!) → Sacré-Cœur → crêpes at top (walkable)
+- Cluster 5 (Luxembourg): Metro → Jardin du Luxembourg playground (BEST for kids 6-9: zipline, climbing!) → toy sailboats → puppet theater (walkable)
 - Cluster 6 (Champs-Élysées): Metro → Arc de Triomphe → Champs-Élysées walk → Christmas lights (walkable)
 - Use metro between clusters, walk within clusters
 
@@ -275,12 +275,15 @@ LONDON CLUSTERING EXAMPLES:
 - Cluster 4 (West End): Take tube to Leicester Square → Covent Garden → theatre district (walkable area)
 - Use tube/bus between clusters, walk within clusters
 
-Kid-Friendly Tips:
-- Prioritize interactive experiences (funiculars, boat rides, musicals, hands-on museums)
-- Include fun snacks (crêpes and macarons in Paris, fish & chips in London)
-- Plan breaks with playgrounds or parks
-- Consider non-verbal entertainment (puppet shows, wax museums, musicals)
-- Include "magical" experiences (Eiffel Tower at night, Christmas lights, theatre)
+Kid-Friendly Tips for Ages 6 & 9:
+- BEST playground: Jardin du Luxembourg (zipline, trampolines, climbing - small fee worth it!)
+- Museums: Keep visits SHORT (1.5-2 hours max). Focus on highlights kids enjoy
+- Funicular rides: Kids LOVE the Montmartre cable-car - instant fun!
+- Hot chocolate: Angelina Tea House is over-the-top amazing for kids
+- Seine cruise: Do at NIGHT with indoor seats (weather-proof, lights are magical)
+- Eiffel Tower: Go EARLY - kids love elevator and shaking walkways
+- Rainy day backup: Paris Aquarium at Trocadéro
+- Reward system: Crêpes after activities, toy sailboats at Luxembourg pond
 
 Transport Guidelines:
 - Walking: if distance is < 1km
@@ -517,11 +520,11 @@ CRITICAL - MUST BE A SPECIFIC PLACE:
 
 ${city === 'Paris' ? `
 PARIS ALTERNATIVES (choose ONE that's NOT in the avoid list):
-- Museums: Musée d'Orsay (PRIORITY!), Louvre, Musée Grévin (wax museum), Rodin Museum
-- Activities: Eiffel Tower, Arc de Triomphe, Seine cruise, Montmartre funicular
-- Food: Angelina (hot chocolate), Café de Flore, traditional crêperies, bistros
-- Landmarks: Notre-Dame area, Sacré-Cœur, Champs-Élysées, Luxembourg Gardens
-- Parks: Tuileries Garden, Luxembourg Gardens, Trocadéro Gardens
+- Museums: Musée d'Orsay (giant clock!), Louvre (1.5-2hrs: mummies, sculptures), Paris Aquarium (rainy day), Musée Grévin
+- Activities: Jardin du Luxembourg playground (BEST for kids 6-9!), Eiffel Tower (go early!), Montmartre funicular (kids love!), Seine night cruise
+- Food: Angelina hot chocolate (over-the-top!), crêperies, traditional bistros, Café de Flore
+- Landmarks: Notre-Dame area, Sacré-Cœur, Arc de Triomphe, Champs-Élysées
+- Parks: Luxembourg Gardens (zipline, toy sailboats), Tuileries Garden, Trocadéro Gardens
 - Markets: Marché Bastille, Marché des Enfants Rouges
 ` : `
 LONDON ALTERNATIVES (choose ONE that's NOT in the avoid list):

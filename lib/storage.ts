@@ -1,7 +1,7 @@
 import { Trip } from './types';
 
 const STORAGE_KEY = 'itinerary_trip_data';
-const STORAGE_VERSION = '14'; // Version 14 for Musée d'Orsay priority
+const STORAGE_VERSION = '15'; // Version 15 for kid-tested Paris recommendations (ages 6-9)
 
 export function saveTrip(trip: Trip): void {
   if (typeof window !== 'undefined') {
