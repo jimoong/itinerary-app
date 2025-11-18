@@ -47,8 +47,8 @@ export async function generateMasterPOIList(
     console.log('[generateMasterPOIList] Calling AI for master POI list...');
     const response = await callAI(prompt);
     
-    if (!response.success || !response.content) {
-      throw new Error('AI response failed or empty');
+    if (!response.content) {
+      throw new Error('AI response content is empty');
     }
 
     console.log('[generateMasterPOIList] ✅ AI response received');
