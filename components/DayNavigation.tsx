@@ -66,6 +66,14 @@ export default function DayNavigation({
   return (
     <div className="bg-white dark:bg-black dark:border-slate-700 shadow-lg px-6 fixed bottom-0 left-0 right-0 z-40">
       <div className="mx-auto flex items-center justify-center gap-4 h-16 pb-safe">
+        <div className="flex items-left gap-2 absolute left-6" ref={menuRef}>
+           {/* Version Manager */}
+           <VersionManager
+            currentTrip={currentTrip}
+            onLoadVersion={onLoadVersion}
+          />
+
+        </div>
 
         <div className="flex items-center gap-4">
           <button
@@ -98,11 +106,6 @@ export default function DayNavigation({
         </div>
 
         <div className="flex items-right gap-2 absolute right-6" ref={menuRef}>
-          {/* Version Manager */}
-          <VersionManager
-            currentTrip={currentTrip}
-            onLoadVersion={onLoadVersion}
-          />
           
           <div className="relative">
             <button
