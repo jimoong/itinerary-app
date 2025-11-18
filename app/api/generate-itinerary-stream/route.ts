@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { generateDayItinerary } from '@/lib/openai';
 import { TRIP_DETAILS } from '@/lib/constants';
 import { DayItinerary } from '@/lib/types';
+import { getRegenerationScope, getRegenerationDescription, getPastDaysPlaceNames } from '@/lib/tripTimeUtils';
 
 // Configure for streaming on Vercel
 export const runtime = 'nodejs';
