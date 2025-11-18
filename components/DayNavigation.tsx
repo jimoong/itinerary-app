@@ -107,7 +107,7 @@ export default function DayNavigation({
 
             {/* Date Picker Dropdown */}
             {showDatePicker && currentTrip && (
-              <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-gray-200 dark:border-slate-700 overflow-hidden z-50 max-h-96 overflow-y-auto">
+              <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-gray-200 dark:border-slate-700 overflow-hidden z-50 max-h-96 overflow-y-auto">
                 {currentTrip.days.map((day, index) => {
                   const isSelected = day.dayNumber === currentDay.dayNumber;
                   let dayFormattedDate = 'Invalid Date';
@@ -134,13 +134,6 @@ export default function DayNavigation({
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className={`text-xs font-medium px-2 py-1 rounded ${
-                          isSelected 
-                            ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300' 
-                            : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400'
-                        }`}>
-                          Day {day.dayNumber}
-                        </div>
                         <div>
                           <div className={`font-medium ${
                             isSelected 
