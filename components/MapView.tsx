@@ -438,9 +438,8 @@ export default function MapView({ places, onMarkerClick, highlightedPlaceId, cur
       if (highlightedIndex !== -1) {
         const highlightedPlace = places[highlightedIndex];
         
-        // If first item (airport/hotel) is selected, show full day view
-        // Or if any hotel is selected, show full day view
-        if (highlightedIndex === 0 || highlightedPlace.category === 'hotel') {
+        // If first item is selected, show full day view
+        if (highlightedIndex === 0) {
           googleMapRef.current.fitBounds(bounds);
         } else {
           // Regular location - zoom to route including the actual path
