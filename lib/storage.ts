@@ -1,7 +1,7 @@
 import { Trip } from './types';
 
 const STORAGE_KEY = 'itinerary_trip_data';
-const STORAGE_VERSION = '9'; // Version 9 for Day 1 Prague arrival flight (EN 8958)
+const STORAGE_VERSION = '10'; // Version 10 for correct arrival day order (airport first)
 
 export function saveTrip(trip: Trip): void {
   if (typeof window !== 'undefined') {

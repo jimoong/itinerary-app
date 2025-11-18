@@ -141,11 +141,14 @@ async function calculateSmartRoute(
 
 // Utility function to add hotel as first and last place in the itinerary
 async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
-  // Special handling for Day 5 and Day 9 (flight days) - no return to hotel
-  const isFlightDay = day.dayNumber === 5 || day.dayNumber === 9;
+  // Special handling for departure flight days (Day 5 and Day 9) - no return to hotel
+  const isDepartureFlightDay = day.dayNumber === 5 || day.dayNumber === 9;
+  
+  // Special handling for arrival days (Day 1 and Day 6) - no start hotel (airport comes first)
+  const isArrivalDay = day.dayNumber === 1 || day.dayNumber === 6;
   
   // Check if hotels are already properly added with transport
-  if (!isFlightDay && day.places.length >= 2 && 
+  if (!isDepartureFlightDay && !isArrivalDay && day.places.length >= 2 && 
       day.places[0].category === 'hotel' && 
       day.places[day.places.length - 1].category === 'hotel' &&
       day.places[0].transportToNext && // Has transport from start hotel
@@ -154,9 +157,14 @@ async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
     return day; // Already has hotels with transport
   }
 
-  // For flight days, check if already processed
-  if (isFlightDay && day.places.length >= 1 && day.places[0].category === 'hotel') {
+  // For departure flight days, check if already processed
+  if (isDepartureFlightDay && day.places.length >= 1 && day.places[0].category === 'hotel') {
     return day; // Already processed
+  }
+  
+  // For arrival days, check if already processed (should have airport first)
+  if (isArrivalDay && day.places.length >= 1 && day.places[0].category === 'airport') {
+    return day; // Already processed by arrival function
   }
 
   // Remove existing hotels if present but incomplete
@@ -183,9 +191,44 @@ async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
     );
   }
 
+  // For arrival days, skip adding start hotel (airport arrival function handles it)
+  if (isArrivalDay) {
+    // Just add end hotel for arrival days
+    const lastPlace = placesWithoutHotels[placesWithoutHotels.length - 1];
+    let lastToHotelRoute = null;
+    
+    if (lastPlace) {
+      lastToHotelRoute = await calculateSmartRoute(
+        { lat: lastPlace.lat, lng: lastPlace.lng },
+        { lat: day.hotel.lat, lng: day.hotel.lng }
+      );
+    }
+    
+    const updatedPlacesArrival = placesWithoutHotels.map((place, index) => {
+      if (index === placesWithoutHotels.length - 1 && lastToHotelRoute) {
+        return {
+          ...place,
+          transportToNext: {
+            mode: lastToHotelRoute.mode,
+            duration: lastToHotelRoute.duration,
+            distance: lastToHotelRoute.distance
+          }
+        };
+      }
+      return place;
+    });
+    
+    const endHotel = { ...hotelPlace, id: `hotel-end-${day.dayNumber}` };
+    
+    return {
+      ...day,
+      places: [...updatedPlacesArrival, endHotel]
+    };
+  }
+  
   // Add hotel at start (with start time and transport to first place)
   // Day 5: 09:00 (Prague departure), Day 9: 06:00 (London early departure), others: 08:00
-  const startTime = day.dayNumber === 9 ? '06:00' : (isFlightDay ? '09:00' : '08:00');
+  const startTime = day.dayNumber === 9 ? '06:00' : (isDepartureFlightDay ? '09:00' : '08:00');
   const startHotel: Place = { 
     ...hotelPlace, 
     id: `hotel-start-${day.dayNumber}`, 
@@ -197,8 +240,8 @@ async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
     } : undefined
   };
   
-  if (isFlightDay) {
-    // For flight days, only add start hotel (no return)
+  if (isDepartureFlightDay) {
+    // For departure flight days, only add start hotel (no return)
     return {
       ...day,
       places: [startHotel, ...placesWithoutHotels]
