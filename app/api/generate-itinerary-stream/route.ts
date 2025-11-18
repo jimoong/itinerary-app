@@ -3,6 +3,8 @@ import { generateDayItinerary } from '@/lib/openai';
 import { TRIP_DETAILS } from '@/lib/constants';
 import { DayItinerary } from '@/lib/types';
 import { getRegenerationScope, getRegenerationDescription, getPastDaysPlaceNames } from '@/lib/tripTimeUtils';
+import { generateMasterPOIList } from '@/lib/masterPOIGenerator';
+import { distributePOIsAcrossDays } from '@/lib/dailyDistributor';
 
 // Configure for streaming on Vercel
 export const runtime = 'nodejs';
@@ -107,14 +109,17 @@ async function replaceDuplicates(allDays: DayItinerary[], duplicates: Array<{ lo
 }
 
 export async function POST(request: NextRequest) {
-  // Check if this is a smart regeneration (from current time onwards)
+  // Check if this is a smart regeneration (from current time onwards) or two-phase mode
   const body = await request.json();
-  const { smartRegeneration, existingDays } = body;
+  const { smartRegeneration, existingDays, useTwoPhase = true } = body; // Two-phase is now default
   
   console.log('========================================');
   console.log('🚀 STREAMING ITINERARY GENERATION');
   if (smartRegeneration) {
     console.log('⏰ SMART MODE: Generating from current time onwards');
+  }
+  if (useTwoPhase) {
+    console.log('🎯 TWO-PHASE MODE: Master POI list → Daily distribution');
   }
   console.log('========================================');
 
@@ -161,72 +166,151 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        for (let i = scope.startDayNumber; i <= scope.endDayNumber; i++) {
-          console.log(`\n--- Day ${i}/10 ---`);
+        // TWO-PHASE GENERATION or FALLBACK TO OLD METHOD
+        if (useTwoPhase && !smartRegeneration) {
+          // ===== PHASE 1: Generate Master POI List =====
+          console.log('\n🎯 [PHASE 1] Generating Master POI List...');
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
+            type: 'progress', 
+            message: 'Generating master POI list...',
+            phase: 1,
+            progress: { current: 0, total: 10 }
+          })}\n\n`));
           
-          // Generate the day
-          const day = await generateDayItinerary(TRIP_DETAILS, i, 10, visitedPlaces);
-          allDays.push(day);
-          
-          // Track AI vs fallback
-          const isLikelyFallback = day.places.some(p => 
-            p.description?.includes('fallback') || 
-            p.description?.includes('default')
-          );
-          
-          if (isLikelyFallback) {
-            fallbackCount++;
-          } else {
-            aiGeneratedCount++;
-          }
-          
-          // Add places to visited list (excluding hotels)
-          day.places.forEach(place => {
-            if (!place.name.toLowerCase().includes('hotel') && 
-                !place.name.toLowerCase().includes('andaz') && 
-                !place.name.toLowerCase().includes('hyatt')) {
-              visitedPlaces.push(place.name);
+          try {
+            const masterPOIs = await generateMasterPOIList(TRIP_DETAILS, visitedPlaces);
+            console.log(`✅ Master POI list generated: ${masterPOIs.totalCount} POIs`);
+            aiGeneratedCount++; // Count master list generation
+            
+            // ===== PHASE 2: Distribute POIs Across Days =====
+            console.log('\n📅 [PHASE 2] Distributing POIs across days...');
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
+              type: 'progress', 
+              message: 'Distributing POIs across days...',
+              phase: 2,
+              progress: { current: 0, total: 10 }
+            })}\n\n`));
+            
+            const distributedDays = await distributePOIsAcrossDays(masterPOIs, TRIP_DETAILS);
+            console.log(`✅ Distribution complete: ${distributedDays.length} days`);
+            aiGeneratedCount++; // Count distribution
+            
+            // Add distributed days to allDays
+            allDays.push(...distributedDays);
+            
+            // Stream each day to client
+            for (let i = 0; i < distributedDays.length; i++) {
+              const day = distributedDays[i];
+              const data = JSON.stringify({ 
+                type: 'day', 
+                day,
+                progress: { current: i + 1, total: 10 }
+              });
+              controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+              console.log(`✅ Day ${day.dayNumber} sent to client`);
             }
-          });
-          
-          console.log(`📝 Visited places so far: ${visitedPlaces.length}`);
-          
-          // Send the day as a Server-Sent Event
-          const data = JSON.stringify({ 
-            type: 'day', 
-            day,
-            progress: { current: i, total: 10 }
-          });
-          controller.enqueue(encoder.encode(`data: ${data}\n\n`));
-          
-          console.log(`✅ Day ${i} sent to client`);
-        }
-        
-        // Check for duplicates
-        console.log('\n========================================');
-        console.log('🔍 CHECKING FOR DUPLICATE LOCATIONS');
-        console.log('========================================');
-        let duplicates = checkForDuplicates(allDays);
-        
-        // Auto-replace duplicates if found
-        if (duplicates.length > 0) {
-          allDays = await replaceDuplicates(allDays, duplicates);
-          
-          // Re-check for any remaining duplicates
-          console.log('\n========================================');
-          console.log('🔍 RE-CHECKING FOR DUPLICATES');
-          console.log('========================================');
-          duplicates = checkForDuplicates(allDays);
-          
-          // Send updated days to client
-          for (let i = 0; i < allDays.length; i++) {
+            
+          } catch (error) {
+            console.error('❌ Two-phase generation failed, falling back to old method:', error);
+            // Fall back to old method
+            allDays = [];
+            for (let i = scope.startDayNumber; i <= scope.endDayNumber; i++) {
+              console.log(`\n--- Day ${i}/10 (FALLBACK) ---`);
+              const day = await generateDayItinerary(TRIP_DETAILS, i, 10, visitedPlaces);
+              allDays.push(day);
+              fallbackCount++;
+              
+              day.places.forEach(place => {
+                if (!place.name.toLowerCase().includes('hotel') && place.category !== 'airport') {
+                  visitedPlaces.push(place.name);
+                }
+              });
+              
+              const data = JSON.stringify({ 
+                type: 'day', 
+                day,
+                progress: { current: i, total: 10 }
+              });
+              controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+            }
+          }
+        } else {
+          // OLD METHOD: Day-by-day generation (for smart regeneration or when two-phase is disabled)
+          for (let i = scope.startDayNumber; i <= scope.endDayNumber; i++) {
+            console.log(`\n--- Day ${i}/10 ---`);
+            
+            // Generate the day
+            const day = await generateDayItinerary(TRIP_DETAILS, i, 10, visitedPlaces);
+            allDays.push(day);
+            
+            // Track AI vs fallback
+            const isLikelyFallback = day.places.some(p => 
+              p.description?.includes('fallback') || 
+              p.description?.includes('default')
+            );
+            
+            if (isLikelyFallback) {
+              fallbackCount++;
+            } else {
+              aiGeneratedCount++;
+            }
+            
+            // Add places to visited list (excluding hotels)
+            day.places.forEach(place => {
+              if (!place.name.toLowerCase().includes('hotel') && 
+                  !place.name.toLowerCase().includes('andaz') && 
+                  !place.name.toLowerCase().includes('hyatt')) {
+                visitedPlaces.push(place.name);
+              }
+            });
+            
+            console.log(`📝 Visited places so far: ${visitedPlaces.length}`);
+            
+            // Send the day as a Server-Sent Event
             const data = JSON.stringify({ 
               type: 'day', 
-              day: allDays[i],
-              progress: { current: i + 1, total: 10 }
+              day,
+              progress: { current: i, total: 10 }
             });
             controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+            
+            console.log(`✅ Day ${i} sent to client`);
           }
+        }
+        
+        // Check for duplicates (only for old method, two-phase shouldn't have duplicates)
+        if (!useTwoPhase || smartRegeneration) {
+          console.log('\n========================================');
+          console.log('🔍 CHECKING FOR DUPLICATE LOCATIONS');
+          console.log('========================================');
+          let duplicates = checkForDuplicates(allDays);
+          
+          // Auto-replace duplicates if found
+          if (duplicates.length > 0) {
+            allDays = await replaceDuplicates(allDays, duplicates);
+            
+            // Re-check for any remaining duplicates
+            console.log('\n========================================');
+            console.log('🔍 RE-CHECKING FOR DUPLICATES');
+            console.log('========================================');
+            duplicates = checkForDuplicates(allDays);
+            
+            // Send updated days to client
+            for (let i = 0; i < allDays.length; i++) {
+              const data = JSON.stringify({ 
+                type: 'day', 
+                day: allDays[i],
+                progress: { current: i + 1, total: 10 }
+              });
+              controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+            }
+          }
+        } else {
+          // For two-phase, just verify no duplicates (should be zero)
+          console.log('\n========================================');
+          console.log('🔍 VERIFYING NO DUPLICATES (Two-Phase)');
+          console.log('========================================');
+          checkForDuplicates(allDays);
         }
         
         // Send completion event

@@ -1,7 +1,7 @@
 import { Trip } from './types';
 
 const STORAGE_KEY = 'itinerary_trip_data';
-const STORAGE_VERSION = '18'; // Version 18 for 10-day trip (Nov 28 full day, Nov 29 departure)
+const STORAGE_VERSION = '19'; // Version 19 for two-phase POI generation system
 const VERSIONS_KEY = 'itinerary_saved_versions';
 const MAX_SAVED_VERSIONS = 5; // Keep last 5 versions
 

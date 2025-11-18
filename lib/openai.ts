@@ -5,7 +5,7 @@ import { getFixedSchedulesForDate, formatFixedScheduleForPrompt, type FixedSched
 import { formatExcludedPOIsForPrompt, getExcludedPOIsSummary } from './excludedPOIs';
 
 // Helper function to clean JSON response from markdown code blocks
-function cleanJsonResponse(content: string): string {
+export function cleanJsonResponse(content: string): string {
   // Remove markdown code blocks if present
   let cleaned = content.trim();
   
