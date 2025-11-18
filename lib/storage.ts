@@ -1,7 +1,7 @@
 import { Trip } from './types';
 
 const STORAGE_KEY = 'itinerary_trip_data';
-const STORAGE_VERSION = '15'; // Version 15 for kid-tested Paris recommendations (ages 6-9)
+const STORAGE_VERSION = '16'; // Version 16 for auto-replace duplicate locations
 
 export function saveTrip(trip: Trip): void {
   if (typeof window !== 'undefined') {

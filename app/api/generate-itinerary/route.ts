@@ -10,8 +10,8 @@ function checkForDuplicates(allDays: DayItinerary[]) {
   allDays.forEach((day, dayIndex) => {
     day.places.forEach(place => {
       const placeName = place.name.toLowerCase();
-      // Skip hotels
-      if (placeName.includes('hotel') || placeName.includes('andaz') || placeName.includes('hyatt')) {
+      // Skip hotels and transportation
+      if (placeName.includes('hotel') || placeName.includes('andaz') || placeName.includes('hyatt') || place.category === 'airport') {
         return;
       }
       
@@ -40,6 +40,61 @@ function checkForDuplicates(allDays: DayItinerary[]) {
     console.log('✅ No duplicate locations found across days');
     return [];
   }
+}
+
+// Helper function to auto-replace duplicate locations
+async function replaceDuplicates(allDays: DayItinerary[], duplicates: Array<{ location: string; days: number[] }>) {
+  console.log('\n========================================');
+  console.log('🔧 AUTO-REPLACING DUPLICATE LOCATIONS');
+  console.log('========================================');
+  
+  for (const duplicate of duplicates) {
+    const { location, days } = duplicate;
+    
+    // Keep first occurrence, replace subsequent ones
+    const daysToReplace = days.slice(1); // Skip first day
+    
+    for (const dayNumber of daysToReplace) {
+      const dayIndex = dayNumber - 1;
+      const day = allDays[dayIndex];
+      
+      // Find the duplicate place in this day
+      const placeIndex = day.places.findIndex(p => p.name.toLowerCase() === location);
+      if (placeIndex === -1) continue;
+      
+      console.log(`🔄 Replacing "${location}" on Day ${dayNumber}...`);
+      
+      // Collect all place names to avoid (including this duplicate)
+      const placesToAvoid: string[] = [];
+      allDays.forEach(d => {
+        d.places.forEach(p => {
+          if (!p.name.toLowerCase().includes('hotel') && p.category !== 'airport') {
+            placesToAvoid.push(p.name);
+          }
+        });
+      });
+      
+      try {
+        // Regenerate this specific place
+        const newPlace = await regenerateSinglePlace(
+          dayNumber,
+          placeIndex,
+          day.places,
+          TRIP_DETAILS,
+          placesToAvoid
+        );
+        
+        // Replace the duplicate
+        day.places[placeIndex] = newPlace;
+        console.log(`✅ Replaced with: "${newPlace.name}"`);
+      } catch (error) {
+        console.error(`❌ Failed to replace duplicate on Day ${dayNumber}:`, error);
+      }
+    }
+  }
+  
+  console.log('========================================\n');
+  return allDays;
 }
 
 export async function POST(request: NextRequest) {
@@ -103,13 +158,26 @@ export async function POST(request: NextRequest) {
       console.log('\n========================================');
       console.log('🔍 CHECKING FOR DUPLICATE LOCATIONS');
       console.log('========================================');
-      const duplicates = checkForDuplicates(allDays);
+      let duplicates = checkForDuplicates(allDays);
+      
+      // Auto-replace duplicates if found
+      if (duplicates.length > 0) {
+        await replaceDuplicates(allDays, duplicates);
+        
+        // Re-check for any remaining duplicates
+        console.log('\n========================================');
+        console.log('🔍 RE-CHECKING FOR DUPLICATES');
+        console.log('========================================');
+        duplicates = checkForDuplicates(allDays);
+      }
       
       console.log('\n========================================');
       console.log('✅ ITINERARY GENERATION COMPLETE');
       console.log(`📊 Summary: ${aiGeneratedCount} days from AI, ${fallbackCount} days from fallback`);
       if (duplicates.length > 0) {
-        console.log(`⚠️ Warning: ${duplicates.length} duplicate location(s) found`);
+        console.log(`⚠️ Warning: ${duplicates.length} duplicate location(s) still remain`);
+      } else {
+        console.log('✅ No duplicates - itinerary is clean!');
       }
       console.log('========================================\n');
       return NextResponse.json({ days: allDays, duplicates });
