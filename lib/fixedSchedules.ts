@@ -108,6 +108,24 @@ export const FIXED_SCHEDULES: FixedSchedule[] = [
     requiresEarlyArrival: true,
     bufferMinutes: 30, // Arrive 30 minutes early for seating
     notes: 'Doors open at 19:00. Show starts at 19:30. Located in Covent Garden area. Plan dinner before or after the show.'
+  },
+  
+  // Back To The Future: The Musical - Pre-booked
+  {
+    id: 'back-to-the-future-musical',
+    date: '2025-11-27', // Thu 27 Nov 2025
+    startTime: '19:30', // 7:30 PM
+    duration: 165, // Approximately 2 hours 45 minutes (including interval)
+    name: 'Back To The Future: The Musical',
+    address: 'Adelphi Theatre, 409-412 Strand, London WC2R 0NS, United Kingdom',
+    lat: 51.5106,
+    lng: -0.1209,
+    description: 'High-energy musical adaptation of the iconic Back To The Future movie. Features spectacular special effects and time-traveling adventure perfect for families.',
+    category: 'show',
+    bookingReference: 'BTTF-2025-1127',
+    requiresEarlyArrival: true,
+    bufferMinutes: 30, // Arrive 30 minutes early for seating
+    notes: 'Doors open at 19:00. Show starts at 19:30. Located near Covent Garden. Plan dinner before or after the show.'
   }
 ];
 
