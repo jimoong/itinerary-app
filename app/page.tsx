@@ -1175,7 +1175,7 @@ export default function Home() {
             <div className="text-center">
               <p className="text-lg text-gray-600 dark:text-gray-400">Failed to load itinerary</p>
               <button
-                onClick={generateAllDays}
+                onClick={() => generateAllDays(false)}
                 className="mt-4 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
                 Try Again
