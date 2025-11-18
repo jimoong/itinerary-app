@@ -35,12 +35,12 @@ export const PRAGUE_TO_LONDON_FLIGHT: Flight = {
   departure: {
     airport: "PRG",
     city: "Prague",
-    time: "10:30" // Typical morning departure for BA855
+    time: "13:50" // Prague local time (CET)
   },
   arrival: {
     airport: "LHR",
     city: "London",
-    time: "12:00" // Approximate arrival time (1.5-2 hour flight)
+    time: "16:05" // London local time (GMT) - 1 hour behind Prague
   }
 };
 

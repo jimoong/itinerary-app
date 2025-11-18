@@ -1,7 +1,7 @@
 import { Trip } from './types';
 
 const STORAGE_KEY = 'itinerary_trip_data';
-const STORAGE_VERSION = '2'; // Version 2 for 9-day itinerary
+const STORAGE_VERSION = '3'; // Version 3 for flight information
 
 export function saveTrip(trip: Trip): void {
   if (typeof window !== 'undefined') {
