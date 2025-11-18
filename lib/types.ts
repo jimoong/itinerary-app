@@ -23,12 +23,27 @@ export interface Hotel {
   lng: number;
 }
 
+export interface Flight {
+  flightNumber: string;
+  departure: {
+    airport: string;
+    city: string;
+    time: string; // e.g., "10:30"
+  };
+  arrival: {
+    airport: string;
+    city: string;
+    time: string;
+  };
+}
+
 export interface DayItinerary {
   date: string; // ISO date string
   dayNumber: number;
   city: string; // "Prague" or "London"
   hotel: Hotel;
   places: Place[];
+  flight?: Flight; // Optional flight information for travel days
 }
 
 export interface Traveler {

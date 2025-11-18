@@ -1,4 +1,4 @@
-import { TripDetails } from './types';
+import { TripDetails, Flight } from './types';
 
 export const TRIP_DETAILS: TripDetails = {
   travelers: [
@@ -26,6 +26,21 @@ export const TRIP_DETAILS: TripDetails = {
     address: "1 Blackfriars, London SE1 8NZ, United Kingdom",
     lat: 51.51226,
     lng: -0.10464
+  }
+};
+
+// Flight information for travel day
+export const PRAGUE_TO_LONDON_FLIGHT: Flight = {
+  flightNumber: "BA0855",
+  departure: {
+    airport: "PRG",
+    city: "Prague",
+    time: "10:30" // Typical morning departure for BA855
+  },
+  arrival: {
+    airport: "LHR",
+    city: "London",
+    time: "12:00" // Approximate arrival time (1.5-2 hour flight)
   }
 };
 

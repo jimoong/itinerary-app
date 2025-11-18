@@ -1,5 +1,6 @@
 import { DayItinerary, Place, TripDetails } from './types';
 import { callAI } from './aiProvider';
+import { PRAGUE_TO_LONDON_FLIGHT } from './constants';
 
 // Helper function to clean JSON response from markdown code blocks
 function cleanJsonResponse(content: string): string {
@@ -251,13 +252,21 @@ Return ONLY a valid JSON object with this exact structure:
       }));
 
       console.log(`[generateDayItinerary] ✅ Successfully parsed ${places.length} places for ${city}`);
-      return {
+      
+      // Add flight information for day 5 (Prague to London travel day)
+      const itinerary: DayItinerary = {
         date,
         dayNumber,
         city,
         hotel,
         places
       };
+      
+      if (dayNumber === 5) {
+        itinerary.flight = PRAGUE_TO_LONDON_FLIGHT;
+      }
+      
+      return itinerary;
     } catch (parseError) {
       console.error('[generateDayItinerary] ❌ JSON PARSE ERROR');
       console.error('Parse error:', parseError);
@@ -965,12 +974,19 @@ function generateFallbackItinerary(
     ? pragueActivitiesByDay[dayNumber] || []
     : londonActivitiesByDay[dayNumber] || [];
 
-  return {
+  const itinerary: DayItinerary = {
     date,
     dayNumber,
     city,
     hotel,
     places
   };
+  
+  // Add flight information for day 5 (Prague to London travel day)
+  if (dayNumber === 5) {
+    itinerary.flight = PRAGUE_TO_LONDON_FLIGHT;
+  }
+  
+  return itinerary;
 }
 

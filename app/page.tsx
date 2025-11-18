@@ -826,6 +826,7 @@ export default function Home() {
             <div ref={timelineScrollRef} className="flex-1 overflow-y-auto px-4 md:px-6 py-4 md:py-6">
               <Timeline
                 places={currentDay.places}
+                flight={currentDay.flight}
                 onRemovePlace={handleRemovePlace}
                 onPlaceClick={setHighlightedPlaceId}
                 onRefreshPlace={handleRefreshPlace}
