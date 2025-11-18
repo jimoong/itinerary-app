@@ -115,18 +115,18 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === 'generate-all') {
-      // Generate all 9 days (5 Prague + 4 London)
+      // Generate all 10 days (5 Lisbon + 5 London)
       console.log('========================================');
-      console.log('🚀 GENERATING ALL 9 DAYS OF ITINERARY');
+      console.log('🚀 GENERATING ALL 10 DAYS OF ITINERARY');
       console.log('========================================');
       const allDays = [];
       const visitedPlaces: string[] = [];
       let aiGeneratedCount = 0;
       let fallbackCount = 0;
       
-      for (let i = 1; i <= 9; i++) {
-        console.log(`\n--- Day ${i}/9 ---`);
-        const day = await generateDayItinerary(TRIP_DETAILS, i, 9, visitedPlaces);
+      for (let i = 1; i <= 10; i++) {
+        console.log(`\n--- Day ${i}/10 ---`);
+        const day = await generateDayItinerary(TRIP_DETAILS, i, 10, visitedPlaces);
         allDays.push(day);
         
         // Track if this was AI generated or fallback (check if it has the expected structure)
@@ -189,14 +189,14 @@ export async function POST(request: NextRequest) {
       if (avoidPlaces && avoidPlaces.length > 0) {
         console.log(`Avoiding ${avoidPlaces.length} places from other days`);
       }
-      const day = await generateDayItinerary(TRIP_DETAILS, dayNumber, 9, avoidPlaces || []);
+      const day = await generateDayItinerary(TRIP_DETAILS, dayNumber, 10, avoidPlaces || []);
       return NextResponse.json({ day });
     }
 
     if (action === 'optimize-day' && dayNumber && places) {
       // Optimize times for existing places
       console.log(`Optimizing day ${dayNumber}...`);
-      const currentDay = await generateDayItinerary(TRIP_DETAILS, dayNumber, 9);
+      const currentDay = await generateDayItinerary(TRIP_DETAILS, dayNumber, 10);
       const optimizedPlaces = await regenerateDayWithChanges(currentDay, places as Place[]);
       return NextResponse.json({ places: optimizedPlaces });
     }
