@@ -1,6 +1,6 @@
 import { DayItinerary, Place, TripDetails } from './types';
 import { callAI } from './aiProvider';
-import { PRAGUE_TO_LONDON_FLIGHT, LONDON_TO_SFO_FLIGHT } from './constants';
+import { FRANKFURT_TO_PRAGUE_FLIGHT, PRAGUE_TO_LONDON_FLIGHT, LONDON_TO_SFO_FLIGHT } from './constants';
 
 // Helper function to clean JSON response from markdown code blocks
 function cleanJsonResponse(content: string): string {
@@ -320,7 +320,9 @@ Return ONLY a valid JSON object with this exact structure:
       };
       
       // Add flight information for travel days
-      if (dayNumber === 5) {
+      if (dayNumber === 1) {
+        itinerary.flight = FRANKFURT_TO_PRAGUE_FLIGHT;
+      } else if (dayNumber === 5) {
         itinerary.flight = PRAGUE_TO_LONDON_FLIGHT;
       } else if (dayNumber === 9) {
         itinerary.flight = LONDON_TO_SFO_FLIGHT;
@@ -1044,7 +1046,9 @@ function generateFallbackItinerary(
   
   // Add flight information for day 5 (Prague to London travel day)
   // Add flight information for travel days
-  if (dayNumber === 5) {
+  if (dayNumber === 1) {
+    itinerary.flight = FRANKFURT_TO_PRAGUE_FLIGHT;
+  } else if (dayNumber === 5) {
     itinerary.flight = PRAGUE_TO_LONDON_FLIGHT;
   } else if (dayNumber === 9) {
     itinerary.flight = LONDON_TO_SFO_FLIGHT;

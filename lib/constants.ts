@@ -30,6 +30,20 @@ export const TRIP_DETAILS: TripDetails = {
 };
 
 // Flight information for travel days
+export const FRANKFURT_TO_PRAGUE_FLIGHT: Flight = {
+  flightNumber: "EN 8958",
+  departure: {
+    airport: "FRA",
+    city: "Frankfurt",
+    time: "17:00" // Frankfurt local time (CET)
+  },
+  arrival: {
+    airport: "PRG",
+    city: "Prague",
+    time: "18:05" // Prague local time (CET) - same timezone
+  }
+};
+
 export const PRAGUE_TO_LONDON_FLIGHT: Flight = {
   flightNumber: "BA0855",
   departure: {

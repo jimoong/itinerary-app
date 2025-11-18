@@ -1,7 +1,7 @@
 import { Trip } from './types';
 
 const STORAGE_KEY = 'itinerary_trip_data';
-const STORAGE_VERSION = '8'; // Version 8 for mandatory restaurant requirements
+const STORAGE_VERSION = '9'; // Version 9 for Day 1 Prague arrival flight (EN 8958)
 
 export function saveTrip(trip: Trip): void {
   if (typeof window !== 'undefined') {
