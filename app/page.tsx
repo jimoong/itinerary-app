@@ -1207,9 +1207,6 @@ export default function Home() {
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span>Generating itinerary...</span>
                   </div>
-                  <span className="text-sm text-blue-700 dark:text-blue-300">
-                    {trip.days.length}/9 days
-                  </span>
                 </div>
                 {/* Progress bar */}
                 <div className="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2 overflow-hidden">
