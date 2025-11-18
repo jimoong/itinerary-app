@@ -141,8 +141,8 @@ async function calculateSmartRoute(
 
 // Utility function to add hotel as first and last place in the itinerary
 async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
-  // Special handling for Day 5 (flight day) - no return to hotel
-  const isFlightDay = day.dayNumber === 5;
+  // Special handling for Day 5 and Day 8 (flight days) - no return to hotel
+  const isFlightDay = day.dayNumber === 5 || day.dayNumber === 8;
   
   // Check if hotels are already properly added with transport
   if (!isFlightDay && day.places.length >= 2 && 
@@ -154,7 +154,7 @@ async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
     return day; // Already has hotels with transport
   }
 
-  // For flight day, check if already processed
+  // For flight days, check if already processed
   if (isFlightDay && day.places.length >= 1 && day.places[0].category === 'hotel') {
     return day; // Already processed
   }
@@ -184,7 +184,8 @@ async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
   }
 
   // Add hotel at start (with start time and transport to first place)
-  const startTime = isFlightDay ? '09:00' : '08:00'; // Later start on flight day
+  // Day 5: 09:00 (Prague departure), Day 8: 06:00 (London early departure), others: 08:00
+  const startTime = day.dayNumber === 8 ? '06:00' : (isFlightDay ? '09:00' : '08:00');
   const startHotel: Place = { 
     ...hotelPlace, 
     id: `hotel-start-${day.dayNumber}`, 
@@ -197,7 +198,7 @@ async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
   };
   
   if (isFlightDay) {
-    // For flight day, only add start hotel (no return)
+    // For flight days, only add start hotel (no return)
     return {
       ...day,
       places: [startHotel, ...placesWithoutHotels]
@@ -241,30 +242,37 @@ async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
   };
 }
 
-// Add flight and airport transportation for Day 5
+// Add flight and airport transportation for Day 5 and Day 8
 async function addFlightToDay(day: DayItinerary): Promise<DayItinerary> {
-  // Only process Day 5 (Prague to London flight day)
-  if (day.dayNumber !== 5 || !day.flight) {
+  // Only process Day 5 (Prague to London) or Day 8 (London to SFO)
+  if ((day.dayNumber !== 5 && day.dayNumber !== 8) || !day.flight) {
     return day;
   }
 
   // Check if flight is already added
   const hasFlightPlace = day.places.some(p => p.category === 'airport');
   if (hasFlightPlace) {
-    console.log('[addFlightToDay] Day 5 already has airport, skipping');
+    console.log(`[addFlightToDay] Day ${day.dayNumber} already has airport, skipping`);
     return day; // Already processed
   }
 
-  console.log('[addFlightToDay] Processing Day 5 flight integration');
+  console.log(`[addFlightToDay] Processing Day ${day.dayNumber} flight integration`);
   console.log('[addFlightToDay] Initial places:', day.places.map(p => `${p.name} (${p.category})`));
 
-  // Prague Airport (Václav Havel Airport Prague)
-  const pragueAirport = {
-    lat: 50.1008,
-    lng: 14.2600,
-    name: 'Václav Havel Airport Prague',
-    address: 'Aviatická 1019/8, 161 00 Praha 6, Czechia'
-  };
+  // Define airport based on day
+  const airport = day.dayNumber === 5 
+    ? {
+        lat: 50.1008,
+        lng: 14.2600,
+        name: 'Václav Havel Airport Prague',
+        address: 'Aviatická 1019/8, 161 00 Praha 6, Czechia'
+      }
+    : {
+        lat: 51.4700,
+        lng: -0.4543,
+        name: 'London Heathrow Airport',
+        address: 'Longford TW6, United Kingdom'
+      };
 
   // Remove any end hotel if it exists (shouldn't be there for Day 5)
   let placesWithoutEndHotel = day.places.filter(p => !(p.category === 'hotel' && p.id.includes('end')));
@@ -285,7 +293,7 @@ async function addFlightToDay(day: DayItinerary): Promise<DayItinerary> {
   // Calculate route from hotel to airport
   const hotelToAirportRoute = await calculateSmartRoute(
     { lat: day.hotel.lat, lng: day.hotel.lng },
-    { lat: pragueAirport.lat, lng: pragueAirport.lng }
+    { lat: airport.lat, lng: airport.lng }
   );
 
   // If route calculation failed, return day as-is
@@ -309,6 +317,10 @@ async function addFlightToDay(day: DayItinerary): Promise<DayItinerary> {
     };
   }
 
+  // Define checkout and airport times based on day
+  const checkoutTime = day.dayNumber === 5 ? '11:00' : '08:00';
+  const airportArrivalTime = day.dayNumber === 5 ? '12:00' : '09:30';
+  
   // Add hotel checkout place
   const checkoutHotel: Place = {
     id: `hotel-checkout-${day.dayNumber}`,
@@ -319,7 +331,7 @@ async function addFlightToDay(day: DayItinerary): Promise<DayItinerary> {
     description: 'Hotel checkout',
     duration: 30, // 30 min for checkout
     category: 'hotel',
-    startTime: '11:00',
+    startTime: checkoutTime,
     transportToNext: {
       mode: hotelToAirportRoute.mode,
       duration: hotelToAirportRoute.duration,
@@ -330,14 +342,14 @@ async function addFlightToDay(day: DayItinerary): Promise<DayItinerary> {
   // Add airport place (final destination - no hotel after)
   const airportPlace: Place = {
     id: `airport-${day.dayNumber}`,
-    name: pragueAirport.name,
-    address: pragueAirport.address,
-    lat: pragueAirport.lat,
-    lng: pragueAirport.lng,
+    name: airport.name,
+    address: airport.address,
+    lat: airport.lat,
+    lng: airport.lng,
     description: `Check-in for flight ${day.flight.flightNumber}`,
     duration: 120, // 2 hours at airport before flight
     category: 'airport',
-    startTime: '12:00', // Arrive at airport by 12:00 for 14:50 flight
+    startTime: airportArrivalTime,
   };
 
   // Add checkout hotel and airport at the end (no return hotel)

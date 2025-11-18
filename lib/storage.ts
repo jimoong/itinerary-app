@@ -1,7 +1,7 @@
 import { Trip } from './types';
 
 const STORAGE_KEY = 'itinerary_trip_data';
-const STORAGE_VERSION = '4'; // Version 4 for cleaned flight timeline (no end hotel)
+const STORAGE_VERSION = '5'; // Version 5 for both flight days (Day 5 and Day 8)
 
 export function saveTrip(trip: Trip): void {
   if (typeof window !== 'undefined') {

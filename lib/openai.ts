@@ -1,6 +1,6 @@
 import { DayItinerary, Place, TripDetails } from './types';
 import { callAI } from './aiProvider';
-import { PRAGUE_TO_LONDON_FLIGHT } from './constants';
+import { PRAGUE_TO_LONDON_FLIGHT, LONDON_TO_SFO_FLIGHT } from './constants';
 
 // Helper function to clean JSON response from markdown code blocks
 function cleanJsonResponse(content: string): string {
@@ -146,21 +146,42 @@ export async function generateDayItinerary(
     ? `\n\nIMPORTANT: DO NOT suggest these places as they were visited on previous days:\n${previousPlaces.join('\n')}`
     : '';
 
-  // Special constraints for Day 5 (Prague departure with flight)
-  const flightDayConstraints = dayNumber === 5 ? `
+  // Special constraints for flight days
+  let flightDayConstraints = '';
+  
+  if (dayNumber === 5) {
+    // Day 5: Prague departure + London arrival
+    flightDayConstraints = `
 
-⚠️ CRITICAL FLIGHT DAY CONSTRAINTS FOR DAY 5:
-- Flight BA0855 departs Prague (PRG) at 14:50
-- Must arrive at airport by 12:50 (2 hours before departure for international flight)
-- Transportation from hotel to airport: ~45 minutes (need to leave hotel by 12:00)
+⚠️ CRITICAL FLIGHT DAY CONSTRAINTS FOR DAY 5 (Prague Departure):
+- Flight BA0855 departs Prague (PRG) at 14:50, arrives London (LHR) at 16:05
+- MORNING (Prague): Must arrive at airport by 12:50 (2 hours before departure)
+- Transportation from hotel to airport: ~45 minutes (leave hotel by 12:00)
 - Hotel checkout time: 11:30
-- ONLY suggest activities from 09:00 to 11:00 (2 hours MAXIMUM available time)
-- Activities MUST be within 10-15 minutes walking distance from ${hotel.name}
-- Suggest ONLY 1-2 quick activities (e.g., breakfast at nearby cafe, quick visit to nearby landmark)
-- NO time-consuming activities (museums, shows, etc.)
-- Focus on: breakfast spots, quick photo opportunities, last-minute shopping near hotel
-- All activities must end by 11:00 to allow time for packing and checkout
-` : '';
+- ONLY suggest Prague morning activities from 09:00 to 11:00 (2 hours MAXIMUM)
+- Prague activities MUST be within 10-15 minutes walking from ${hotel.name}
+- Suggest ONLY 1-2 quick Prague activities (breakfast at nearby cafe, quick landmark visit)
+- NO time-consuming Prague activities (museums, shows, etc.)
+- EVENING (London): Arrive at London hotel around 18:00-19:00 (after flight, customs, transport)
+- Suggest 1-2 light evening activities near ${city === 'London' ? hotel.name : 'Hyatt Regency London Blackfriars'} (dinner, short walk)
+- Keep evening activities relaxed after travel day
+`;
+  } else if (dayNumber === 8) {
+    // Day 8: London departure
+    flightDayConstraints = `
+
+⚠️ CRITICAL FLIGHT DAY CONSTRAINTS FOR DAY 8 (London Departure):
+- Flight VS 19 departs London (LHR) at 11:30 to San Francisco (SFO)
+- Must arrive at airport by 09:30 (2 hours before departure for international flight)
+- Transportation from hotel to airport: ~45-60 minutes (leave hotel by 08:30)
+- Hotel checkout time: 08:00
+- ONLY suggest activities from 06:00 to 07:45 (very limited time)
+- Activities MUST be within hotel or 5 minutes walking distance
+- Suggest ONLY 1 quick activity (early breakfast at hotel or nearby cafe)
+- NO sightseeing - focus on breakfast and final packing
+- This is a very early departure day
+`;
+  }
 
   const prompt = `Generate a detailed day itinerary for a family trip to ${city}.
 
@@ -278,8 +299,11 @@ Return ONLY a valid JSON object with this exact structure:
         places
       };
       
+      // Add flight information for travel days
       if (dayNumber === 5) {
         itinerary.flight = PRAGUE_TO_LONDON_FLIGHT;
+      } else if (dayNumber === 8) {
+        itinerary.flight = LONDON_TO_SFO_FLIGHT;
       }
       
       return itinerary;
@@ -999,8 +1023,11 @@ function generateFallbackItinerary(
   };
   
   // Add flight information for day 5 (Prague to London travel day)
+  // Add flight information for travel days
   if (dayNumber === 5) {
     itinerary.flight = PRAGUE_TO_LONDON_FLIGHT;
+  } else if (dayNumber === 8) {
+    itinerary.flight = LONDON_TO_SFO_FLIGHT;
   }
   
   return itinerary;

@@ -29,7 +29,7 @@ export const TRIP_DETAILS: TripDetails = {
   }
 };
 
-// Flight information for travel day
+// Flight information for travel days
 export const PRAGUE_TO_LONDON_FLIGHT: Flight = {
   flightNumber: "BA0855",
   departure: {
@@ -41,6 +41,20 @@ export const PRAGUE_TO_LONDON_FLIGHT: Flight = {
     airport: "LHR",
     city: "London",
     time: "16:05" // London local time (GMT) - 1 hour behind Prague
+  }
+};
+
+export const LONDON_TO_SFO_FLIGHT: Flight = {
+  flightNumber: "VS 19",
+  departure: {
+    airport: "LHR",
+    city: "London",
+    time: "11:30" // London local time (GMT)
+  },
+  arrival: {
+    airport: "SFO",
+    city: "San Francisco",
+    time: "14:30" // San Francisco local time (PST) - 8 hours behind London
   }
 };
 
