@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { generateDayItinerary, generateItineraryWithPOIList } from '@/lib/openai';
+import { generateDayItinerary } from '@/lib/openai';
 import { TRIP_DETAILS } from '@/lib/constants';
 import { DayItinerary } from '@/lib/types';
 

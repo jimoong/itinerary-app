@@ -1,6 +1,7 @@
 import { DayItinerary, Place, TripDetails } from './types';
 import { callAI } from './aiProvider';
 import { SFO_TO_LISBON_FLIGHT, LISBON_TO_LONDON_FLIGHT, LONDON_TO_SFO_FLIGHT } from './constants';
+import { getFixedSchedulesForDate, formatFixedScheduleForPrompt, type FixedSchedule } from './fixedSchedules';
 
 // Helper function to clean JSON response from markdown code blocks
 function cleanJsonResponse(content: string): string {
@@ -146,6 +147,12 @@ export async function generateDayItinerary(
     ? `\n\n🚫 CRITICAL - PLACES ALREADY VISITED (ABSOLUTELY DO NOT REPEAT ANY OF THESE):\n${previousPlaces.map(p => `  ❌ ${p}`).join('\n')}\n\n⚠️ YOU MUST SUGGEST COMPLETELY DIFFERENT PLACES NOT IN THIS LIST.\n⚠️ Suggesting any place from this list will result in REJECTION.\n⚠️ Focus on VARIETY - each day should explore different neighborhoods and attraction types.\n⚠️ If previous days visited museums, focus on outdoor activities, landmarks, or food experiences today.\n`
     : '';
 
+  // Check for fixed schedules on this date
+  const fixedSchedules = getFixedSchedulesForDate(date);
+  const fixedSchedulesInfo = fixedSchedules.length > 0
+    ? `\n\n${'='.repeat(60)}\n⚠️⚠️⚠️ FIXED SCHEDULES - PRE-BOOKED ACTIVITIES ⚠️⚠️⚠️\n${'='.repeat(60)}\n\nThe following activities are ALREADY BOOKED and CANNOT be changed:\n${fixedSchedules.map(schedule => formatFixedScheduleForPrompt(schedule)).join('\n')}\n${'='.repeat(60)}\n\n⚠️ CRITICAL INSTRUCTIONS FOR FIXED SCHEDULES:\n1. DO NOT suggest any activities during the fixed schedule times\n2. Plan activities BEFORE or AFTER the fixed schedules\n3. Consider travel time to reach fixed schedule locations\n4. If fixed schedule requires early arrival, ensure previous activity ends with enough time\n5. Include the fixed schedule as a place in your itinerary at the specified time\n6. Use the exact details provided (name, address, coordinates, duration)\n${'='.repeat(60)}\n`
+    : '';
+
   // Special constraints for flight days
   let flightDayConstraints = '';
   
@@ -206,7 +213,7 @@ export async function generateDayItinerary(
   }
 
   const prompt = `Generate a detailed day itinerary for a family trip to ${city}.
-
+${fixedSchedulesInfo}
 Trip Details:
 - Date: ${date} (Day ${dayNumber} of ${totalDays})
 - ${dayContext}
@@ -320,7 +327,7 @@ Return ONLY a valid JSON object with this exact structure:
       "lng": longitude (number),
       "description": "Detailed description including why it's special and what kids will enjoy. Include booking tips if needed.",
       "duration": duration in minutes (number),
-      "category": "restaurant|museum|park|landmark|shopping|entertainment",
+      "category": "restaurant|museum|park|landmark|shopping|entertainment|concert|show|tour",
       "startTime": "HH:MM" (24-hour format),
       "kidsRating": "Specific reason why this is perfect for ages 6 and 9. Mention interactive elements, visual appeal, or hands-on experiences.",
       "transportToNext": {
@@ -330,7 +337,9 @@ Return ONLY a valid JSON object with this exact structure:
       }
     }
   ]
-}`;
+}
+
+${fixedSchedules.length > 0 ? `\n⚠️ REMINDER: Include the fixed schedule(s) as place(s) in your response at the exact time specified:\n${fixedSchedules.map(s => `- ${s.name} at ${s.startTime} (${s.duration} min)`).join('\n')}\n` : ''}`;
 
   try {
     console.log(`[generateDayItinerary] Calling AI for ${city} on ${date}...`);
