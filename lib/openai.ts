@@ -143,7 +143,7 @@ export async function generateDayItinerary(
                      `This is day ${dayNumber - (city === 'London' ? 5 : 0)} of ${city === 'Lisbon' ? 5 : 4} in ${city}.`;
 
   const avoidPlaces = previousPlaces && previousPlaces.length > 0 
-    ? `\n\nIMPORTANT: DO NOT suggest these places as they were visited on previous days:\n${previousPlaces.join('\n')}`
+    ? `\n\n🚫 CRITICAL - PLACES ALREADY VISITED (ABSOLUTELY DO NOT REPEAT ANY OF THESE):\n${previousPlaces.map(p => `  ❌ ${p}`).join('\n')}\n\n⚠️ YOU MUST SUGGEST COMPLETELY DIFFERENT PLACES NOT IN THIS LIST.\n⚠️ Suggesting any place from this list will result in REJECTION.\n⚠️ Focus on VARIETY - each day should explore different neighborhoods and attraction types.\n⚠️ If previous days visited museums, focus on outdoor activities, landmarks, or food experiences today.\n`
     : '';
 
   // Special constraints for flight days
@@ -219,6 +219,9 @@ Requirements:
 - Suggest ${numActivities} DIFFERENT family-friendly activities/places suitable for children aged 6 and 9
 - Start around ${startTime}, end by ${endTime}${isFirstDayInCity ? ' (arrival day - limited time)' : ''}${isLastDayInCity ? ' (departure day - limited time)' : ''}
 - Include mix of activities: landmarks, museums, parks, restaurants
+- **CRITICAL**: Each place must be UNIQUE - no repeats from previous days (see list above)
+- **CRITICAL**: Ensure variety - if Day ${dayNumber - 1} focused on museums, focus on outdoor activities or landmarks today
+- **CRITICAL**: Distribute major attractions across different days - don't cluster all top sights on one day
 
 CRITICAL - MINIMIZE WALKING DISTANCE (CLUSTER STRATEGY):
 - Group POIs by neighborhood/area to minimize total walking
