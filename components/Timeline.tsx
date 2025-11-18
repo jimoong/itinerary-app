@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Place, Flight } from '@/lib/types';
-import { Clock, MapPin, Trash2, Coffee, Building2, TreePine, Landmark, ShoppingBag, Ticket, Navigation, Car, Train, TramFront, Heart, RefreshCw, Hotel, Info, MoreVertical } from 'lucide-react';
+import { Clock, MapPin, Trash2, Coffee, Building2, TreePine, Landmark, ShoppingBag, Ticket, Navigation, Car, Train, TramFront, Heart, RefreshCw, Hotel, Info, MoreVertical, Check, EyeOff } from 'lucide-react';
 import ImagePanel from './ImagePanel';
 
 interface TimelineProps {
@@ -11,12 +11,15 @@ interface TimelineProps {
   onRemovePlace: (placeId: string) => void;
   onPlaceClick?: (placeId: string) => void;
   onRefreshPlace?: (placeIndex: number) => void;
+  onMarkAsVisited?: (placeIndex: number) => void;
+  onExcludePlace?: (placeIndex: number) => void;
   highlightedPlaceId?: string;
   refreshingPlaceIndex?: number;
   nextPlaceIndex?: number | null;
+  visitedPlaceIds?: Set<string>;
 }
 
-export default function Timeline({ places, flight, onRemovePlace, onPlaceClick, onRefreshPlace, highlightedPlaceId, refreshingPlaceIndex, nextPlaceIndex }: TimelineProps) {
+export default function Timeline({ places, flight, onRemovePlace, onPlaceClick, onRefreshPlace, onMarkAsVisited, onExcludePlace, highlightedPlaceId, refreshingPlaceIndex, nextPlaceIndex, visitedPlaceIds }: TimelineProps) {
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const [isImagePanelOpen, setIsImagePanelOpen] = useState(false);
   const [openMenuIndex, setOpenMenuIndex] = useState<number | null>(null);
@@ -240,6 +243,42 @@ export default function Timeline({ places, flight, onRemovePlace, onPlaceClick, 
                               </button>
                             )}
                             
+                            {/* Mark as Visited option */}
+                            {onMarkAsVisited && place.category !== 'hotel' && place.category !== 'airport' && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenMenuIndex(null);
+                                  onMarkAsVisited(index);
+                                }}
+                                className="w-full px-4 py-3 text-left hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors flex items-center gap-3 border-b border-gray-100 dark:border-slate-700"
+                              >
+                                <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
+                                <div className="flex-1">
+                                  <div className="text-base text-gray-700 dark:text-gray-300">Visited</div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">Mark as visited & exclude from future</div>
+                                </div>
+                              </button>
+                            )}
+                            
+                            {/* Do Not Show This option */}
+                            {onExcludePlace && place.category !== 'hotel' && place.category !== 'airport' && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenMenuIndex(null);
+                                  onExcludePlace(index);
+                                }}
+                                className="w-full px-4 py-3 text-left hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors flex items-center gap-3 border-b border-gray-100 dark:border-slate-700"
+                              >
+                                <EyeOff className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+                                <div className="flex-1">
+                                  <div className="text-base text-gray-700 dark:text-gray-300">Do not show this</div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">Exclude from future suggestions</div>
+                                </div>
+                              </button>
+                            )}
+                            
                             {/* Remove option */}
                             <button
                               onClick={(e) => {
@@ -267,6 +306,13 @@ export default function Timeline({ places, flight, onRemovePlace, onPlaceClick, 
                         {getCategoryIcon(place.category)}
                       </div> */}
                       <h3 className="timeline__title">{place.name}</h3>
+                      {/* Visited badge */}
+                      {visitedPlaceIds?.has(place.id) && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
+                          <Check className="w-3 h-3 mr-1" />
+                          Visited
+                        </span>
+                      )}
                       {/* Next badge */}
                       {nextPlaceIndex === index && (
                         <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-xs font-semibold rounded-full">

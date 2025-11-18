@@ -86,10 +86,10 @@ export function getExcludedPOIsForCity(city: 'Lisbon' | 'London'): ExcludedPOI[]
 }
 
 /**
- * Format excluded POIs for AI prompt
+ * Format excluded POIs for AI prompt (includes runtime additions)
  */
 export function formatExcludedPOIsForPrompt(city: 'Lisbon' | 'London'): string {
-  const excluded = getExcludedPOIsForCity(city);
+  const excluded = getExcludedPOIsForCityWithRuntime(city);
   
   if (excluded.length === 0) {
     return '';
@@ -128,5 +128,63 @@ export function isPlaceExcluded(placeName: string, city: 'Lisbon' | 'London'): b
     // Check for exact match or if one contains the other
     return lowerPlaceName.includes(lowerExcludedName) || lowerExcludedName.includes(lowerPlaceName);
   });
+}
+
+/**
+ * Add a place to the excluded list dynamically (runtime only, not persisted to file)
+ */
+const runtimeExcludedPOIs: ExcludedPOI[] = [];
+
+export function addToExcludedList(
+  name: string,
+  city: 'Lisbon' | 'London',
+  reason?: string
+): void {
+  // Check if already excluded
+  const exists = runtimeExcludedPOIs.some(poi => 
+    poi.name.toLowerCase() === name.toLowerCase() && poi.city === city
+  );
+  
+  if (!exists) {
+    const newExcluded: ExcludedPOI = {
+      id: `runtime-${Date.now()}`,
+      name,
+      city,
+      reason: reason || 'User excluded',
+      category: 'other'
+    };
+    
+    runtimeExcludedPOIs.push(newExcluded);
+    console.log(`🚫 Added to excluded list: ${name} (${city})`);
+  }
+}
+
+/**
+ * Remove a place from the runtime excluded list
+ */
+export function removeFromExcludedList(name: string, city: 'Lisbon' | 'London'): void {
+  const index = runtimeExcludedPOIs.findIndex(poi => 
+    poi.name.toLowerCase() === name.toLowerCase() && poi.city === city
+  );
+  
+  if (index !== -1) {
+    runtimeExcludedPOIs.splice(index, 1);
+    console.log(`✅ Removed from excluded list: ${name}`);
+  }
+}
+
+/**
+ * Get all excluded POIs including runtime additions
+ */
+export function getAllExcludedPOIs(): ExcludedPOI[] {
+  return [...EXCLUDED_POIS, ...runtimeExcludedPOIs];
+}
+
+/**
+ * Get excluded POIs for a city including runtime additions
+ */
+export function getExcludedPOIsForCityWithRuntime(city: 'Lisbon' | 'London'): ExcludedPOI[] {
+  const allExcluded = getAllExcludedPOIs();
+  return allExcluded.filter(poi => poi.city === city || poi.city === 'Any');
 }
 
