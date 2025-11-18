@@ -1,7 +1,7 @@
 import { Trip } from './types';
 
 const STORAGE_KEY = 'itinerary_trip_data';
-const STORAGE_VERSION = '11'; // Version 11 for arrival day time constraints
+const STORAGE_VERSION = '12'; // Version 12 for POI clustering strategy to minimize walking
 
 export function saveTrip(trip: Trip): void {
   if (typeof window !== 'undefined') {

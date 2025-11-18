@@ -227,8 +227,15 @@ Requirements:
 - Suggest ${numActivities} DIFFERENT family-friendly activities/places suitable for children aged 6 and 9
 - Start around ${startTime}, end by ${endTime}${isFirstDayInCity ? ' (arrival day - limited time)' : ''}${isLastDayInCity ? ' (departure day - limited time)' : ''}
 - Include mix of activities: landmarks, museums, parks, restaurants
-- Plan locations in a logical geographical route to minimize travel time
-- Keep consecutive places close together when possible (walking distance preferred)
+
+CRITICAL - MINIMIZE WALKING DISTANCE (CLUSTER STRATEGY):
+- Group POIs by neighborhood/area to minimize total walking
+- When visiting distant areas, cluster 2-3 nearby POIs together
+- Use public transport to reach a neighborhood, then walk between nearby places
+- Example: Take metro to Museum District → Visit 2-3 museums within walking distance → Take metro back
+- Avoid zigzagging across the city - plan in geographical clusters
+- Keep walking segments under 15 minutes between consecutive places
+- If places are far apart (>1.5km), they should be in different clusters with transport between
 
 CRITICAL - DO NOT SUGGEST TRANSPORTATION AS ACTIVITIES:
 - Each place MUST be a specific Point of Interest (POI), attraction, restaurant, or venue
@@ -248,6 +255,12 @@ PRAGUE-SPECIFIC RECOMMENDATIONS (if applicable):
 - Christmas markets (if open): Magical atmosphere in Old Town Square
 - Evening activities: Night views from Charles Bridge looking at Prague Castle
 
+PRAGUE CLUSTERING EXAMPLES:
+- Cluster 1 (Old Town): Old Town Square → Astronomical Clock → Charles Bridge (all walkable)
+- Cluster 2 (Castle Hill): Take tram to Prague Castle → Toy Museum → St. Vitus Cathedral (walkable area)
+- Cluster 3 (Lesser Town): Petřín Hill → Lennon Wall → nearby cafes (walkable area)
+- Use trams/metro between clusters, walk within clusters
+
 LONDON-SPECIFIC RECOMMENDATIONS (if applicable):
 - Natural History Museum or Science Museum: Interactive exhibits for kids
 - Tower of London: Crown Jewels and history
@@ -257,6 +270,13 @@ LONDON-SPECIFIC RECOMMENDATIONS (if applicable):
 - Buckingham Palace: Changing of the Guard (check schedule)
 - Christmas lights: Oxford Street, Carnaby Street (spectacular in late November)
 - Borough Market or Covent Garden: Street performers
+
+LONDON CLUSTERING EXAMPLES:
+- Cluster 1 (South Kensington): Natural History Museum → Science Museum → lunch nearby (all walkable)
+- Cluster 2 (Westminster): Take tube to Westminster → Big Ben → London Eye → nearby restaurant (walkable area)
+- Cluster 3 (Tower/Bridge): Take tube to Tower Hill → Tower of London → Tower Bridge → Borough Market (walkable area)
+- Cluster 4 (West End): Take tube to Leicester Square → Covent Garden → theatre district (walkable area)
+- Use tube/bus between clusters, walk within clusters
 
 Kid-Friendly Tips:
 - Prioritize interactive experiences (cable cars, puppet shows, musicals, hands-on museums)
