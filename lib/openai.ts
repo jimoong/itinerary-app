@@ -150,21 +150,35 @@ export async function generateDayItinerary(
   let flightDayConstraints = '';
   
   if (dayNumber === 5) {
-    // Day 5: Prague departure + London arrival
+    // Day 5: Prague departure ONLY (London arrival is Day 6)
     flightDayConstraints = `
 
-⚠️ CRITICAL FLIGHT DAY CONSTRAINTS FOR DAY 5 (Prague Departure):
-- Flight BA0855 departs Prague (PRG) at 14:50, arrives London (LHR) at 16:05
-- MORNING (Prague): Must arrive at airport by 12:50 (2 hours before departure)
+⚠️ CRITICAL FLIGHT DAY CONSTRAINTS FOR DAY 5 (Prague Departure ONLY):
+- This is PRAGUE ONLY - DO NOT suggest any London activities
+- Flight BA0855 departs Prague (PRG) at 14:50
+- Must arrive at airport by 12:50 (2 hours before departure)
 - Transportation from hotel to airport: ~45 minutes (leave hotel by 12:00)
 - Hotel checkout time: 11:30
-- ONLY suggest Prague morning activities from 09:00 to 11:00 (2 hours MAXIMUM)
-- Prague activities MUST be within 10-15 minutes walking from ${hotel.name}
-- Suggest ONLY 1-2 quick Prague activities (breakfast at nearby cafe, quick landmark visit)
-- NO time-consuming Prague activities (museums, shows, etc.)
-- EVENING (London): Arrive at London hotel around 18:00-19:00 (after flight, customs, transport)
-- Suggest 1-2 light evening activities near ${city === 'London' ? hotel.name : 'Hyatt Regency London Blackfriars'} (dinner, short walk)
-- Keep evening activities relaxed after travel day
+- ONLY suggest PRAGUE morning activities from 09:00 to 11:00 (2 hours MAXIMUM)
+- All activities MUST be in PRAGUE, within 10-15 minutes walking from Andaz Prague hotel
+- Suggest ONLY 1-2 quick PRAGUE activities (breakfast at nearby Prague cafe, quick Prague landmark)
+- NO time-consuming activities (museums, shows, etc.)
+- Focus on: Prague breakfast spots, quick Prague photo opportunities, last-minute Prague shopping
+- CRITICAL: All suggested places MUST be in Prague, Czech Republic
+`;
+  } else if (dayNumber === 6) {
+    // Day 6: London arrival evening
+    flightDayConstraints = `
+
+⚠️ LONDON ARRIVAL DAY CONSTRAINTS FOR DAY 6:
+- Arrived on flight BA0855 from Prague at 16:05 (4:05 PM)
+- After customs, baggage, and transport to hotel: arrive at hotel around 18:00-19:00
+- This is an ARRIVAL day with limited evening time
+- ONLY suggest London evening activities from 18:30 to 21:00
+- Suggest 1-2 light evening activities near Hyatt Regency London Blackfriars
+- Focus on: dinner near hotel, short evening walk, nearby pub
+- Keep activities relaxed and close to hotel after travel day
+- NO time-consuming activities - just settling in
 `;
   } else if (dayNumber === 8) {
     // Day 8: London departure

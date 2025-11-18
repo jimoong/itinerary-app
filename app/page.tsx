@@ -364,6 +364,103 @@ async function addFlightToDay(day: DayItinerary): Promise<DayItinerary> {
   };
 }
 
+// Add London arrival airport for Day 6
+async function addLondonArrival(day: DayItinerary): Promise<DayItinerary> {
+  // Only process Day 6 (London arrival from Prague)
+  if (day.dayNumber !== 6) {
+    return day;
+  }
+
+  // Check if airport arrival is already added
+  const hasAirportArrival = day.places.some(p => p.category === 'airport');
+  if (hasAirportArrival) {
+    console.log('[addLondonArrival] Day 6 already has airport arrival, skipping');
+    return day;
+  }
+
+  console.log('[addLondonArrival] Processing Day 6 London arrival');
+  console.log('[addLondonArrival] Initial places:', day.places.map(p => `${p.name} (${p.category})`));
+
+  // London Heathrow Airport
+  const heathrowAirport = {
+    lat: 51.4700,
+    lng: -0.4543,
+    name: 'London Heathrow Airport',
+    address: 'Longford TW6, United Kingdom'
+  };
+
+  // Remove the start hotel (we'll add airport first, then hotel)
+  let placesWithoutStartHotel = day.places.filter(p => !(p.category === 'hotel' && p.id.includes('start')));
+  
+  // Calculate route from airport to hotel
+  const airportToHotelRoute = await calculateSmartRoute(
+    { lat: heathrowAirport.lat, lng: heathrowAirport.lng },
+    { lat: day.hotel.lat, lng: day.hotel.lng }
+  );
+
+  if (!airportToHotelRoute) {
+    console.error('[addLondonArrival] Failed to calculate route from airport to hotel');
+    return day;
+  }
+
+  // Add airport arrival place
+  const airportArrival: Place = {
+    id: `airport-arrival-${day.dayNumber}`,
+    name: heathrowAirport.name,
+    address: heathrowAirport.address,
+    lat: heathrowAirport.lat,
+    lng: heathrowAirport.lng,
+    description: 'Arrived from Prague (BA0855)',
+    duration: 90, // 90 min for customs, baggage, etc.
+    category: 'airport',
+    startTime: '16:05', // Flight arrival time
+    transportToNext: {
+      mode: airportToHotelRoute.mode,
+      duration: airportToHotelRoute.duration,
+      distance: airportToHotelRoute.distance
+    }
+  };
+
+  // Calculate route from hotel to first activity
+  let hotelToFirstRoute = null;
+  if (placesWithoutStartHotel.length > 0) {
+    const firstPlace = placesWithoutStartHotel[0];
+    hotelToFirstRoute = await calculateSmartRoute(
+      { lat: day.hotel.lat, lng: day.hotel.lng },
+      { lat: firstPlace.lat, lng: firstPlace.lng }
+    );
+  }
+
+  // Add hotel check-in
+  const hotelCheckIn: Place = {
+    id: `hotel-checkin-${day.dayNumber}`,
+    name: day.hotel.name,
+    address: day.hotel.address,
+    lat: day.hotel.lat,
+    lng: day.hotel.lng,
+    description: 'Hotel check-in',
+    duration: 30, // 30 min for check-in
+    category: 'hotel',
+    startTime: '18:00', // Estimated arrival at hotel
+    transportToNext: hotelToFirstRoute ? {
+      mode: hotelToFirstRoute.mode,
+      duration: hotelToFirstRoute.duration,
+      distance: hotelToFirstRoute.distance
+    } : undefined
+  };
+
+  // Build final places array: airport → hotel → activities → end hotel
+  const updatedPlaces = [airportArrival, hotelCheckIn, ...placesWithoutStartHotel];
+
+  console.log('[addLondonArrival] Final places:', updatedPlaces.map(p => `${p.name} (${p.category})`));
+  console.log('[addLondonArrival] ✅ Day 6 London arrival complete');
+
+  return {
+    ...day,
+    places: updatedPlaces
+  };
+}
+
 export default function Home() {
   const [trip, setTrip] = useState<Trip | null>(null);
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
@@ -410,13 +507,16 @@ export default function Home() {
         const daysWithHotels = await Promise.all(
           savedTrip.days.map(day => addHotelsToDay(day))
         );
-        // Add flight to Day 5 if applicable
+        // Add flights and London arrival
         const daysWithFlights = await Promise.all(
           daysWithHotels.map(day => addFlightToDay(day))
         );
+        const daysWithLondonArrival = await Promise.all(
+          daysWithFlights.map(day => addLondonArrival(day))
+        );
         const tripWithHotels = {
           ...savedTrip,
-          days: daysWithFlights
+          days: daysWithLondonArrival
         };
         setTrip(tripWithHotels);
         setIsLoading(false);
@@ -524,6 +624,10 @@ export default function Home() {
         const daysWithFlights = await Promise.all(
           daysWithHotels.map((day: DayItinerary) => addFlightToDay(day))
         );
+        // Add London arrival to Day 6
+        const daysWithLondonArrival = await Promise.all(
+          daysWithFlights.map((day: DayItinerary) => addLondonArrival(day))
+        );
         
         const newTrip: Trip = {
           travelers: [
@@ -532,7 +636,7 @@ export default function Home() {
             { role: "Girl", age: 9 },
             { role: "Boy", age: 6 }
           ],
-          days: daysWithFlights,
+          days: daysWithLondonArrival,
           startDate: data.days[0].date,
           endDate: data.days[data.days.length - 1].date,
         };
@@ -579,10 +683,11 @@ export default function Home() {
               if (event.type === 'day') {
                 console.log(`📅 Received day ${event.progress.current}/${event.progress.total}`);
                 
-                // Add hotels and flights to the day
+                // Add hotels, flights, and London arrival to the day
                 const dayWithHotels = await addHotelsToDay(event.day);
                 const dayWithFlight = await addFlightToDay(dayWithHotels);
-                allDays.push(dayWithFlight);
+                const dayWithLondonArrival = await addLondonArrival(dayWithFlight);
+                allDays.push(dayWithLondonArrival);
                 
                 // Update trip progressively
                 const progressTrip: Trip = {
@@ -677,19 +782,20 @@ export default function Home() {
 
       const data = await response.json();
       
-      // Add hotels and flights to the regenerated day
+      // Add hotels, flights, and London arrival to the regenerated day
       const dayWithHotels = await addHotelsToDay(data.day);
       const dayWithFlight = await addFlightToDay(dayWithHotels);
+      const dayWithLondonArrival = await addLondonArrival(dayWithFlight);
       
       setTrip({
         ...trip,
-        days: trip.days.map((d, i) => i === currentDayIndex ? dayWithFlight : d)
+        days: trip.days.map((d, i) => i === currentDayIndex ? dayWithLondonArrival : d)
       });
       
       // Save to localStorage
       const updatedTrip = {
         ...trip,
-        days: trip.days.map((d, i) => i === currentDayIndex ? dayWithFlight : d)
+        days: trip.days.map((d, i) => i === currentDayIndex ? dayWithLondonArrival : d)
       };
       saveTrip(updatedTrip);
       
