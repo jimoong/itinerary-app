@@ -1,4 +1,4 @@
-import { TripDetails, Flight } from './types';
+import { TripDetails, Flight, Train } from './types';
 
 export const TRIP_DETAILS: TripDetails = {
   travelers: [
@@ -7,19 +7,19 @@ export const TRIP_DETAILS: TripDetails = {
     { role: "Girl", age: 9 },
     { role: "Boy", age: 6 }
   ],
-  pragueDates: {
+  parisDates: {
     start: "2025-11-21",
-    end: "2025-11-25"  // 5 days in Prague: Nov 21 (arrival), 22, 23, 24, 25 (departure morning)
+    end: "2025-11-25"  // 5 days in Paris: Nov 21 (arrival), 22, 23, 24, 25 (departure midday)
   },
   londonDates: {
     start: "2025-11-25",
     end: "2025-11-28"  // 4 days in London: Nov 25 (arrival afternoon), 26, 27, 28 (departure morning)
   },
-  pragueHotel: {
-    name: "Andaz Prague",
-    address: "Senovážné náměstí 976/31, 110 00 Nové Město, Czech Republic",
-    lat: 50.08548,
-    lng: 14.43034
+  parisHotel: {
+    name: "Hyatt Regency Paris Étoile",
+    address: "3 Place du Général Koenig, 75017 Paris, France",
+    lat: 48.88012,
+    lng: 2.28332
   },
   londonHotel: {
     name: "Hyatt Regency London Blackfriars",
@@ -30,31 +30,31 @@ export const TRIP_DETAILS: TripDetails = {
 };
 
 // Flight information for travel days
-export const FRANKFURT_TO_PRAGUE_FLIGHT: Flight = {
-  flightNumber: "EN 8958",
+export const SFO_TO_PARIS_FLIGHT: Flight = {
+  flightNumber: "UA990",
   departure: {
-    airport: "FRA",
-    city: "Frankfurt",
-    time: "17:00" // Frankfurt local time (CET)
+    airport: "SFO",
+    city: "San Francisco",
+    time: "18:30" // San Francisco local time (PST)
   },
   arrival: {
-    airport: "PRG",
-    city: "Prague",
-    time: "18:05" // Prague local time (CET) - same timezone
+    airport: "CDG",
+    city: "Paris",
+    time: "13:45" // Paris local time (CET) next day - 9hr flight + 9hr timezone
   }
 };
 
-export const PRAGUE_TO_LONDON_FLIGHT: Flight = {
-  flightNumber: "BA0855",
+export const PARIS_TO_LONDON_TRAIN: Train = {
+  trainNumber: "Eurostar",
   departure: {
-    airport: "PRG",
-    city: "Prague",
-    time: "14:50" // Prague local time (CET)
+    station: "Gare du Nord",
+    city: "Paris",
+    time: "12:30" // Paris local time (CET)
   },
   arrival: {
-    airport: "LHR",
+    station: "St Pancras International",
     city: "London",
-    time: "16:05" // London local time (GMT) - 1 hour behind Prague
+    time: "13:57" // London local time (GMT) - 2h 27min journey
   }
 };
 

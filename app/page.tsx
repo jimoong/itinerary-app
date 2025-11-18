@@ -227,7 +227,7 @@ async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
   }
   
   // Add hotel at start (with start time and transport to first place)
-  // Day 5: 09:00 (Prague departure), Day 9: 06:00 (London early departure), others: 08:00
+  // Day 5: 09:00 (Paris departure), Day 9: 06:00 (London early departure), others: 08:00
   const startTime = day.dayNumber === 9 ? '06:00' : (isDepartureFlightDay ? '09:00' : '08:00');
   const startHotel: Place = { 
     ...hotelPlace, 
@@ -287,28 +287,28 @@ async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
 
 // Add flight and airport transportation for Day 5 and Day 9
 async function addFlightToDay(day: DayItinerary): Promise<DayItinerary> {
-  // Only process Day 5 (Prague to London) or Day 9 (London to SFO)
-  if ((day.dayNumber !== 5 && day.dayNumber !== 9) || !day.flight) {
+  // Only process Day 5 (Paris to London train) or Day 9 (London to SFO flight)
+  if ((day.dayNumber !== 5 && day.dayNumber !== 9) || (!day.flight && !day.train)) {
     return day;
   }
 
-  // Check if flight is already added
+  // Check if airport/station is already added
   const hasFlightPlace = day.places.some(p => p.category === 'airport');
   if (hasFlightPlace) {
-    console.log(`[addFlightToDay] Day ${day.dayNumber} already has airport, skipping`);
+    console.log(`[addFlightToDay] Day ${day.dayNumber} already has airport/station, skipping`);
     return day; // Already processed
   }
 
-  console.log(`[addFlightToDay] Processing Day ${day.dayNumber} flight integration`);
+  console.log(`[addFlightToDay] Processing Day ${day.dayNumber} travel integration`);
   console.log('[addFlightToDay] Initial places:', day.places.map(p => `${p.name} (${p.category})`));
 
-  // Define airport based on day
-  const airport = day.dayNumber === 5 
+  // Define departure point based on day
+  const departurePoint = day.dayNumber === 5 
     ? {
-        lat: 50.1008,
-        lng: 14.2600,
-        name: 'Václav Havel Airport Prague',
-        address: 'Aviatická 1019/8, 161 00 Praha 6, Czechia'
+        lat: 48.88108,
+        lng: 2.35504,
+        name: 'Gare du Nord',
+        address: '18 Rue de Dunkerque, 75010 Paris, France'
       }
     : {
         lat: 51.4700,
@@ -333,15 +333,15 @@ async function addFlightToDay(day: DayItinerary): Promise<DayItinerary> {
     );
   }
 
-  // Calculate route from hotel to airport
-  const hotelToAirportRoute = await calculateSmartRoute(
+  // Calculate route from hotel to departure point (airport or station)
+  const hotelToDepartureRoute = await calculateSmartRoute(
     { lat: day.hotel.lat, lng: day.hotel.lng },
-    { lat: airport.lat, lng: airport.lng }
+    { lat: departurePoint.lat, lng: departurePoint.lng }
   );
 
   // If route calculation failed, return day as-is
-  if (!hotelToAirportRoute) {
-    console.error('Failed to calculate route from hotel to airport');
+  if (!hotelToDepartureRoute) {
+    console.error('Failed to calculate route from hotel to departure point');
     return day;
   }
 
@@ -360,9 +360,9 @@ async function addFlightToDay(day: DayItinerary): Promise<DayItinerary> {
     };
   }
 
-  // Define checkout and airport times based on day
+  // Define checkout and departure times based on day
   const checkoutTime = day.dayNumber === 5 ? '11:00' : '08:00';
-  const airportArrivalTime = day.dayNumber === 5 ? '12:00' : '09:30';
+  const departureArrivalTime = day.dayNumber === 5 ? '11:30' : '09:30';
   
   // Add hotel checkout place
   const checkoutHotel: Place = {
@@ -376,30 +376,32 @@ async function addFlightToDay(day: DayItinerary): Promise<DayItinerary> {
     category: 'hotel',
     startTime: checkoutTime,
     transportToNext: {
-      mode: hotelToAirportRoute.mode,
-      duration: hotelToAirportRoute.duration,
-      distance: hotelToAirportRoute.distance
+      mode: hotelToDepartureRoute.mode,
+      duration: hotelToDepartureRoute.duration,
+      distance: hotelToDepartureRoute.distance
     }
   };
 
-  // Add airport place (final destination - no hotel after)
-  const airportPlace: Place = {
-    id: `airport-${day.dayNumber}`,
-    name: airport.name,
-    address: airport.address,
-    lat: airport.lat,
-    lng: airport.lng,
-    description: `Check-in for flight ${day.flight.flightNumber}`,
-    duration: 120, // 2 hours at airport before flight
+  // Add departure place (train station or airport - final destination, no hotel after)
+  const departurePlace: Place = {
+    id: `departure-${day.dayNumber}`,
+    name: departurePoint.name,
+    address: departurePoint.address,
+    lat: departurePoint.lat,
+    lng: departurePoint.lng,
+    description: day.dayNumber === 5 
+      ? `Check-in for Eurostar train ${day.train?.trainNumber}`
+      : `Check-in for flight ${day.flight?.flightNumber}`,
+    duration: day.dayNumber === 5 ? 60 : 120, // 1 hour for train, 2 hours for flight
     category: 'airport',
-    startTime: airportArrivalTime,
+    startTime: departureArrivalTime,
   };
 
-  // Add checkout hotel and airport at the end (no return hotel)
-  updatedPlaces.push(checkoutHotel, airportPlace);
+  // Add checkout hotel and departure point at the end (no return hotel)
+  updatedPlaces.push(checkoutHotel, departurePlace);
 
   console.log('[addFlightToDay] Final places:', updatedPlaces.map(p => `${p.name} (${p.category})`));
-  console.log('[addFlightToDay] ✅ Day 5 flight integration complete');
+  console.log(`[addFlightToDay] ✅ Day ${day.dayNumber} travel integration complete`);
 
   return {
     ...day,
@@ -407,9 +409,9 @@ async function addFlightToDay(day: DayItinerary): Promise<DayItinerary> {
   };
 }
 
-// Add Prague arrival airport for Day 1
-async function addPragueArrival(day: DayItinerary): Promise<DayItinerary> {
-  // Only process Day 1 (Prague arrival from Frankfurt)
+// Add Paris arrival airport for Day 1
+async function addParisArrival(day: DayItinerary): Promise<DayItinerary> {
+  // Only process Day 1 (Paris arrival from San Francisco)
   if (day.dayNumber !== 1) {
     return day;
   }
@@ -417,19 +419,19 @@ async function addPragueArrival(day: DayItinerary): Promise<DayItinerary> {
   // Check if airport arrival is already added
   const hasAirportArrival = day.places.some(p => p.category === 'airport');
   if (hasAirportArrival) {
-    console.log('[addPragueArrival] Day 1 already has airport arrival, skipping');
+    console.log('[addParisArrival] Day 1 already has airport arrival, skipping');
     return day;
   }
 
-  console.log('[addPragueArrival] Processing Day 1 Prague arrival');
-  console.log('[addPragueArrival] Initial places:', day.places.map(p => `${p.name} (${p.category})`));
+  console.log('[addParisArrival] Processing Day 1 Paris arrival');
+  console.log('[addParisArrival] Initial places:', day.places.map(p => `${p.name} (${p.category})`));
 
-  // Prague Airport (Václav Havel Airport Prague)
-  const pragueAirport = {
-    lat: 50.1008,
-    lng: 14.2600,
-    name: 'Václav Havel Airport Prague',
-    address: 'Aviatická 1019/8, 161 00 Praha 6, Czechia'
+  // Paris CDG Airport (Charles de Gaulle Airport)
+  const parisAirport = {
+    lat: 49.00972,
+    lng: 2.54778,
+    name: 'Charles de Gaulle Airport',
+    address: '95700 Roissy-en-France, France'
   };
 
   // Remove the start hotel (we'll add airport first, then hotel)
@@ -437,26 +439,26 @@ async function addPragueArrival(day: DayItinerary): Promise<DayItinerary> {
   
   // Calculate route from airport to hotel
   const airportToHotelRoute = await calculateSmartRoute(
-    { lat: pragueAirport.lat, lng: pragueAirport.lng },
+    { lat: parisAirport.lat, lng: parisAirport.lng },
     { lat: day.hotel.lat, lng: day.hotel.lng }
   );
 
   if (!airportToHotelRoute) {
-    console.error('[addPragueArrival] Failed to calculate route from airport to hotel');
+    console.error('[addParisArrival] Failed to calculate route from airport to hotel');
     return day;
   }
 
   // Add airport arrival place
   const airportArrival: Place = {
     id: `airport-arrival-${day.dayNumber}`,
-    name: pragueAirport.name,
-    address: pragueAirport.address,
-    lat: pragueAirport.lat,
-    lng: pragueAirport.lng,
-    description: 'Arrived from Frankfurt (EN 8958)',
-    duration: 60, // 60 min for customs, baggage, etc.
+    name: parisAirport.name,
+    address: parisAirport.address,
+    lat: parisAirport.lat,
+    lng: parisAirport.lng,
+    description: 'Arrived from San Francisco (UA990)',
+    duration: 90, // 90 min for customs, baggage, etc. (international long-haul)
     category: 'airport',
-    startTime: '18:05', // Flight arrival time
+    startTime: '13:45', // Flight arrival time
     transportToNext: {
       mode: airportToHotelRoute.mode,
       duration: airportToHotelRoute.duration,
@@ -484,7 +486,7 @@ async function addPragueArrival(day: DayItinerary): Promise<DayItinerary> {
     description: 'Hotel check-in',
     duration: 30, // 30 min for check-in
     category: 'hotel',
-    startTime: '19:15', // Estimated arrival at hotel (18:05 + 60 min + transport)
+    startTime: '15:30', // Estimated arrival at hotel (13:45 + 90 min + transport)
     transportToNext: hotelToFirstRoute ? {
       mode: hotelToFirstRoute.mode,
       duration: hotelToFirstRoute.duration,
@@ -495,8 +497,8 @@ async function addPragueArrival(day: DayItinerary): Promise<DayItinerary> {
   // Build final places array: airport → hotel → activities → end hotel
   const updatedPlaces = [airportArrival, hotelCheckIn, ...placesWithoutStartHotel];
 
-  console.log('[addPragueArrival] Final places:', updatedPlaces.map(p => `${p.name} (${p.category})`));
-  console.log('[addPragueArrival] ✅ Day 1 Prague arrival complete');
+  console.log('[addParisArrival] Final places:', updatedPlaces.map(p => `${p.name} (${p.category})`));
+  console.log('[addParisArrival] ✅ Day 1 Paris arrival complete');
 
   return {
     ...day,
@@ -504,9 +506,9 @@ async function addPragueArrival(day: DayItinerary): Promise<DayItinerary> {
   };
 }
 
-// Add London arrival airport for Day 6
+// Add London arrival for Day 6 (Eurostar from Paris)
 async function addLondonArrival(day: DayItinerary): Promise<DayItinerary> {
-  // Only process Day 6 (London arrival from Prague)
+  // Only process Day 6 (London arrival from Paris via Eurostar)
   if (day.dayNumber !== 6) {
     return day;
   }
@@ -521,43 +523,43 @@ async function addLondonArrival(day: DayItinerary): Promise<DayItinerary> {
   console.log('[addLondonArrival] Processing Day 6 London arrival');
   console.log('[addLondonArrival] Initial places:', day.places.map(p => `${p.name} (${p.category})`));
 
-  // London Heathrow Airport
-  const heathrowAirport = {
-    lat: 51.4700,
-    lng: -0.4543,
-    name: 'London Heathrow Airport',
-    address: 'Longford TW6, United Kingdom'
+  // St Pancras International (Eurostar arrival from Paris)
+  const stPancrasStation = {
+    lat: 51.5309,
+    lng: -0.1260,
+    name: 'St Pancras International',
+    address: 'Euston Rd, London N1C 4QP, United Kingdom'
   };
 
-  // Remove the start hotel (we'll add airport first, then hotel)
+  // Remove the start hotel (we'll add station first, then hotel)
   let placesWithoutStartHotel = day.places.filter(p => !(p.category === 'hotel' && p.id.includes('start')));
   
-  // Calculate route from airport to hotel
-  const airportToHotelRoute = await calculateSmartRoute(
-    { lat: heathrowAirport.lat, lng: heathrowAirport.lng },
+  // Calculate route from station to hotel
+  const stationToHotelRoute = await calculateSmartRoute(
+    { lat: stPancrasStation.lat, lng: stPancrasStation.lng },
     { lat: day.hotel.lat, lng: day.hotel.lng }
   );
 
-  if (!airportToHotelRoute) {
-    console.error('[addLondonArrival] Failed to calculate route from airport to hotel');
+  if (!stationToHotelRoute) {
+    console.error('[addLondonArrival] Failed to calculate route from station to hotel');
     return day;
   }
 
-  // Add airport arrival place
-  const airportArrival: Place = {
-    id: `airport-arrival-${day.dayNumber}`,
-    name: heathrowAirport.name,
-    address: heathrowAirport.address,
-    lat: heathrowAirport.lat,
-    lng: heathrowAirport.lng,
-    description: 'Arrived from Prague (BA0855)',
-    duration: 90, // 90 min for customs, baggage, etc.
-    category: 'airport',
-    startTime: '16:05', // Flight arrival time
+  // Add train arrival place
+  const trainArrival: Place = {
+    id: `train-arrival-${day.dayNumber}`,
+    name: stPancrasStation.name,
+    address: stPancrasStation.address,
+    lat: stPancrasStation.lat,
+    lng: stPancrasStation.lng,
+    description: 'Arrived from Paris (Eurostar)',
+    duration: 30, // 30 min for disembarkation, baggage
+    category: 'airport', // Using 'airport' category for consistency
+    startTime: '13:57', // Train arrival time
     transportToNext: {
-      mode: airportToHotelRoute.mode,
-      duration: airportToHotelRoute.duration,
-      distance: airportToHotelRoute.distance
+      mode: stationToHotelRoute.mode,
+      duration: stationToHotelRoute.duration,
+      distance: stationToHotelRoute.distance
     }
   };
 
@@ -581,7 +583,7 @@ async function addLondonArrival(day: DayItinerary): Promise<DayItinerary> {
     description: 'Hotel check-in',
     duration: 30, // 30 min for check-in
     category: 'hotel',
-    startTime: '18:00', // Estimated arrival at hotel
+    startTime: '14:45', // Estimated arrival at hotel (13:57 + 30 min + transport)
     transportToNext: hotelToFirstRoute ? {
       mode: hotelToFirstRoute.mode,
       duration: hotelToFirstRoute.duration,
@@ -589,8 +591,8 @@ async function addLondonArrival(day: DayItinerary): Promise<DayItinerary> {
     } : undefined
   };
 
-  // Build final places array: airport → hotel → activities → end hotel
-  const updatedPlaces = [airportArrival, hotelCheckIn, ...placesWithoutStartHotel];
+  // Build final places array: train station → hotel → activities → end hotel
+  const updatedPlaces = [trainArrival, hotelCheckIn, ...placesWithoutStartHotel];
 
   console.log('[addLondonArrival] Final places:', updatedPlaces.map(p => `${p.name} (${p.category})`));
   console.log('[addLondonArrival] ✅ Day 6 London arrival complete');
@@ -647,15 +649,15 @@ export default function Home() {
         const daysWithHotels = await Promise.all(
           savedTrip.days.map(day => addHotelsToDay(day))
         );
-        // Add flights, Prague arrival, and London arrival
+        // Add flights, Paris arrival, and London arrival
         const daysWithFlights = await Promise.all(
           daysWithHotels.map(day => addFlightToDay(day))
         );
-        const daysWithPragueArrival = await Promise.all(
-          daysWithFlights.map(day => addPragueArrival(day))
+        const daysWithParisArrival = await Promise.all(
+          daysWithFlights.map(day => addParisArrival(day))
         );
         const daysWithLondonArrival = await Promise.all(
-          daysWithPragueArrival.map(day => addLondonArrival(day))
+          daysWithParisArrival.map(day => addLondonArrival(day))
         );
         const tripWithHotels = {
           ...savedTrip,
@@ -767,13 +769,13 @@ export default function Home() {
         const daysWithFlights = await Promise.all(
           daysWithHotels.map((day: DayItinerary) => addFlightToDay(day))
         );
-        // Add Prague arrival to Day 1
-        const daysWithPragueArrival = await Promise.all(
-          daysWithFlights.map((day: DayItinerary) => addPragueArrival(day))
+        // Add Paris arrival to Day 1
+        const daysWithParisArrival = await Promise.all(
+          daysWithFlights.map((day: DayItinerary) => addParisArrival(day))
         );
         // Add London arrival to Day 6
         const daysWithLondonArrival = await Promise.all(
-          daysWithPragueArrival.map((day: DayItinerary) => addLondonArrival(day))
+          daysWithParisArrival.map((day: DayItinerary) => addLondonArrival(day))
         );
         
         const newTrip: Trip = {
@@ -830,11 +832,11 @@ export default function Home() {
               if (event.type === 'day') {
                 console.log(`📅 Received day ${event.progress.current}/${event.progress.total}`);
                 
-                // Add hotels, flights, Prague arrival, and London arrival to the day
+                // Add hotels, flights, Paris arrival, and London arrival to the day
                 const dayWithHotels = await addHotelsToDay(event.day);
                 const dayWithFlight = await addFlightToDay(dayWithHotels);
-                const dayWithPragueArrival = await addPragueArrival(dayWithFlight);
-                const dayWithLondonArrival = await addLondonArrival(dayWithPragueArrival);
+                const dayWithParisArrival = await addParisArrival(dayWithFlight);
+                const dayWithLondonArrival = await addLondonArrival(dayWithParisArrival);
                 allDays.push(dayWithLondonArrival);
                 
                 // Update trip progressively
@@ -930,11 +932,11 @@ export default function Home() {
 
       const data = await response.json();
       
-      // Add hotels, flights, Prague arrival, and London arrival to the regenerated day
+      // Add hotels, flights, Paris arrival, and London arrival to the regenerated day
       const dayWithHotels = await addHotelsToDay(data.day);
       const dayWithFlight = await addFlightToDay(dayWithHotels);
-      const dayWithPragueArrival = await addPragueArrival(dayWithFlight);
-      const dayWithLondonArrival = await addLondonArrival(dayWithPragueArrival);
+      const dayWithParisArrival = await addParisArrival(dayWithFlight);
+      const dayWithLondonArrival = await addLondonArrival(dayWithParisArrival);
       
       setTrip({
         ...trip,

@@ -37,13 +37,28 @@ export interface Flight {
   };
 }
 
+export interface Train {
+  trainNumber: string;
+  departure: {
+    station: string;
+    city: string;
+    time: string; // e.g., "12:30"
+  };
+  arrival: {
+    station: string;
+    city: string;
+    time: string;
+  };
+}
+
 export interface DayItinerary {
   date: string; // ISO date string
   dayNumber: number;
-  city: string; // "Prague" or "London"
+  city: string; // "Paris" or "London"
   hotel: Hotel;
   places: Place[];
   flight?: Flight; // Optional flight information for travel days
+  train?: Train; // Optional train information for travel days
 }
 
 export interface Traveler {
@@ -60,7 +75,7 @@ export interface Trip {
 
 export interface TripDetails {
   travelers: Traveler[];
-  pragueDates: {
+  parisDates: {
     start: string;
     end: string;
   };
@@ -68,7 +83,7 @@ export interface TripDetails {
     start: string;
     end: string;
   };
-  pragueHotel: Hotel;
+  parisHotel: Hotel;
   londonHotel: Hotel;
 }
 

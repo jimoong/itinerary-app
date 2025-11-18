@@ -1,6 +1,6 @@
 import { DayItinerary, Place, TripDetails } from './types';
 import { callAI } from './aiProvider';
-import { FRANKFURT_TO_PRAGUE_FLIGHT, PRAGUE_TO_LONDON_FLIGHT, LONDON_TO_SFO_FLIGHT } from './constants';
+import { SFO_TO_PARIS_FLIGHT, PARIS_TO_LONDON_TRAIN, LONDON_TO_SFO_FLIGHT } from './constants';
 
 // Helper function to clean JSON response from markdown code blocks
 function cleanJsonResponse(content: string): string {
@@ -104,11 +104,11 @@ export async function generateDayItinerary(
   let city: string;
   
   if (dayNumber <= 5) {
-    // Prague days 1-5: Nov 21-25
-    const pragueStart = new Date(details.pragueDates.start);
-    pragueStart.setDate(pragueStart.getDate() + (dayNumber - 1));
-    date = pragueStart.toISOString().split('T')[0];
-    city = 'Prague';
+    // Paris days 1-5: Nov 21-25
+    const parisStart = new Date(details.parisDates.start);
+    parisStart.setDate(parisStart.getDate() + (dayNumber - 1));
+    date = parisStart.toISOString().split('T')[0];
+    city = 'Paris';
   } else {
     // London days 6-9: Nov 25-28
     const londonStart = new Date(details.londonDates.start);
@@ -117,11 +117,11 @@ export async function generateDayItinerary(
     city = 'London';
   }
   
-  const hotel = city === 'Prague' ? details.pragueHotel : details.londonHotel;
+  const hotel = city === 'Paris' ? details.parisHotel : details.londonHotel;
 
   // Determine if this is arrival or departure day
-  const isFirstDayInCity = (city === 'Prague' && dayNumber === 1) || (city === 'London' && dayNumber === 6);
-  const isLastDayInCity = (city === 'Prague' && dayNumber === 5) || (city === 'London' && dayNumber === 9);
+  const isFirstDayInCity = (city === 'Paris' && dayNumber === 1) || (city === 'London' && dayNumber === 6);
+  const isLastDayInCity = (city === 'Paris' && dayNumber === 5) || (city === 'London' && dayNumber === 9);
   
   // Adjust time windows
   let startTime = '09:00';
@@ -140,7 +140,7 @@ export async function generateDayItinerary(
 
   const dayContext = isFirstDayInCity ? `This is the ARRIVAL day in ${city}.` : 
                      isLastDayInCity ? `This is the DEPARTURE day from ${city}.` :
-                     `This is day ${dayNumber - (city === 'London' ? 5 : 0)} of ${city === 'Prague' ? 5 : 4} in ${city}.`;
+                     `This is day ${dayNumber - (city === 'London' ? 5 : 0)} of ${city === 'Paris' ? 5 : 4} in ${city}.`;
 
   const avoidPlaces = previousPlaces && previousPlaces.length > 0 
     ? `\n\nIMPORTANT: DO NOT suggest these places as they were visited on previous days:\n${previousPlaces.join('\n')}`
@@ -150,51 +150,43 @@ export async function generateDayItinerary(
   let flightDayConstraints = '';
   
   if (dayNumber === 1) {
-    // Day 1: Prague arrival evening
+    // Day 1: Paris arrival afternoon
     flightDayConstraints = `
 
-⚠️ PRAGUE ARRIVAL DAY CONSTRAINTS FOR DAY 1:
-- Arrived on flight EN 8958 from Frankfurt at 18:05 (6:05 PM)
-- After customs, baggage, and transport to hotel: arrive at hotel around 19:15-19:30
-- This is an ARRIVAL day with very limited evening time
-- ONLY suggest Prague evening activities from 19:45 to 21:30
-- Suggest 1-2 light evening activities near Andaz Prague hotel
-- Focus on: dinner near hotel, short evening walk to Old Town Square (nearby)
-- Keep activities relaxed and close to hotel after travel day
-- NO time-consuming activities - just settling in and first impressions
-- All activities must have start times AFTER 19:45
+⚠️ PARIS ARRIVAL DAY CONSTRAINTS FOR DAY 1:
+- Arrived on flight UA990 from San Francisco at 13:45 (1:45 PM)
+- After customs, baggage, and RER/taxi to hotel: arrive at hotel around 15:30-16:00
+- This is an ARRIVAL day but with afternoon/evening time available
+- Suggest 2-3 light activities from 16:30 to 21:30
+- Focus on: nearby walk to Eiffel Tower (close to hotel), dinner near hotel
+- Keep activities relaxed after long-haul flight (jet lag)
+- All activities must have start times AFTER 16:30
 `;
   } else if (dayNumber === 5) {
-    // Day 5: Prague departure ONLY (London arrival is Day 6)
+    // Day 5: Paris departure ONLY (London arrival is Day 6)
     flightDayConstraints = `
 
-⚠️ CRITICAL FLIGHT DAY CONSTRAINTS FOR DAY 5 (Prague Departure ONLY):
-- This is PRAGUE ONLY - DO NOT suggest any London activities
-- Flight BA0855 departs Prague (PRG) at 14:50
-- Must arrive at airport by 12:50 (2 hours before departure)
-- Transportation from hotel to airport: ~45 minutes (leave hotel by 12:00)
-- Hotel checkout time: 11:30
-- ONLY suggest PRAGUE morning activities from 09:00 to 11:00 (2 hours MAXIMUM)
-- All activities MUST be in PRAGUE, within 10-15 minutes walking from Andaz Prague hotel
-- Suggest ONLY 1-2 quick PRAGUE activities (breakfast at nearby Prague cafe, quick Prague landmark)
-- NO time-consuming activities (museums, shows, etc.)
-- Focus on: Prague breakfast spots, quick Prague photo opportunities, last-minute Prague shopping
-- CRITICAL: All suggested places MUST be in Prague, Czech Republic
+⚠️ PARIS DEPARTURE DAY CONSTRAINTS FOR DAY 5:
+- Eurostar train to London departs at 12:30 from Gare du Nord
+- Must check out of hotel by 11:00 AM
+- Must arrive at Gare du Nord by 11:30 (1 hour before departure for customs/security)
+- Morning activities ONLY from 08:00 to 10:30
+- Suggest ONLY 1 quick activity (early breakfast at hotel or nearby café)
+- NO sightseeing - focus on breakfast and final packing
+- This is a morning departure day with train travel
 `;
   } else if (dayNumber === 6) {
-    // Day 6: London arrival evening
+    // Day 6: London arrival afternoon
     flightDayConstraints = `
 
 ⚠️ LONDON ARRIVAL DAY CONSTRAINTS FOR DAY 6:
-- Arrived on flight BA0855 from Prague at 16:05 (4:05 PM)
-- After customs, baggage, and transport to hotel: arrive at hotel around 18:00-18:30
-- This is an ARRIVAL day with limited evening time
-- ONLY suggest London evening activities from 18:45 to 21:30
-- Suggest 1-2 light evening activities near Hyatt Regency London Blackfriars
-- Focus on: dinner near hotel, short evening walk, nearby pub
-- Keep activities relaxed and close to hotel after travel day
-- NO time-consuming activities - just settling in
-- All activities must have start times AFTER 18:45
+- Arrived on Eurostar train from Paris at 13:57 (1:57 PM)
+- After transport to hotel: arrive at hotel around 14:45-15:00
+- This is an ARRIVAL day with afternoon/evening time available
+- Suggest 2-3 activities from 15:30 to 21:30
+- Focus on: nearby attractions, dinner near hotel, evening walk
+- Keep first day relaxed after train journey
+- All activities must have start times AFTER 15:30
 `;
   } else if (dayNumber === 9) {
     // Day 9: London departure
@@ -221,7 +213,7 @@ Trip Details:
 - City: ${city}
 - Staying at: ${hotel.name}
 - Family: Dad (46), Mom (39), Girl (9), Boy (6)
-- Season: Late November (sunset around 16:30 in Prague, 16:00 in London)
+- Season: Late November (sunset around 17:00 in Paris, 16:00 in London)
 
 Requirements:
 - Suggest ${numActivities} DIFFERENT family-friendly activities/places suitable for children aged 6 and 9
@@ -244,22 +236,25 @@ CRITICAL - DO NOT SUGGEST TRANSPORTATION AS ACTIVITIES:
 - Transportation between places will be calculated automatically
 - Focus ONLY on actual destinations and activities
 
-PRAGUE-SPECIFIC RECOMMENDATIONS (if applicable):
-- Prague Castle area: Include Toy Museum for kids
-- Old Town Square: Astronomical Clock (watch figurines move on the hour)
-- Charles Bridge: Street performers and artists
-- Black Light Theatre: Non-verbal visual performance (perfect for kids!)
-- Traditional Czech puppet shows (marionettes)
-- Petřín Hill: Take the funicular/cable car up (kids love it!)
-- Trdelník (sweet pastry): Popular street snack kids enjoy
-- Christmas markets (if open): Magical atmosphere in Old Town Square
-- Evening activities: Night views from Charles Bridge looking at Prague Castle
+PARIS-SPECIFIC RECOMMENDATIONS (if applicable):
+- Eiffel Tower: Book skip-the-line tickets, go at sunset
+- Louvre Museum: Focus on highlights (Mona Lisa, Egyptian wing) - kids love mummies
+- Arc de Triomphe: Climb to top for panoramic views
+- Jardin du Luxembourg: Playground, puppet theater, toy sailboats in pond
+- Disneyland Paris: Full day trip (30min train from city center)
+- Seine River Cruise: Evening boat ride with city lights
+- Musée Grévin: Wax museum (interactive for kids)
+- Champs-Élysées: Christmas lights and decorations
+- Crêpes and macarons: Kid-friendly French treats
+- Montmartre: Sacré-Cœur, artists' square, funicular ride
 
-PRAGUE CLUSTERING EXAMPLES:
-- Cluster 1 (Old Town): Old Town Square → Astronomical Clock → Charles Bridge (all walkable)
-- Cluster 2 (Castle Hill): Take tram to Prague Castle → Toy Museum → St. Vitus Cathedral (walkable area)
-- Cluster 3 (Lesser Town): Petřín Hill → Lennon Wall → nearby cafes (walkable area)
-- Use trams/metro between clusters, walk within clusters
+PARIS CLUSTERING EXAMPLES:
+- Cluster 1 (Eiffel Area): Metro → Eiffel Tower → Trocadéro Gardens → Seine cruise (walkable)
+- Cluster 2 (Louvre/Tuileries): Metro → Louvre Museum → Tuileries Garden → lunch nearby (walkable)
+- Cluster 3 (Montmartre): Metro → Sacré-Cœur → Place du Tertre → crêpe café (walkable)
+- Cluster 4 (Latin Quarter): Metro → Notre-Dame area → Luxembourg Gardens → toy sailboats (walkable)
+- Cluster 5 (Champs-Élysées): Metro → Arc de Triomphe → Champs-Élysées walk → Christmas lights (walkable)
+- Use metro between clusters, walk within clusters
 
 LONDON-SPECIFIC RECOMMENDATIONS (if applicable):
 - Natural History Museum or Science Museum: Interactive exhibits for kids
@@ -279,11 +274,11 @@ LONDON CLUSTERING EXAMPLES:
 - Use tube/bus between clusters, walk within clusters
 
 Kid-Friendly Tips:
-- Prioritize interactive experiences (cable cars, puppet shows, musicals, hands-on museums)
-- Include fun snacks (Trdelník in Prague, fish & chips in London)
+- Prioritize interactive experiences (funiculars, boat rides, musicals, hands-on museums)
+- Include fun snacks (crêpes and macarons in Paris, fish & chips in London)
 - Plan breaks with playgrounds or parks
-- Consider non-verbal entertainment (puppet shows, Black Light Theatre, musicals)
-- Include "magical" experiences (Christmas markets, castle night views, theatre)
+- Consider non-verbal entertainment (puppet shows, wax museums, musicals)
+- Include "magical" experiences (Eiffel Tower at night, Christmas lights, theatre)
 
 Transport Guidelines:
 - Walking: if distance is < 1km
@@ -355,11 +350,11 @@ Return ONLY a valid JSON object with this exact structure:
         places
       };
       
-      // Add flight information for travel days
+      // Add flight/train information for travel days
       if (dayNumber === 1) {
-        itinerary.flight = FRANKFURT_TO_PRAGUE_FLIGHT;
+        itinerary.flight = SFO_TO_PARIS_FLIGHT;
       } else if (dayNumber === 5) {
-        itinerary.flight = PRAGUE_TO_LONDON_FLIGHT;
+        itinerary.train = PARIS_TO_LONDON_TRAIN;
       } else if (dayNumber === 9) {
         itinerary.flight = LONDON_TO_SFO_FLIGHT;
       }
@@ -454,13 +449,13 @@ export async function regenerateSinglePlace(
   console.log('regenerateSinglePlace called with:', { dayNumber, placeIndex, placesCount: currentPlaces.length });
   
   // Determine city based on day number
-  const city = dayNumber <= 5 ? 'Prague' : 'London';
+  const city = dayNumber <= 5 ? 'Paris' : 'London';
   let date: string;
   
   if (dayNumber <= 5) {
-    const pragueStart = new Date(details.pragueDates.start);
-    pragueStart.setDate(pragueStart.getDate() + (dayNumber - 1));
-    date = pragueStart.toISOString().split('T')[0];
+    const parisStart = new Date(details.parisDates.start);
+    parisStart.setDate(parisStart.getDate() + (dayNumber - 1));
+    date = parisStart.toISOString().split('T')[0];
   } else {
     const londonStart = new Date(details.londonDates.start);
     londonStart.setDate(londonStart.getDate() + (dayNumber - 6));
@@ -518,14 +513,14 @@ CRITICAL - MUST BE A SPECIFIC PLACE:
 - DO NOT suggest transportation activities like "Walk to", "Stroll", "Travel to"
 - Must be an actual destination with a real address and coordinates
 
-${city === 'Prague' ? `
-PRAGUE ALTERNATIVES (choose ONE that's NOT in the avoid list):
-- Museums: National Museum, Toy Museum, Kafka Museum, Museum of Decorative Arts
-- Activities: Petřín Tower (funicular ride), Puppet shows, Black Light Theatre, River cruise
-- Food: Lokál (traditional Czech), Café Louvre, U Fleků (brewery)
-- Landmarks: Vyšehrad, Dancing House, Powder Tower, National Theatre
-- Parks: Letná Park, Kampa Island, Riegrovy Sady
-- Markets: Havelská Market, Náplavka Farmers Market
+${city === 'Paris' ? `
+PARIS ALTERNATIVES (choose ONE that's NOT in the avoid list):
+- Museums: Louvre, Musée d'Orsay, Musée Grévin (wax museum), Rodin Museum
+- Activities: Eiffel Tower, Arc de Triomphe, Seine cruise, Montmartre funicular
+- Food: Angelina (hot chocolate), Café de Flore, traditional crêperies, bistros
+- Landmarks: Notre-Dame area, Sacré-Cœur, Champs-Élysées, Luxembourg Gardens
+- Parks: Tuileries Garden, Luxembourg Gardens, Trocadéro Gardens
+- Markets: Marché Bastille, Marché des Enfants Rouges
 ` : `
 LONDON ALTERNATIVES (choose ONE that's NOT in the avoid list):
 - Museums: Natural History Museum, Science Museum, British Museum, V&A Museum
@@ -627,200 +622,22 @@ function generateFallbackItinerary(
   city: string,
   hotel: any
 ): DayItinerary {
-  const isFirstDayInCity = (city === 'Prague' && dayNumber === 1) || (city === 'London' && dayNumber === 6);
-  const isLastDayInCity = (city === 'Prague' && dayNumber === 5) || (city === 'London' && dayNumber === 9);
+  const isFirstDayInCity = (city === 'Paris' && dayNumber === 1) || (city === 'London' && dayNumber === 6);
+  const isLastDayInCity = (city === 'Paris' && dayNumber === 5) || (city === 'London' && dayNumber === 9);
   
-  const pragueActivitiesByDay: { [key: number]: Place[] } = {
+  const parisActivitiesByDay: { [key: number]: Place[] } = {
     1: [ // Nov 21 - Arrival day - afternoon/evening only
       {
         id: `${dayNumber}-0`,
-        name: 'Old Town Square',
-        address: 'Staroměstské nám., 110 00 Prague, Czech Republic',
-        lat: 50.0875,
-        lng: 14.4213,
-        description: 'Fairy tale atmosphere with colorful buildings and Christmas market preparations. Watch the Astronomical Clock figurines move on the hour!',
-        duration: 120,
-        category: 'landmark',
-        startTime: '14:30',
-        kidsRating: 'Magical first impression! Kids will love the moving clock figurines and warm Trdelník pastries.',
-        transportToNext: {
-          mode: 'walk',
-          duration: 10,
-          distance: '0.7 km'
-        }
-      },
-      {
-        id: `${dayNumber}-1`,
-        name: 'Café Louvre',
-        address: 'Národní 22, 110 00 Prague, Czech Republic',
-        lat: 50.0817,
-        lng: 14.4169,
-        description: 'Historic café with family-friendly atmosphere and traditional Czech dishes.',
+        name: 'Eiffel Tower',
+        address: 'Champ de Mars, 5 Avenue Anatole France, 75007 Paris, France',
+        lat: 48.8584,
+        lng: 2.2945,
+        description: 'Iconic Paris landmark. Walk around Trocadéro Gardens for best photo spots and let kids run around.',
         duration: 90,
-        category: 'restaurant',
+        category: 'landmark',
         startTime: '17:00',
-        kidsRating: 'Cozy indoor setting perfect for jet-lagged kids, with hot chocolate and pastries.'
-      }
-    ],
-    2: [ // Nov 22 - Full day
-      {
-        id: `${dayNumber}-0`,
-        name: 'Prague Castle & Toy Museum',
-        address: 'Hradčany, 119 08 Prague 1, Czech Republic',
-        lat: 50.0903,
-        lng: 14.4004,
-        description: 'Historic castle complex with stunning views. MUST visit the Toy Museum inside the castle - antique toys from centuries past!',
-        duration: 210,
-        category: 'museum',
-        startTime: '09:00',
-        kidsRating: 'The Toy Museum is a hidden gem! Kids ages 6-9 love seeing vintage toys and the castle guards.',
-        transportToNext: {
-          mode: 'walk',
-          duration: 15,
-          distance: '1.2 km'
-        }
-      },
-      {
-        id: `${dayNumber}-1`,
-        name: 'U Zlaté studně Restaurant',
-        address: 'U Zlaté studně 166/4, 118 00 Prague, Czech Republic',
-        lat: 50.0887,
-        lng: 14.4026,
-        description: 'Family-friendly restaurant with castle views and traditional Czech cuisine.',
-        duration: 90,
-        category: 'restaurant',
-        startTime: '12:30',
-        kidsRating: 'Kid-friendly menu with schnitzel and dumplings. Great views to keep everyone entertained.',
-        transportToNext: {
-          mode: 'tram',
-          duration: 12,
-          distance: '1.8 km'
-        }
-      },
-      {
-        id: `${dayNumber}-2`,
-        name: 'Traditional Czech Marionette Theatre',
-        address: 'Žatecká 1, 110 00 Prague, Czech Republic',
-        lat: 50.0899,
-        lng: 14.4189,
-        description: 'Authentic puppet show experience. Czech Republic is the home of marionette theatre!',
-        duration: 90,
-        category: 'entertainment',
-        startTime: '16:00',
-        kidsRating: 'Perfect evening activity! Visual storytelling that 6 and 9 year olds can follow without language barriers.',
-        transportToNext: {
-          mode: 'walk',
-          duration: 8,
-          distance: '0.6 km'
-        }
-      },
-      {
-        id: `${dayNumber}-3`,
-        name: 'Old Town Square Evening',
-        address: 'Staroměstské nám., 110 00 Prague, Czech Republic',
-        lat: 50.0875,
-        lng: 14.4213,
-        description: 'Return for magical evening atmosphere with lights and possibly Christmas market opening.',
-        duration: 60,
-        category: 'landmark',
-        startTime: '18:00',
-        kidsRating: 'Evening lights transform the square into a winter wonderland. Try Trdelník (sweet pastry)!'
-      }
-    ],
-    3: [ // Nov 23 - Full day
-      {
-        id: `${dayNumber}-0`,
-        name: 'Astronomical Clock & Old Town',
-        address: 'Staroměstské nám. 1, 110 00 Prague, Czech Republic',
-        lat: 50.0870,
-        lng: 14.4208,
-        description: 'Watch the famous clock\'s figurines move at the top of the hour. Time your visit for the hourly show!',
-        duration: 60,
-        category: 'landmark',
-        startTime: '10:00',
-        kidsRating: 'Kids are mesmerized by the moving apostles and skeleton! Arrive 5 minutes early for best views.',
-        transportToNext: {
-          mode: 'walk',
-          duration: 8,
-          distance: '0.5 km'
-        }
-      },
-      {
-        id: `${dayNumber}-1`,
-        name: 'Charles Bridge',
-        address: 'Karlův most, 110 00 Prague, Czech Republic',
-        lat: 50.0865,
-        lng: 14.4114,
-        description: 'Iconic medieval bridge with street performers, artists, and stunning views of Prague Castle.',
-        duration: 90,
-        category: 'landmark',
-        startTime: '11:00',
-        kidsRating: 'Street artists, musicians, and the statues\' legends captivate young imaginations!',
-        transportToNext: {
-          mode: 'walk',
-          duration: 5,
-          distance: '0.3 km'
-        }
-      },
-      {
-        id: `${dayNumber}-2`,
-        name: 'Kampa Park Restaurant',
-        address: 'Na Kampě 8b, 118 00 Prague, Czech Republic',
-        lat: 50.0856,
-        lng: 14.4090,
-        description: 'Riverside dining with views of Charles Bridge. Family-friendly with outdoor seating in good weather.',
-        duration: 90,
-        category: 'restaurant',
-        startTime: '13:00',
-        kidsRating: 'Kids can watch swans and boats while eating. Pasta and pizza available for picky eaters.',
-        transportToNext: {
-          mode: 'metro',
-          duration: 20,
-          distance: '2.5 km'
-        }
-      },
-      {
-        id: `${dayNumber}-3`,
-        name: 'Black Light Theatre',
-        address: 'Národní 25, 110 00 Prague, Czech Republic',
-        lat: 50.0818,
-        lng: 14.4164,
-        description: 'TOP RECOMMENDATION! Non-verbal visual theatre using UV light, fluorescent costumes, and black backgrounds. Stunning visual spectacle.',
-        duration: 90,
-        category: 'entertainment',
-        startTime: '17:00',
-        kidsRating: 'PERFECT for ages 6-9! No language needed - pure visual magic with glowing objects "floating" in darkness. Unforgettable!'
-      }
-    ],
-    4: [ // Nov 24 - Full day
-      {
-        id: `${dayNumber}-0`,
-        name: 'Petřín Hill & Lookout Tower',
-        address: 'Petřínské sady, 118 00 Prague 1, Czech Republic',
-        lat: 50.0838,
-        lng: 14.3972,
-        description: 'Take the funicular railway up! Mini Eiffel Tower with panoramic city views. Mirror maze is also great for kids.',
-        duration: 180,
-        category: 'entertainment',
-        startTime: '09:00',
-        kidsRating: 'The funicular ride itself is an adventure! Tower climb + mirror maze = double fun for kids.',
-        transportToNext: {
-          mode: 'tram',
-          duration: 15,
-          distance: '2.0 km'
-        }
-      },
-      {
-        id: `${dayNumber}-1`,
-        name: 'Lokál Dlouhááá',
-        address: 'Dlouhá 33, 110 00 Prague, Czech Republic',
-        lat: 50.0899,
-        lng: 14.4264,
-        description: 'Traditional Czech pub with family atmosphere. Famous for fresh Pilsner and authentic Czech food.',
-        duration: 90,
-        category: 'restaurant',
-        startTime: '12:30',
-        kidsRating: 'Casual atmosphere where kids can be kids. Try Czech goulash and svíčková (beef in cream sauce).',
+        kidsRating: 'First sight of the Eiffel Tower is magical! Kids love watching it sparkle at night.',
         transportToNext: {
           mode: 'walk',
           duration: 10,
@@ -828,47 +645,30 @@ function generateFallbackItinerary(
         }
       },
       {
-        id: `${dayNumber}-2`,
-        name: 'Charles Bridge Evening Walk',
-        address: 'Karlův most, 110 00 Prague, Czech Republic',
-        lat: 50.0865,
-        lng: 14.4114,
-        description: 'Final Prague evening - walk the bridge at dusk to see Prague Castle illuminated. Bring warm drinks!',
-        duration: 60,
-        category: 'landmark',
-        startTime: '16:00',
-        kidsRating: 'Magical finale! The lit-up castle looks like a fairy tale. Perfect photo opportunity for the family.',
-        transportToNext: {
-          mode: 'walk',
-          duration: 12,
-          distance: '0.9 km'
-        }
-      },
-      {
-        id: `${dayNumber}-3`,
-        name: 'Wenceslas Square',
-        address: 'Václavské nám., 110 00 Prague, Czech Republic',
-        lat: 50.0813,
-        lng: 14.4266,
-        description: 'Evening stroll through the main boulevard with shops and Christmas decorations.',
-        duration: 60,
-        category: 'landmark',
-        startTime: '17:30',
-        kidsRating: 'Bustling atmosphere with street performers and holiday lights.'
-      }
-    ],
-    5: [ // Nov 25 - Departure day - morning only
-      {
-        id: `${dayNumber}-0`,
-        name: 'Municipal House Café',
-        address: 'nám. Republiky 5, 111 21 Prague, Czech Republic',
-        lat: 50.0877,
-        lng: 14.4277,
-        description: 'Stunning Art Nouveau building for farewell brunch. Ornate interiors and excellent pastries.',
+        id: `${dayNumber}-1`,
+        name: 'Café de l\'Homme',
+        address: '17 Place du Trocadéro, 75016 Paris, France',
+        lat: 48.8622,
+        lng: 2.2879,
+        description: 'Restaurant with stunning Eiffel Tower views. Perfect for first dinner in Paris.',
         duration: 90,
         category: 'restaurant',
+        startTime: '19:00',
+        kidsRating: 'Kids can watch the Eiffel Tower light show while eating. Family-friendly menu available.'
+      }
+    ],
+    2: [ // Nov 22 - Full day
+      {
+        id: `${dayNumber}-0`,
+        name: 'Louvre Museum',
+        address: 'Rue de Rivoli, 75001 Paris, France',
+        lat: 48.8606,
+        lng: 2.3376,
+        description: 'World-famous museum. Focus on highlights: Mona Lisa, Egyptian mummies, and Venus de Milo. Kids love the mummy section!',
+        duration: 180,
+        category: 'museum',
         startTime: '09:00',
-        kidsRating: 'Like dining in a palace! Kids will remember the beautiful ceilings and chandeliers.',
+        kidsRating: 'Egyptian mummies fascinate kids! Get there early to avoid crowds at Mona Lisa.',
         transportToNext: {
           mode: 'walk',
           duration: 5,
@@ -877,15 +677,210 @@ function generateFallbackItinerary(
       },
       {
         id: `${dayNumber}-1`,
-        name: 'Powder Tower',
-        address: 'nám. Republiky 5, 110 00 Prague, Czech Republic',
-        lat: 50.0872,
-        lng: 14.4283,
-        description: 'Quick visit to Gothic tower before departure. Brief but memorable.',
-        duration: 45,
+        name: 'Angelina Paris',
+        address: '226 Rue de Rivoli, 75001 Paris, France',
+        lat: 48.8651,
+        lng: 2.3281,
+        description: 'Famous tearoom known for hot chocolate and pastries. Perfect lunch break for families.',
+        duration: 75,
+        category: 'restaurant',
+        startTime: '13:00',
+        kidsRating: 'Kids love the thick hot chocolate and Mont Blanc dessert!',
+        transportToNext: {
+          mode: 'metro',
+          duration: 15,
+          distance: '2.1 km'
+        }
+      },
+      {
+        id: `${dayNumber}-2`,
+        name: 'Arc de Triomphe',
+        address: 'Place Charles de Gaulle, 75008 Paris, France',
+        lat: 48.8738,
+        lng: 2.2950,
+        description: 'Iconic monument. Climb to top for panoramic Paris views. Kids enjoy counting the 12 avenues radiating from the roundabout!',
+        duration: 90,
         category: 'landmark',
-        startTime: '11:00',
-        kidsRating: 'Short climb with great views - perfect last Prague moment before heading to airport.'
+        startTime: '15:00',
+        kidsRating: 'Climbing the 284 steps is an adventure! Amazing views of Eiffel Tower and Champs-Élysées.',
+        transportToNext: {
+          mode: 'walk',
+          duration: 12,
+          distance: '1.0 km'
+        }
+      },
+      {
+        id: `${dayNumber}-3`,
+        name: 'Champs-Élysées Christmas Lights',
+        address: 'Avenue des Champs-Élysées, 75008 Paris, France',
+        lat: 48.8698,
+        lng: 2.3078,
+        description: 'Stroll down the famous avenue decorated with Christmas lights. Window shopping and festive atmosphere.',
+        duration: 90,
+        category: 'landmark',
+        startTime: '17:00',
+        kidsRating: 'Magical Christmas lights! Stop at Ladurée for colorful macarons that kids will love.'
+      }
+    ],
+    3: [ // Nov 23 - Full day
+      {
+        id: `${dayNumber}-0`,
+        name: 'Montmartre & Sacré-Cœur',
+        address: 'Parvis du Sacré-Cœur, 75018 Paris, France',
+        lat: 48.8867,
+        lng: 2.3431,
+        description: 'Charming hilltop neighborhood. Take funicular up to Sacré-Cœur basilica for stunning Paris views.',
+        duration: 120,
+        category: 'landmark',
+        startTime: '09:00',
+        kidsRating: 'Funicular ride is fun! Artists in Place du Tertre draw portraits. Amazing views from the dome.',
+        transportToNext: {
+          mode: 'walk',
+          duration: 8,
+          distance: '0.4 km'
+        }
+      },
+      {
+        id: `${dayNumber}-1`,
+        name: 'Le Consulat',
+        address: '18 Rue Norvins, 75018 Paris, France',
+        lat: 48.8866,
+        lng: 2.3403,
+        description: 'Historic Montmartre café with traditional French cuisine. Charming atmosphere.',
+        duration: 90,
+        category: 'restaurant',
+        startTime: '12:00',
+        kidsRating: 'Classic French bistro with crêpes and croques-monsieurs that kids enjoy.',
+        transportToNext: {
+          mode: 'metro',
+          duration: 18,
+          distance: '3.2 km'
+        }
+      },
+      {
+        id: `${dayNumber}-2`,
+        name: 'Jardin du Luxembourg',
+        address: '6th arrondissement, 75006 Paris, France',
+        lat: 48.8462,
+        lng: 2.3372,
+        description: 'Beautiful gardens with playground, puppet theater, and toy sailboats to rent for the pond!',
+        duration: 120,
+        category: 'park',
+        startTime: '14:30',
+        kidsRating: 'Kids LOVE the toy sailboats! Playground, pony rides, and puppet shows available.',
+        transportToNext: {
+          mode: 'metro',
+          duration: 12,
+          distance: '1.8 km'
+        }
+      },
+      {
+        id: `${dayNumber}-3`,
+        name: 'Seine River Cruise',
+        address: 'Port de la Bourdonnais, 75007 Paris, France',
+        lat: 48.8606,
+        lng: 2.2978,
+        description: 'Evening boat cruise passing illuminated landmarks. See Paris from the water!',
+        duration: 75,
+        category: 'entertainment',
+        startTime: '17:30',
+        kidsRating: 'Magical evening cruise! See Eiffel Tower, Notre-Dame, and Louvre lit up from the river.'
+      }
+    ],
+    4: [ // Nov 24 - Full day
+      {
+        id: `${dayNumber}-0`,
+        name: 'Musée Grévin',
+        address: '10 Boulevard Montmartre, 75009 Paris, France',
+        lat: 48.8718,
+        lng: 2.3422,
+        description: 'Wax museum with lifelike figures of celebrities, historical figures, and French icons. Interactive and fun for kids!',
+        duration: 120,
+        category: 'museum',
+        startTime: '09:30',
+        kidsRating: 'Kids love taking photos with wax figures! More engaging than traditional museums.',
+        transportToNext: {
+          mode: 'metro',
+          duration: 15,
+          distance: '2.3 km'
+        }
+      },
+      {
+        id: `${dayNumber}-1`,
+        name: 'Café de Flore',
+        address: '172 Boulevard Saint-Germain, 75006 Paris, France',
+        lat: 48.8542,
+        lng: 2.3320,
+        description: 'Historic café in Saint-Germain-des-Prés. Classic Parisian atmosphere.',
+        duration: 75,
+        category: 'restaurant',
+        startTime: '12:30',
+        kidsRating: 'Try French onion soup and croque-madame. Hot chocolate for kids!',
+        transportToNext: {
+          mode: 'walk',
+          duration: 10,
+          distance: '0.7 km'
+        }
+      },
+      {
+        id: `${dayNumber}-2`,
+        name: 'Notre-Dame Area',
+        address: 'Île de la Cité, 75004 Paris, France',
+        lat: 48.8530,
+        lng: 2.3499,
+        description: 'Explore the island, see Notre-Dame exterior (under restoration), visit nearby shops.',
+        duration: 90,
+        category: 'landmark',
+        startTime: '14:30',
+        kidsRating: 'Walk along the Seine, feed birds, explore the charming island streets.',
+        transportToNext: {
+          mode: 'metro',
+          duration: 12,
+          distance: '1.5 km'
+        }
+      },
+      {
+        id: `${dayNumber}-3`,
+        name: 'Eiffel Tower Evening',
+        address: 'Champ de Mars, 5 Avenue Anatole France, 75007 Paris, France',
+        lat: 48.8584,
+        lng: 2.2945,
+        description: 'Final Paris evening at the Eiffel Tower. Watch the sparkling light show at night!',
+        duration: 90,
+        category: 'landmark',
+        startTime: '17:30',
+        kidsRating: 'Magical farewell! The tower sparkles for 5 minutes every hour after sunset. Unforgettable!'
+      }
+    ],
+    5: [ // Nov 25 - Departure day - morning only
+      {
+        id: `${dayNumber}-0`,
+        name: 'Café de la Paix',
+        address: '5 Place de l\'Opéra, 75009 Paris, France',
+        lat: 48.8708,
+        lng: 2.3314,
+        description: 'Historic grand café near Opéra Garnier. Perfect for farewell breakfast.',
+        duration: 75,
+        category: 'restaurant',
+        startTime: '09:00',
+        kidsRating: 'Elegant setting for final Parisian breakfast. Croissants and hot chocolate!',
+        transportToNext: {
+          mode: 'walk',
+          duration: 5,
+          distance: '0.2 km'
+        }
+      },
+      {
+        id: `${dayNumber}-1`,
+        name: 'Opéra Garnier Exterior',
+        address: 'Place de l\'Opéra, 75009 Paris, France',
+        lat: 48.8720,
+        lng: 2.3318,
+        description: 'Quick photo stop at the stunning opera house before heading to train station.',
+        duration: 20,
+        category: 'landmark',
+        startTime: '10:30',
+        kidsRating: 'Beautiful architecture for final Paris photos before Eurostar!'
       }
     ]
   };
@@ -1068,8 +1063,8 @@ function generateFallbackItinerary(
     ]
   };
 
-  const places = city === 'Prague' 
-    ? pragueActivitiesByDay[dayNumber] || []
+  const places = city === 'Paris' 
+    ? parisActivitiesByDay[dayNumber] || []
     : londonActivitiesByDay[dayNumber] || [];
 
   const itinerary: DayItinerary = {
@@ -1080,12 +1075,11 @@ function generateFallbackItinerary(
     places
   };
   
-  // Add flight information for day 5 (Prague to London travel day)
-  // Add flight information for travel days
+  // Add flight/train information for travel days
   if (dayNumber === 1) {
-    itinerary.flight = FRANKFURT_TO_PRAGUE_FLIGHT;
+    itinerary.flight = SFO_TO_PARIS_FLIGHT;
   } else if (dayNumber === 5) {
-    itinerary.flight = PRAGUE_TO_LONDON_FLIGHT;
+    itinerary.train = PARIS_TO_LONDON_TRAIN;
   } else if (dayNumber === 9) {
     itinerary.flight = LONDON_TO_SFO_FLIGHT;
   }
