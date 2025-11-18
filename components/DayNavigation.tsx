@@ -139,6 +139,25 @@ export default function DayNavigation({
                   </div>
                 </button>
 
+                {/* Regenerate from Now (Smart) */}
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    onSmartRegenerate();
+                  }}
+                  className="w-full px-4 py-3 text-left hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors flex items-center gap-3 border-b border-gray-100 dark:border-slate-700"
+                >
+                  <div>
+                    <div className="font-medium text-blue-600 dark:text-blue-400">
+                      Regenerate from Now
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                      Generate remaining trip based on current time
+                    </div>
+                  </div>
+                </button>
+
+                {/* Regenerate All Days */}
                 <button
                   onClick={() => {
                     setShowMenu(false);

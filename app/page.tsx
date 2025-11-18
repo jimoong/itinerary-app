@@ -731,17 +731,26 @@ export default function Home() {
     }
   }, [trip, currentDayIndex]);
 
-  const generateAllDays = async () => {
+  const generateAllDays = async (smartMode: boolean = false) => {
     setIsLoading(true);
     
     // Try streaming first, fallback to non-streaming if it fails
     let useStreaming = true;
     
     try {
-      console.log('🚀 Starting streaming itinerary generation...');
+      if (smartMode) {
+        console.log('⏰ Starting SMART streaming itinerary generation (from current time)...');
+      } else {
+        console.log('🚀 Starting streaming itinerary generation...');
+      }
+      
       const response = await fetch('/api/generate-itinerary-stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          smartRegeneration: smartMode,
+          existingDays: smartMode && trip ? trip.days : undefined
+        }),
       });
 
       console.log('Response status:', response.status);
@@ -1131,7 +1140,19 @@ export default function Home() {
     if (confirm('Are you sure you want to reset and regenerate all days? This cannot be undone.')) {
       clearTrip();
       setCurrentDayIndex(0);
-      await generateAllDays();
+      await generateAllDays(false);
+    }
+  };
+
+  const handleSmartRegenerate = async () => {
+    if (!trip) {
+      // If no trip exists, just do a full generation
+      await generateAllDays(false);
+      return;
+    }
+    
+    if (confirm('Regenerate remaining days from current time onwards? Past days will be preserved.')) {
+      await generateAllDays(true);
     }
   };
 
@@ -1365,6 +1386,7 @@ export default function Home() {
         canGoPrevious={currentDayIndex > 0}
         canGoNext={currentDayIndex < trip.days.length - 1}
         onHardRefresh={handleResetAll}
+        onSmartRegenerate={handleSmartRegenerate}
         onRegenerateCurrentDay={regenerateCurrentDay}
         onLoadVersion={(loadedTrip) => {
           setTrip(loadedTrip);
