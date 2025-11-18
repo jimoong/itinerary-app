@@ -180,11 +180,11 @@ export async function generateDayItinerary(
 - Keep activities relaxed and close to hotel after travel day
 - NO time-consuming activities - just settling in
 `;
-  } else if (dayNumber === 8) {
-    // Day 8: London departure
+  } else if (dayNumber === 9) {
+    // Day 9: London departure
     flightDayConstraints = `
 
-⚠️ CRITICAL FLIGHT DAY CONSTRAINTS FOR DAY 8 (London Departure):
+⚠️ CRITICAL FLIGHT DAY CONSTRAINTS FOR DAY 9 (London Departure):
 - Flight VS 19 departs London (LHR) at 11:30 to San Francisco (SFO)
 - Must arrive at airport by 09:30 (2 hours before departure for international flight)
 - Transportation from hotel to airport: ~45-60 minutes (leave hotel by 08:30)
@@ -316,7 +316,7 @@ Return ONLY a valid JSON object with this exact structure:
       // Add flight information for travel days
       if (dayNumber === 5) {
         itinerary.flight = PRAGUE_TO_LONDON_FLIGHT;
-      } else if (dayNumber === 8) {
+      } else if (dayNumber === 9) {
         itinerary.flight = LONDON_TO_SFO_FLIGHT;
       }
       
@@ -1040,7 +1040,7 @@ function generateFallbackItinerary(
   // Add flight information for travel days
   if (dayNumber === 5) {
     itinerary.flight = PRAGUE_TO_LONDON_FLIGHT;
-  } else if (dayNumber === 8) {
+  } else if (dayNumber === 9) {
     itinerary.flight = LONDON_TO_SFO_FLIGHT;
   }
   

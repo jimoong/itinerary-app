@@ -1,7 +1,7 @@
 import { Trip } from './types';
 
 const STORAGE_KEY = 'itinerary_trip_data';
-const STORAGE_VERSION = '6'; // Version 6 for Day 5 Prague-only + Day 6 London arrival
+const STORAGE_VERSION = '7'; // Version 7 for Day 9 (not Day 8) London departure fix
 
 export function saveTrip(trip: Trip): void {
   if (typeof window !== 'undefined') {
