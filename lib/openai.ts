@@ -449,9 +449,10 @@ export async function regenerateSinglePlace(
   dayNumber: number,
   placeIndex: number,
   currentPlaces: Place[],
-  details: TripDetails
+  details: TripDetails,
+  additionalAvoidPlaces?: string[]
 ): Promise<Place> {
-  console.log('regenerateSinglePlace called with:', { dayNumber, placeIndex, placesCount: currentPlaces.length });
+  console.log('regenerateSinglePlace called with:', { dayNumber, placeIndex, placesCount: currentPlaces.length, additionalAvoidPlaces: additionalAvoidPlaces?.length || 0 });
   
   // Determine city based on day number
   const city = dayNumber <= 5 ? 'Paris' : 'London';
@@ -477,9 +478,12 @@ export async function regenerateSinglePlace(
   const nextPlace = placeIndex < currentPlaces.length - 1 ? currentPlaces[placeIndex + 1] : null;
   
   // Build list of places to avoid (all current places except the one we're replacing)
-  const placesToAvoid = currentPlaces
-    .filter((_, idx) => idx !== placeIndex)
-    .map(p => p.name);
+  const placesToAvoid = [
+    ...currentPlaces
+      .filter((_, idx) => idx !== placeIndex)
+      .map(p => p.name),
+    ...(additionalAvoidPlaces || [])
+  ];
 
   // Determine time constraints
   const suggestedStartTime = previousPlace 
