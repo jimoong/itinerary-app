@@ -124,7 +124,7 @@ export async function generateDayItinerary(
 
   // Determine if this is arrival or departure day
   const isFirstDayInCity = (city === 'Lisbon' && dayNumber === 1) || (city === 'London' && dayNumber === 6);
-  const isLastDayInCity = (city === 'Lisbon' && dayNumber === 5) || (city === 'London' && dayNumber === 9);
+  const isLastDayInCity = (city === 'Lisbon' && dayNumber === 5) || (city === 'London' && dayNumber === 10);
   
   // Adjust time windows
   let startTime = '09:00';
@@ -143,7 +143,7 @@ export async function generateDayItinerary(
 
   const dayContext = isFirstDayInCity ? `This is the ARRIVAL day in ${city}.` : 
                      isLastDayInCity ? `This is the DEPARTURE day from ${city}.` :
-                     `This is day ${dayNumber - (city === 'London' ? 5 : 0)} of ${city === 'Lisbon' ? 5 : 4} in ${city}.`;
+                     `This is day ${dayNumber - (city === 'London' ? 5 : 0)} of ${city === 'Lisbon' ? 5 : 5} in ${city}.`;
 
   const avoidPlaces = previousPlaces && previousPlaces.length > 0 
     ? `\n\n🚫 CRITICAL - PLACES ALREADY VISITED (ABSOLUTELY DO NOT REPEAT ANY OF THESE):\n${previousPlaces.map(p => `  ❌ ${p}`).join('\n')}\n\n⚠️ YOU MUST SUGGEST COMPLETELY DIFFERENT PLACES NOT IN THIS LIST.\n⚠️ Suggesting any place from this list will result in REJECTION.\n⚠️ Focus on VARIETY - each day should explore different neighborhoods and attraction types.\n⚠️ If previous days visited museums, focus on outdoor activities, landmarks, or food experiences today.\n`
@@ -200,16 +200,16 @@ export async function generateDayItinerary(
 - Keep first day relaxed after flight
 - All activities must have start times AFTER 16:30
 `;
-  } else if (dayNumber === 9) {
-    // Day 9: London departure
+  } else if (dayNumber === 10) {
+    // Day 10: London departure (Nov 29)
     flightDayConstraints = `
 
-⚠️ CRITICAL FLIGHT DAY CONSTRAINTS FOR DAY 9 (London Departure):
-- Flight VS 19 departs London (LHR) at 11:30 to San Francisco (SFO)
-- Must arrive at airport by 09:30 (2 hours before departure for international flight)
-- Transportation from hotel to airport: ~45-60 minutes (leave hotel by 08:30)
-- Hotel checkout time: 08:00
-- ONLY suggest activities from 06:00 to 07:45 (very limited time)
+⚠️ CRITICAL FLIGHT DAY CONSTRAINTS FOR DAY 10 (London Departure - Nov 29):
+- Flight departs London (LHR) at 11:00 to San Francisco (SFO)
+- Must arrive at airport by 09:00 (2 hours before departure for international flight)
+- Transportation from hotel to airport: ~45-60 minutes (leave hotel by 08:00)
+- Hotel checkout time: 07:30
+- ONLY suggest activities from 06:00 to 07:15 (very limited time)
 - Activities MUST be within hotel or 5 minutes walking distance
 - Suggest ONLY 1 quick activity (early breakfast at hotel or nearby cafe)
 - NO sightseeing - focus on breakfast and final packing
@@ -377,7 +377,7 @@ ${fixedSchedules.length > 0 ? `\n⚠️ REMINDER: Include the fixed schedule(s) 
         itinerary.flight = SFO_TO_LISBON_FLIGHT;
       } else if (dayNumber === 5) {
         itinerary.flight = LISBON_TO_LONDON_FLIGHT;
-      } else if (dayNumber === 9) {
+      } else if (dayNumber === 10) {
         itinerary.flight = LONDON_TO_SFO_FLIGHT;
       }
       
@@ -652,7 +652,7 @@ function generateFallbackItinerary(
   hotel: any
 ): DayItinerary {
   const isFirstDayInCity = (city === 'Lisbon' && dayNumber === 1) || (city === 'London' && dayNumber === 6);
-  const isLastDayInCity = (city === 'Lisbon' && dayNumber === 5) || (city === 'London' && dayNumber === 9);
+  const isLastDayInCity = (city === 'Lisbon' && dayNumber === 5) || (city === 'London' && dayNumber === 10);
   
   const lisbonActivitiesByDay: { [key: number]: Place[] } = {
     1: [ // Nov 21 - Arrival day - afternoon/evening only
@@ -1109,7 +1109,7 @@ function generateFallbackItinerary(
     itinerary.flight = SFO_TO_LISBON_FLIGHT;
   } else if (dayNumber === 5) {
     itinerary.flight = LISBON_TO_LONDON_FLIGHT;
-  } else if (dayNumber === 9) {
+  } else if (dayNumber === 10) {
     itinerary.flight = LONDON_TO_SFO_FLIGHT;
   }
   

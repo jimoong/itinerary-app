@@ -121,11 +121,11 @@ export async function POST(request: NextRequest) {
         let aiGeneratedCount = 0;
         let fallbackCount = 0;
 
-        for (let i = 1; i <= 9; i++) {
-          console.log(`\n--- Day ${i}/9 ---`);
+        for (let i = 1; i <= 10; i++) {
+          console.log(`\n--- Day ${i}/10 ---`);
           
           // Generate the day
-          const day = await generateDayItinerary(TRIP_DETAILS, i, 9, visitedPlaces);
+          const day = await generateDayItinerary(TRIP_DETAILS, i, 10, visitedPlaces);
           allDays.push(day);
           
           // Track AI vs fallback
@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
           const data = JSON.stringify({ 
             type: 'day', 
             day,
-            progress: { current: i, total: 9 }
+            progress: { current: i, total: 10 }
           });
           controller.enqueue(encoder.encode(`data: ${data}\n\n`));
           
@@ -183,7 +183,7 @@ export async function POST(request: NextRequest) {
             const data = JSON.stringify({ 
               type: 'day', 
               day: allDays[i],
-              progress: { current: i + 1, total: 9 }
+              progress: { current: i + 1, total: 10 }
             });
             controller.enqueue(encoder.encode(`data: ${data}\n\n`));
           }

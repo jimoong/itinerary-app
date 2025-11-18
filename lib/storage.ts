@@ -1,7 +1,7 @@
 import { Trip } from './types';
 
 const STORAGE_KEY = 'itinerary_trip_data';
-const STORAGE_VERSION = '17'; // Version 17 for Lisbon (replaced Paris)
+const STORAGE_VERSION = '18'; // Version 18 for 10-day trip (Nov 28 full day, Nov 29 departure)
 const VERSIONS_KEY = 'itinerary_saved_versions';
 const MAX_SAVED_VERSIONS = 5; // Keep last 5 versions
 
@@ -134,7 +134,7 @@ export function loadTrip(): Trip | null {
           const trip = parsed.trip;
           
           // Validate the trip data
-          if (!trip.days || !Array.isArray(trip.days) || trip.days.length !== 9) {
+          if (!trip.days || !Array.isArray(trip.days) || trip.days.length !== 10) {
             console.warn('Invalid trip data: wrong number of days. Clearing...');
             clearTrip();
             return null;

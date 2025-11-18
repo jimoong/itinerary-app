@@ -13,7 +13,7 @@ export const TRIP_DETAILS: TripDetails = {
   },
   londonDates: {
     start: "2025-11-25",
-    end: "2025-11-29"  // 5 days in London: Nov 25 (arrival afternoon), 26, 27, 28, 29 (departure morning)
+    end: "2025-11-29"  // 5 days in London: Nov 25 (arrival afternoon), 26, 27, 28 (full day), 29 (departure morning)
   },
   lisbonHotel: {
     name: "Hyatt Regency Lisbon",
@@ -63,7 +63,7 @@ export const LONDON_TO_SFO_FLIGHT: Flight = {
   departure: {
     airport: "LHR",
     city: "London",
-    time: "11:00" // London local time (GMT) - morning departure
+    time: "11:00" // London local time (GMT) - Nov 29 morning departure
   },
   arrival: {
     airport: "SFO",

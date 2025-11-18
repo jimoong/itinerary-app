@@ -141,8 +141,8 @@ async function calculateSmartRoute(
 
 // Utility function to add hotel as first and last place in the itinerary
 async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
-  // Special handling for departure flight days (Day 5 and Day 9) - no return to hotel
-  const isDepartureFlightDay = day.dayNumber === 5 || day.dayNumber === 9;
+  // Special handling for departure flight days (Day 5 and Day 10) - no return to hotel
+  const isDepartureFlightDay = day.dayNumber === 5 || day.dayNumber === 10;
   
   // Special handling for arrival days (Day 1 and Day 6) - no start hotel (airport comes first)
   const isArrivalDay = day.dayNumber === 1 || day.dayNumber === 6;
@@ -227,8 +227,8 @@ async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
   }
   
   // Add hotel at start (with start time and transport to first place)
-  // Day 5: 09:00 (Paris departure), Day 9: 06:00 (London early departure), others: 08:00
-  const startTime = day.dayNumber === 9 ? '06:00' : (isDepartureFlightDay ? '09:00' : '08:00');
+  // Day 5: 09:00 (Lisbon departure), Day 10: 06:00 (London early departure), others: 08:00
+  const startTime = day.dayNumber === 10 ? '06:00' : (isDepartureFlightDay ? '09:00' : '08:00');
   const startHotel: Place = { 
     ...hotelPlace, 
     id: `hotel-start-${day.dayNumber}`, 
@@ -285,10 +285,10 @@ async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
   };
 }
 
-// Add flight and airport transportation for Day 5 and Day 9
+// Add flight and airport transportation for Day 5 and Day 10
 async function addFlightToDay(day: DayItinerary): Promise<DayItinerary> {
-  // Only process Day 5 (Lisbon to London flight) or Day 9 (London to SFO flight)
-  if ((day.dayNumber !== 5 && day.dayNumber !== 9) || !day.flight) {
+  // Only process Day 5 (Lisbon to London flight) or Day 10 (London to SFO flight)
+  if ((day.dayNumber !== 5 && day.dayNumber !== 10) || !day.flight) {
     return day;
   }
 
