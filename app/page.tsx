@@ -1300,12 +1300,17 @@ export default function Home() {
       {/* Bottom Navigation */}
       <DayNavigation
         currentDay={currentDay}
+        currentTrip={trip}
         onPrevious={() => setCurrentDayIndex(Math.max(0, currentDayIndex - 1))}
         onNext={() => setCurrentDayIndex(Math.min(trip.days.length - 1, currentDayIndex + 1))}
         canGoPrevious={currentDayIndex > 0}
         canGoNext={currentDayIndex < trip.days.length - 1}
         onHardRefresh={handleResetAll}
         onRegenerateCurrentDay={regenerateCurrentDay}
+        onLoadVersion={(loadedTrip) => {
+          setTrip(loadedTrip);
+          setCurrentDayIndex(0);
+        }}
         isRegenerating={isRegenerating}
       />
 

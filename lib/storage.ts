@@ -2,6 +2,16 @@ import { Trip } from './types';
 
 const STORAGE_KEY = 'itinerary_trip_data';
 const STORAGE_VERSION = '16'; // Version 16 for auto-replace duplicate locations
+const VERSIONS_KEY = 'itinerary_saved_versions';
+const MAX_SAVED_VERSIONS = 5; // Keep last 5 versions
+
+export interface SavedVersion {
+  id: string;
+  name: string;
+  timestamp: number;
+  trip: Trip;
+  version: string;
+}
 
 export function saveTrip(trip: Trip): void {
   if (typeof window !== 'undefined') {
@@ -11,6 +21,105 @@ export function saveTrip(trip: Trip): void {
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
   }
+}
+
+// Save a named version of the current trip
+export function saveVersion(trip: Trip, name?: string): string {
+  if (typeof window !== 'undefined') {
+    const versions = getSavedVersions();
+    const timestamp = Date.now();
+    const id = `version-${timestamp}`;
+    const defaultName = `Itinerary ${new Date(timestamp).toLocaleString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      hour: 'numeric', 
+      minute: '2-digit' 
+    })}`;
+    
+    const newVersion: SavedVersion = {
+      id,
+      name: name || defaultName,
+      timestamp,
+      trip,
+      version: STORAGE_VERSION
+    };
+    
+    // Add new version at the beginning
+    versions.unshift(newVersion);
+    
+    // Keep only MAX_SAVED_VERSIONS
+    const trimmedVersions = versions.slice(0, MAX_SAVED_VERSIONS);
+    
+    localStorage.setItem(VERSIONS_KEY, JSON.stringify(trimmedVersions));
+    console.log(`✅ Saved version: "${newVersion.name}"`);
+    
+    return id;
+  }
+  return '';
+}
+
+// Get all saved versions
+export function getSavedVersions(): SavedVersion[] {
+  if (typeof window !== 'undefined') {
+    const data = localStorage.getItem(VERSIONS_KEY);
+    if (data) {
+      try {
+        const versions = JSON.parse(data);
+        return Array.isArray(versions) ? versions : [];
+      } catch (error) {
+        console.error('Error parsing saved versions:', error);
+        return [];
+      }
+    }
+  }
+  return [];
+}
+
+// Load a specific version
+export function loadVersion(versionId: string): Trip | null {
+  const versions = getSavedVersions();
+  const version = versions.find(v => v.id === versionId);
+  
+  if (version) {
+    console.log(`📂 Loading version: "${version.name}"`);
+    // Save it as the current trip
+    saveTrip(version.trip);
+    return version.trip;
+  }
+  
+  console.warn(`Version ${versionId} not found`);
+  return null;
+}
+
+// Delete a specific version
+export function deleteVersion(versionId: string): boolean {
+  if (typeof window !== 'undefined') {
+    const versions = getSavedVersions();
+    const filteredVersions = versions.filter(v => v.id !== versionId);
+    
+    if (filteredVersions.length < versions.length) {
+      localStorage.setItem(VERSIONS_KEY, JSON.stringify(filteredVersions));
+      console.log(`🗑️ Deleted version: ${versionId}`);
+      return true;
+    }
+  }
+  return false;
+}
+
+// Rename a version
+export function renameVersion(versionId: string, newName: string): boolean {
+  if (typeof window !== 'undefined') {
+    const versions = getSavedVersions();
+    const version = versions.find(v => v.id === versionId);
+    
+    if (version) {
+      version.name = newName;
+      localStorage.setItem(VERSIONS_KEY, JSON.stringify(versions));
+      console.log(`✏️ Renamed version to: "${newName}"`);
+      return true;
+    }
+  }
+  return false;
 }
 
 export function loadTrip(): Trip | null {

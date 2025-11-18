@@ -1,29 +1,34 @@
 'use client';
 
-import { DayItinerary } from '@/lib/types';
+import { DayItinerary, Trip } from '@/lib/types';
 import { ChevronLeft, ChevronRight, RotateCcw, Calendar, CalendarRange } from 'lucide-react';
 import { format } from 'date-fns';
 import { useState, useRef, useEffect } from 'react';
+import VersionManager from './VersionManager';
 
 interface DayNavigationProps {
   currentDay: DayItinerary;
+  currentTrip: Trip | null;
   onPrevious: () => void;
   onNext: () => void;
   canGoPrevious: boolean;
   canGoNext: boolean;
   onHardRefresh: () => void;
   onRegenerateCurrentDay: () => void;
+  onLoadVersion: (trip: Trip) => void;
   isRegenerating?: boolean;
 }
 
 export default function DayNavigation({
   currentDay,
+  currentTrip,
   onPrevious,
   onNext,
   canGoPrevious,
   canGoNext,
   onHardRefresh,
   onRegenerateCurrentDay,
+  onLoadVersion,
   isRegenerating = false
 }: DayNavigationProps) {
   const [showMenu, setShowMenu] = useState(false);
@@ -93,6 +98,12 @@ export default function DayNavigation({
         </div>
 
         <div className="flex items-right gap-2 absolute right-6" ref={menuRef}>
+          {/* Version Manager */}
+          <VersionManager
+            currentTrip={currentTrip}
+            onLoadVersion={onLoadVersion}
+          />
+          
           <div className="relative">
             <button
               onClick={() => !isRegenerating && setShowMenu(!showMenu)}
