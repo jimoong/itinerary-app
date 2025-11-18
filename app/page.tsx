@@ -251,8 +251,12 @@ async function addFlightToDay(day: DayItinerary): Promise<DayItinerary> {
   // Check if flight is already added
   const hasFlightPlace = day.places.some(p => p.category === 'airport');
   if (hasFlightPlace) {
+    console.log('[addFlightToDay] Day 5 already has airport, skipping');
     return day; // Already processed
   }
+
+  console.log('[addFlightToDay] Processing Day 5 flight integration');
+  console.log('[addFlightToDay] Initial places:', day.places.map(p => `${p.name} (${p.category})`));
 
   // Prague Airport (Václav Havel Airport Prague)
   const pragueAirport = {
@@ -264,6 +268,7 @@ async function addFlightToDay(day: DayItinerary): Promise<DayItinerary> {
 
   // Remove any end hotel if it exists (shouldn't be there for Day 5)
   let placesWithoutEndHotel = day.places.filter(p => !(p.category === 'hotel' && p.id.includes('end')));
+  console.log('[addFlightToDay] After removing end hotel:', placesWithoutEndHotel.map(p => `${p.name} (${p.category})`));
 
   // Get the last place (should be the last activity)
   const lastPlace = placesWithoutEndHotel[placesWithoutEndHotel.length - 1];
@@ -337,6 +342,9 @@ async function addFlightToDay(day: DayItinerary): Promise<DayItinerary> {
 
   // Add checkout hotel and airport at the end (no return hotel)
   updatedPlaces.push(checkoutHotel, airportPlace);
+
+  console.log('[addFlightToDay] Final places:', updatedPlaces.map(p => `${p.name} (${p.category})`));
+  console.log('[addFlightToDay] ✅ Day 5 flight integration complete');
 
   return {
     ...day,
