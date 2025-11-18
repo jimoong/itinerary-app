@@ -1,6 +1,6 @@
 import { DayItinerary, Place, TripDetails } from './types';
 import { callAI } from './aiProvider';
-import { SFO_TO_PARIS_FLIGHT, PARIS_TO_LONDON_TRAIN, LONDON_TO_SFO_FLIGHT } from './constants';
+import { SFO_TO_LISBON_FLIGHT, LISBON_TO_LONDON_FLIGHT, LONDON_TO_SFO_FLIGHT } from './constants';
 
 // Helper function to clean JSON response from markdown code blocks
 function cleanJsonResponse(content: string): string {
@@ -104,11 +104,11 @@ export async function generateDayItinerary(
   let city: string;
   
   if (dayNumber <= 5) {
-    // Paris days 1-5: Nov 21-25
-    const parisStart = new Date(details.parisDates.start);
-    parisStart.setDate(parisStart.getDate() + (dayNumber - 1));
-    date = parisStart.toISOString().split('T')[0];
-    city = 'Paris';
+    // Lisbon days 1-5: Nov 21-25
+    const lisbonStart = new Date(details.lisbonDates.start);
+    lisbonStart.setDate(lisbonStart.getDate() + (dayNumber - 1));
+    date = lisbonStart.toISOString().split('T')[0];
+    city = 'Lisbon';
   } else {
     // London days 6-9: Nov 25-28
     const londonStart = new Date(details.londonDates.start);
@@ -117,11 +117,11 @@ export async function generateDayItinerary(
     city = 'London';
   }
   
-  const hotel = city === 'Paris' ? details.parisHotel : details.londonHotel;
+  const hotel = city === 'Lisbon' ? details.lisbonHotel : details.londonHotel;
 
   // Determine if this is arrival or departure day
-  const isFirstDayInCity = (city === 'Paris' && dayNumber === 1) || (city === 'London' && dayNumber === 6);
-  const isLastDayInCity = (city === 'Paris' && dayNumber === 5) || (city === 'London' && dayNumber === 9);
+  const isFirstDayInCity = (city === 'Lisbon' && dayNumber === 1) || (city === 'London' && dayNumber === 6);
+  const isLastDayInCity = (city === 'Lisbon' && dayNumber === 5) || (city === 'London' && dayNumber === 9);
   
   // Adjust time windows
   let startTime = '09:00';
@@ -140,7 +140,7 @@ export async function generateDayItinerary(
 
   const dayContext = isFirstDayInCity ? `This is the ARRIVAL day in ${city}.` : 
                      isLastDayInCity ? `This is the DEPARTURE day from ${city}.` :
-                     `This is day ${dayNumber - (city === 'London' ? 5 : 0)} of ${city === 'Paris' ? 5 : 4} in ${city}.`;
+                     `This is day ${dayNumber - (city === 'London' ? 5 : 0)} of ${city === 'Lisbon' ? 5 : 4} in ${city}.`;
 
   const avoidPlaces = previousPlaces && previousPlaces.length > 0 
     ? `\n\nIMPORTANT: DO NOT suggest these places as they were visited on previous days:\n${previousPlaces.join('\n')}`
@@ -150,20 +150,20 @@ export async function generateDayItinerary(
   let flightDayConstraints = '';
   
   if (dayNumber === 1) {
-    // Day 1: Paris arrival afternoon
+    // Day 1: Lisbon arrival afternoon
     flightDayConstraints = `
 
-⚠️ PARIS ARRIVAL DAY CONSTRAINTS FOR DAY 1:
-- Arrived on flight UA990 from San Francisco at 13:45 (1:45 PM)
-- After customs, baggage, and RER/taxi to hotel: arrive at hotel around 15:30-16:00
+⚠️ LISBON ARRIVAL DAY CONSTRAINTS FOR DAY 1:
+- Arrived on flight from San Francisco at 13:00 (1:00 PM) - placeholder time
+- After customs, baggage, and taxi to hotel: arrive at hotel around 15:00-15:30
 - This is an ARRIVAL day but with afternoon/evening time available
-- Suggest 2-3 light activities from 16:30 to 21:30
-- Focus on: nearby walk to Eiffel Tower (close to hotel), dinner near hotel
+- Suggest 2-3 light activities from 17:00 to 21:30
+- Focus on: nearby Belém area (close to hotel), dinner near hotel, evening walk
 - Keep activities relaxed after long-haul flight (jet lag)
-- All activities must have start times AFTER 16:30
+- All activities must have start times AFTER 17:00
 `;
   } else if (dayNumber === 5) {
-    // Day 5: Paris departure ONLY (London arrival is Day 6)
+    // Day 5: Lisbon departure ONLY (London arrival is Day 6)
     flightDayConstraints = `
 
 ⚠️ PARIS DEPARTURE DAY CONSTRAINTS FOR DAY 5:
@@ -180,13 +180,13 @@ export async function generateDayItinerary(
     flightDayConstraints = `
 
 ⚠️ LONDON ARRIVAL DAY CONSTRAINTS FOR DAY 6:
-- Arrived on Eurostar train from Paris at 13:57 (1:57 PM)
-- After transport to hotel: arrive at hotel around 14:45-15:00
+- Arrived on flight from Lisbon at 14:30 (2:30 PM) - placeholder time
+- After transport to hotel: arrive at hotel around 15:30-16:00
 - This is an ARRIVAL day with afternoon/evening time available
-- Suggest 2-3 activities from 15:30 to 21:30
+- Suggest 2-3 activities from 16:30 to 21:30
 - Focus on: nearby attractions, dinner near hotel, evening walk
-- Keep first day relaxed after train journey
-- All activities must have start times AFTER 15:30
+- Keep first day relaxed after flight
+- All activities must have start times AFTER 16:30
 `;
   } else if (dayNumber === 9) {
     // Day 9: London departure
@@ -213,7 +213,7 @@ Trip Details:
 - City: ${city}
 - Staying at: ${hotel.name}
 - Family: Dad (46), Mom (39), Girl (9), Boy (6)
-- Season: Late November (sunset around 17:00 in Paris, 16:00 in London)
+- Season: Late November (sunset around 17:30 in Lisbon, 16:00 in London)
 
 Requirements:
 - Suggest ${numActivities} DIFFERENT family-friendly activities/places suitable for children aged 6 and 9
@@ -236,27 +236,27 @@ CRITICAL - DO NOT SUGGEST TRANSPORTATION AS ACTIVITIES:
 - Transportation between places will be calculated automatically
 - Focus ONLY on actual destinations and activities
 
-PARIS-SPECIFIC RECOMMENDATIONS (if applicable):
-- Jardin du Luxembourg: BEST FOR AGES 6-9! Giant playground with zipline, climbing, trampolines (small fee). Add puppet theater and toy sailboats in pond
-- Musée d'Orsay: MUST-VISIT! Shorter & manageable. Kids love giant clock + animal sculptures. Impressionist art in beautiful railway station
-- Eiffel Tower: Go early! Kids love elevator ride and shaking walkways. Book skip-the-line tickets
-- Seine River Cruise: Do at NIGHT for lights! Warm indoor seats (weather-proof). Surprisingly fun for kids
-- Louvre Museum: 1.5-2 hours MAX! Focus on: Egyptian mummies, Greek sculptures, Winged Victory, Napoleon III apartments. Don't do full museum day
-- Montmartre Funicular: Kids LOVE this mini cable-car! Quick reward: crêpes at the top. Visit Sacré-Cœur and artists' square
-- Angelina Tea House: Over-the-top hot chocolate - kids think it's amazing!
-- Paris Aquarium (Trocadéro): Perfect rainy-day activity, near Eiffel Tower
-- Arc de Triomphe: Climb to top for panoramic views
-- Musée Grévin: Wax museum (interactive for kids)
-- Champs-Élysées: Christmas lights and decorations
+LISBON-SPECIFIC RECOMMENDATIONS (if applicable):
+- Oceanário de Lisboa: MUST-VISIT! One of world's best aquariums. Kids LOVE the giant central tank with sharks, rays, and ocean sunfish
+- Tram 28: BEST FOR KIDS! Historic yellow tram through narrow streets - like an amusement park ride. Goes through Alfama, Graça, and Baixa
+- Castle of São Jorge: Kids love exploring castle walls and peacocks roaming freely. Amazing views over Lisbon
+- Belém Tower: Iconic fortress on the water. Quick visit, great for photos
+- Jerónimos Monastery: UNESCO site with beautiful architecture. Keep visit short for kids
+- Pastéis de Belém: MUST-TRY! Original custard tarts (pastel de nata). Kids think they're amazing!
+- Elevador de Santa Justa: Historic elevator with viewing platform. Kids love the ride up
+- Time Out Market: Food hall with variety of options. Great for picky eaters
+- Parque das Nações: Modern waterfront area with cable car, riverside walk, and Oceanário
+- Lisbon Zoo: Great backup activity. Cable car ride through zoo is a highlight
+- Praça do Comércio: Grand waterfront square. Good for running around
+- Alfama district: Charming old neighborhood with narrow streets and viewpoints
 
-PARIS CLUSTERING EXAMPLES:
-- Cluster 1 (Eiffel/Trocadéro): Metro → Eiffel Tower (go early!) → Paris Aquarium → Seine night cruise (walkable)
-- Cluster 2 (Louvre/Angelina): Metro → Louvre (1.5-2hrs: mummies, sculptures) → Angelina hot chocolate → Tuileries Garden (walkable)
-- Cluster 3 (Orsay/Left Bank): Metro → Musée d'Orsay (giant clock!) → Seine walk → nearby café (walkable)
-- Cluster 4 (Montmartre): Metro → Montmartre funicular (kids love it!) → Sacré-Cœur → crêpes at top (walkable)
-- Cluster 5 (Luxembourg): Metro → Jardin du Luxembourg playground (BEST for kids 6-9: zipline, climbing!) → toy sailboats → puppet theater (walkable)
-- Cluster 6 (Champs-Élysées): Metro → Arc de Triomphe → Champs-Élysées walk → Christmas lights (walkable)
-- Use metro between clusters, walk within clusters
+LISBON CLUSTERING EXAMPLES:
+- Cluster 1 (Belém): Tram 15 → Jerónimos Monastery → Belém Tower → Pastéis de Belém (all walkable, 5-10min each)
+- Cluster 2 (Alfama): Tram 28 ride → Castle of São Jorge → explore Alfama streets → viewpoints (walkable/tram)
+- Cluster 3 (Parque das Nações): Metro → Oceanário de Lisboa → cable car ride → riverside walk (all walkable)
+- Cluster 4 (Downtown): Metro → Elevador de Santa Justa → Rossio Square → Time Out Market (metro/walk combo)
+- Cluster 5 (Chiado/Bairro Alto): Metro → Chiado shops → São Pedro de Alcântara viewpoint → nearby restaurants (walkable)
+- Use metro/tram between clusters, walk within clusters
 
 LONDON-SPECIFIC RECOMMENDATIONS (if applicable):
 - Natural History Museum or Science Museum: Interactive exhibits for kids
@@ -276,14 +276,14 @@ LONDON CLUSTERING EXAMPLES:
 - Use tube/bus between clusters, walk within clusters
 
 Kid-Friendly Tips for Ages 6 & 9:
-- BEST playground: Jardin du Luxembourg (zipline, trampolines, climbing - small fee worth it!)
+- BEST aquarium: Oceanário de Lisboa (one of world's best - kids are mesmerized!)
 - Museums: Keep visits SHORT (1.5-2 hours max). Focus on highlights kids enjoy
-- Funicular rides: Kids LOVE the Montmartre cable-car - instant fun!
-- Hot chocolate: Angelina Tea House is over-the-top amazing for kids
-- Seine cruise: Do at NIGHT with indoor seats (weather-proof, lights are magical)
-- Eiffel Tower: Go EARLY - kids love elevator and shaking walkways
-- Rainy day backup: Paris Aquarium at Trocadéro
-- Reward system: Crêpes after activities, toy sailboats at Luxembourg pond
+- Tram rides: Kids LOVE Tram 28 - it's like an amusement park ride through the city!
+- Custard tarts: Pastéis de Belém are a MUST-TRY - kids think they're amazing
+- Castle: São Jorge has peacocks roaming free - kids love chasing them
+- Elevators: Historic elevators and funiculars are instant fun for kids
+- Rainy day backup: Lisbon Zoo with cable car ride through the zoo
+- Reward system: Custard tarts after activities, gelato in Alfama
 
 Transport Guidelines:
 - Walking: if distance is < 1km
@@ -355,11 +355,11 @@ Return ONLY a valid JSON object with this exact structure:
         places
       };
       
-      // Add flight/train information for travel days
+      // Add flight information for travel days
       if (dayNumber === 1) {
-        itinerary.flight = SFO_TO_PARIS_FLIGHT;
+        itinerary.flight = SFO_TO_LISBON_FLIGHT;
       } else if (dayNumber === 5) {
-        itinerary.train = PARIS_TO_LONDON_TRAIN;
+        itinerary.flight = LISBON_TO_LONDON_FLIGHT;
       } else if (dayNumber === 9) {
         itinerary.flight = LONDON_TO_SFO_FLIGHT;
       }
@@ -455,13 +455,13 @@ export async function regenerateSinglePlace(
   console.log('regenerateSinglePlace called with:', { dayNumber, placeIndex, placesCount: currentPlaces.length, additionalAvoidPlaces: additionalAvoidPlaces?.length || 0 });
   
   // Determine city based on day number
-  const city = dayNumber <= 5 ? 'Paris' : 'London';
+  const city = dayNumber <= 5 ? 'Lisbon' : 'London';
   let date: string;
   
   if (dayNumber <= 5) {
-    const parisStart = new Date(details.parisDates.start);
-    parisStart.setDate(parisStart.getDate() + (dayNumber - 1));
-    date = parisStart.toISOString().split('T')[0];
+    const lisbonStart = new Date(details.lisbonDates.start);
+    lisbonStart.setDate(lisbonStart.getDate() + (dayNumber - 1));
+    date = lisbonStart.toISOString().split('T')[0];
   } else {
     const londonStart = new Date(details.londonDates.start);
     londonStart.setDate(londonStart.getDate() + (dayNumber - 6));
@@ -522,14 +522,14 @@ CRITICAL - MUST BE A SPECIFIC PLACE:
 - DO NOT suggest transportation activities like "Walk to", "Stroll", "Travel to"
 - Must be an actual destination with a real address and coordinates
 
-${city === 'Paris' ? `
-PARIS ALTERNATIVES (choose ONE that's NOT in the avoid list):
-- Museums: Musée d'Orsay (giant clock!), Louvre (1.5-2hrs: mummies, sculptures), Paris Aquarium (rainy day), Musée Grévin
-- Activities: Jardin du Luxembourg playground (BEST for kids 6-9!), Eiffel Tower (go early!), Montmartre funicular (kids love!), Seine night cruise
-- Food: Angelina hot chocolate (over-the-top!), crêperies, traditional bistros, Café de Flore
-- Landmarks: Notre-Dame area, Sacré-Cœur, Arc de Triomphe, Champs-Élysées
-- Parks: Luxembourg Gardens (zipline, toy sailboats), Tuileries Garden, Trocadéro Gardens
-- Markets: Marché Bastille, Marché des Enfants Rouges
+${city === 'Lisbon' ? `
+LISBON ALTERNATIVES (choose ONE that's NOT in the avoid list):
+- Museums: Oceanário de Lisboa (BEST for kids!), Museu da Marinha, Pavilhão do Conhecimento (science museum), Museu Nacional do Azulejo
+- Activities: Tram 28 ride (kids LOVE it!), Castle of São Jorge (peacocks!), Elevador de Santa Justa, cable car in Parque das Nações
+- Food: Pastéis de Belém (custard tarts!), Time Out Market, seafood restaurants, traditional Portuguese restaurants
+- Landmarks: Belém Tower, Jerónimos Monastery, Praça do Comércio, Alfama district viewpoints
+- Parks: Parque das Nações (waterfront), Jardim da Estrela, Parque Eduardo VII
+- Markets: Time Out Market, Feira da Ladra (flea market)
 ` : `
 LONDON ALTERNATIVES (choose ONE that's NOT in the avoid list):
 - Museums: Natural History Museum, Science Museum, British Museum, V&A Museum
@@ -631,53 +631,118 @@ function generateFallbackItinerary(
   city: string,
   hotel: any
 ): DayItinerary {
-  const isFirstDayInCity = (city === 'Paris' && dayNumber === 1) || (city === 'London' && dayNumber === 6);
-  const isLastDayInCity = (city === 'Paris' && dayNumber === 5) || (city === 'London' && dayNumber === 9);
+  const isFirstDayInCity = (city === 'Lisbon' && dayNumber === 1) || (city === 'London' && dayNumber === 6);
+  const isLastDayInCity = (city === 'Lisbon' && dayNumber === 5) || (city === 'London' && dayNumber === 9);
   
-  const parisActivitiesByDay: { [key: number]: Place[] } = {
+  const lisbonActivitiesByDay: { [key: number]: Place[] } = {
     1: [ // Nov 21 - Arrival day - afternoon/evening only
       {
         id: `${dayNumber}-0`,
-        name: 'Eiffel Tower',
-        address: 'Champ de Mars, 5 Avenue Anatole France, 75007 Paris, France',
-        lat: 48.8584,
-        lng: 2.2945,
-        description: 'Iconic Paris landmark. Walk around Trocadéro Gardens for best photo spots and let kids run around.',
+        name: 'Alfama District Walk',
+        address: 'Alfama, 1100 Lisbon, Portugal',
+        lat: 38.7131,
+        lng: -9.1288,
+        description: 'Explore Lisbon\'s oldest neighborhood with narrow streets and colorful tiles. Perfect first evening activity.',
         duration: 90,
         category: 'landmark',
-        startTime: '17:00',
-        kidsRating: 'First sight of the Eiffel Tower is magical! Kids love watching it sparkle at night.',
+        startTime: '17:30',
+        kidsRating: 'Kids love the winding streets and discovering hidden viewpoints!',
         transportToNext: {
           mode: 'walk',
-          duration: 10,
-          distance: '0.8 km'
+          duration: 8,
+          distance: '0.6 km'
         }
       },
       {
         id: `${dayNumber}-1`,
-        name: 'Café de l\'Homme',
-        address: '17 Place du Trocadéro, 75016 Paris, France',
-        lat: 48.8622,
-        lng: 2.2879,
-        description: 'Restaurant with stunning Eiffel Tower views. Perfect for first dinner in Paris.',
+        name: 'Chapitô à Mesa',
+        address: 'Costa do Castelo 7, 1100-179 Lisbon, Portugal',
+        lat: 38.7140,
+        lng: -9.1327,
+        description: 'Restaurant with stunning views over Lisbon. Perfect for first dinner with a view.',
         duration: 90,
         category: 'restaurant',
-        startTime: '19:00',
-        kidsRating: 'Kids can watch the Eiffel Tower light show while eating. Family-friendly menu available.'
+        startTime: '19:30',
+        kidsRating: 'Amazing sunset views! Family-friendly menu with Portuguese classics.'
       }
     ],
-    2: [ // Nov 22 - Full day
+    2: [ // Nov 22 - Full day - Belém area
       {
         id: `${dayNumber}-0`,
-        name: 'Louvre Museum',
-        address: 'Rue de Rivoli, 75001 Paris, France',
-        lat: 48.8606,
-        lng: 2.3376,
-        description: 'World-famous museum. Focus on highlights: Mona Lisa, Egyptian mummies, and Venus de Milo. Kids love the mummy section!',
-        duration: 180,
+        name: 'Jerónimos Monastery',
+        address: 'Praça do Império 1400-206, Lisbon, Portugal',
+        lat: 38.6979,
+        lng: -9.2061,
+        description: 'UNESCO World Heritage site with stunning Manueline architecture. Keep visit short for kids.',
+        duration: 90,
+        category: 'landmark',
+        startTime: '09:30',
+        kidsRating: 'Beautiful cloisters! Kids enjoy the detailed stone carvings.',
+        transportToNext: {
+          mode: 'walk',
+          duration: 8,
+          distance: '0.6 km'
+        }
+      },
+      {
+        id: `${dayNumber}-1`,
+        name: 'Belém Tower',
+        address: 'Av. Brasília, 1400-038 Lisbon, Portugal',
+        lat: 38.6916,
+        lng: -9.2160,
+        description: 'Iconic 16th-century fortress on the Tagus River. Quick visit, great for photos.',
+        duration: 60,
+        category: 'landmark',
+        startTime: '11:30',
+        kidsRating: 'Kids love exploring the tower rooms and seeing cannons!',
+        transportToNext: {
+          mode: 'walk',
+          duration: 5,
+          distance: '0.4 km'
+        }
+      },
+      {
+        id: `${dayNumber}-2`,
+        name: 'Pastéis de Belém',
+        address: 'R. Belém 84-92, 1300-085 Lisbon, Portugal',
+        lat: 38.6976,
+        lng: -9.2033,
+        description: 'Original custard tart bakery since 1837. MUST-TRY for the famous pastel de nata!',
+        duration: 45,
+        category: 'restaurant',
+        startTime: '13:00',
+        kidsRating: 'Kids LOVE these warm custard tarts! Get them fresh from the oven.',
+        transportToNext: {
+          mode: 'tram',
+          duration: 20,
+          distance: '5.2 km'
+        }
+      },
+      {
+        id: `${dayNumber}-3`,
+        name: 'Time Out Market',
+        address: 'Av. 24 de Julho 49, 1200-479 Lisbon, Portugal',
+        lat: 38.7072,
+        lng: -9.1458,
+        description: 'Food hall with variety of Portuguese cuisine. Great for picky eaters!',
+        duration: 90,
+        category: 'restaurant',
+        startTime: '15:30',
+        kidsRating: 'Something for everyone! Kids can choose what they like.'
+      }
+    ],
+    3: [ // Nov 23 - Full day - Oceanário & Parque das Nações
+      {
+        id: `${dayNumber}-0`,
+        name: 'Oceanário de Lisboa',
+        address: 'Esplanada Dom Carlos I s/nº, 1990-005 Lisbon, Portugal',
+        lat: 38.7633,
+        lng: -9.0935,
+        description: 'One of the world\'s best aquariums! Giant central tank with sharks, rays, and ocean sunfish.',
+        duration: 150,
         category: 'museum',
-        startTime: '09:00',
-        kidsRating: 'Egyptian mummies fascinate kids! Get there early to avoid crowds at Mona Lisa.',
+        startTime: '09:30',
+        kidsRating: 'MUST-VISIT! Kids are mesmerized by the giant tank. One of the highlights of Lisbon!',
         transportToNext: {
           mode: 'walk',
           duration: 5,
@@ -686,145 +751,15 @@ function generateFallbackItinerary(
       },
       {
         id: `${dayNumber}-1`,
-        name: 'Angelina Paris',
-        address: '226 Rue de Rivoli, 75001 Paris, France',
-        lat: 48.8651,
-        lng: 2.3281,
-        description: 'Famous tearoom known for hot chocolate and pastries. Perfect lunch break for families.',
-        duration: 75,
-        category: 'restaurant',
-        startTime: '13:00',
-        kidsRating: 'Kids love the thick hot chocolate and Mont Blanc dessert!',
-        transportToNext: {
-          mode: 'metro',
-          duration: 15,
-          distance: '2.1 km'
-        }
-      },
-      {
-        id: `${dayNumber}-2`,
-        name: 'Arc de Triomphe',
-        address: 'Place Charles de Gaulle, 75008 Paris, France',
-        lat: 48.8738,
-        lng: 2.2950,
-        description: 'Iconic monument. Climb to top for panoramic Paris views. Kids enjoy counting the 12 avenues radiating from the roundabout!',
-        duration: 90,
-        category: 'landmark',
-        startTime: '15:00',
-        kidsRating: 'Climbing the 284 steps is an adventure! Amazing views of Eiffel Tower and Champs-Élysées.',
-        transportToNext: {
-          mode: 'walk',
-          duration: 12,
-          distance: '1.0 km'
-        }
-      },
-      {
-        id: `${dayNumber}-3`,
-        name: 'Champs-Élysées Christmas Lights',
-        address: 'Avenue des Champs-Élysées, 75008 Paris, France',
-        lat: 48.8698,
-        lng: 2.3078,
-        description: 'Stroll down the famous avenue decorated with Christmas lights. Window shopping and festive atmosphere.',
-        duration: 90,
-        category: 'landmark',
-        startTime: '17:00',
-        kidsRating: 'Magical Christmas lights! Stop at Ladurée for colorful macarons that kids will love.'
-      }
-    ],
-    3: [ // Nov 23 - Full day
-      {
-        id: `${dayNumber}-0`,
-        name: 'Montmartre & Sacré-Cœur',
-        address: 'Parvis du Sacré-Cœur, 75018 Paris, France',
-        lat: 48.8867,
-        lng: 2.3431,
-        description: 'Charming hilltop neighborhood. Take funicular up to Sacré-Cœur basilica for stunning Paris views.',
-        duration: 120,
-        category: 'landmark',
-        startTime: '09:00',
-        kidsRating: 'Funicular ride is fun! Artists in Place du Tertre draw portraits. Amazing views from the dome.',
-        transportToNext: {
-          mode: 'walk',
-          duration: 8,
-          distance: '0.4 km'
-        }
-      },
-      {
-        id: `${dayNumber}-1`,
-        name: 'Le Consulat',
-        address: '18 Rue Norvins, 75018 Paris, France',
-        lat: 48.8866,
-        lng: 2.3403,
-        description: 'Historic Montmartre café with traditional French cuisine. Charming atmosphere.',
-        duration: 90,
-        category: 'restaurant',
-        startTime: '12:00',
-        kidsRating: 'Classic French bistro with crêpes and croques-monsieurs that kids enjoy.',
-        transportToNext: {
-          mode: 'metro',
-          duration: 18,
-          distance: '3.2 km'
-        }
-      },
-      {
-        id: `${dayNumber}-2`,
-        name: 'Jardin du Luxembourg',
-        address: '6th arrondissement, 75006 Paris, France',
-        lat: 48.8462,
-        lng: 2.3372,
-        description: 'Beautiful gardens with playground, puppet theater, and toy sailboats to rent for the pond!',
-        duration: 120,
-        category: 'park',
-        startTime: '14:30',
-        kidsRating: 'Kids LOVE the toy sailboats! Playground, pony rides, and puppet shows available.',
-        transportToNext: {
-          mode: 'metro',
-          duration: 12,
-          distance: '1.8 km'
-        }
-      },
-      {
-        id: `${dayNumber}-3`,
-        name: 'Seine River Cruise',
-        address: 'Port de la Bourdonnais, 75007 Paris, France',
-        lat: 48.8606,
-        lng: 2.2978,
-        description: 'Evening boat cruise passing illuminated landmarks. See Paris from the water!',
-        duration: 75,
+        name: 'Parque das Nações Cable Car',
+        address: 'Passeio das Tágides, 1990-280 Lisbon, Portugal',
+        lat: 38.7686,
+        lng: -9.0943,
+        description: 'Cable car ride over the Tagus River with panoramic views of modern Lisbon.',
+        duration: 30,
         category: 'entertainment',
-        startTime: '17:30',
-        kidsRating: 'Magical evening cruise! See Eiffel Tower, Notre-Dame, and Louvre lit up from the river.'
-      }
-    ],
-    4: [ // Nov 24 - Full day
-      {
-        id: `${dayNumber}-0`,
-        name: 'Musée Grévin',
-        address: '10 Boulevard Montmartre, 75009 Paris, France',
-        lat: 48.8718,
-        lng: 2.3422,
-        description: 'Wax museum with lifelike figures of celebrities, historical figures, and French icons. Interactive and fun for kids!',
-        duration: 120,
-        category: 'museum',
-        startTime: '09:30',
-        kidsRating: 'Kids love taking photos with wax figures! More engaging than traditional museums.',
-        transportToNext: {
-          mode: 'metro',
-          duration: 15,
-          distance: '2.3 km'
-        }
-      },
-      {
-        id: `${dayNumber}-1`,
-        name: 'Café de Flore',
-        address: '172 Boulevard Saint-Germain, 75006 Paris, France',
-        lat: 48.8542,
-        lng: 2.3320,
-        description: 'Historic café in Saint-Germain-des-Prés. Classic Parisian atmosphere.',
-        duration: 75,
-        category: 'restaurant',
         startTime: '12:30',
-        kidsRating: 'Try French onion soup and croque-madame. Hot chocolate for kids!',
+        kidsRating: 'Kids LOVE the cable car ride! Great views of the river and Vasco da Gama Bridge.',
         transportToNext: {
           mode: 'walk',
           duration: 10,
@@ -833,63 +768,128 @@ function generateFallbackItinerary(
       },
       {
         id: `${dayNumber}-2`,
-        name: 'Notre-Dame Area',
-        address: 'Île de la Cité, 75004 Paris, France',
-        lat: 48.8530,
-        lng: 2.3499,
-        description: 'Explore the island, see Notre-Dame exterior (under restoration), visit nearby shops.',
+        name: 'Vasco da Gama Shopping',
+        address: 'Av. Dom João II 40, 1990-094 Lisbon, Portugal',
+        lat: 38.7681,
+        lng: -9.0958,
+        description: 'Modern shopping center with food court. Great for lunch with variety of options.',
         duration: 90,
-        category: 'landmark',
-        startTime: '14:30',
-        kidsRating: 'Walk along the Seine, feed birds, explore the charming island streets.',
+        category: 'restaurant',
+        startTime: '13:30',
+        kidsRating: 'Food court has something for everyone! Indoor play area available.',
         transportToNext: {
-          mode: 'metro',
-          duration: 12,
-          distance: '1.5 km'
+          mode: 'walk',
+          duration: 15,
+          distance: '1.2 km'
         }
       },
       {
         id: `${dayNumber}-3`,
-        name: 'Eiffel Tower Evening',
-        address: 'Champ de Mars, 5 Avenue Anatole France, 75007 Paris, France',
-        lat: 48.8584,
-        lng: 2.2945,
-        description: 'Final Paris evening at the Eiffel Tower. Watch the sparkling light show at night!',
+        name: 'Parque das Nações Riverside Walk',
+        address: 'Parque das Nações, Lisbon, Portugal',
+        lat: 38.7686,
+        lng: -9.0943,
+        description: 'Scenic waterfront promenade with modern art installations and gardens.',
         duration: 90,
+        category: 'park',
+        startTime: '15:30',
+        kidsRating: 'Nice walk along the river. Kids can run around in the open spaces!'
+      }
+    ],
+    4: [ // Nov 24 - Full day - Castle & Tram 28
+      {
+        id: `${dayNumber}-0`,
+        name: 'Castle of São Jorge',
+        address: 'R. de Santa Cruz do Castelo, 1100-129 Lisbon, Portugal',
+        lat: 38.7139,
+        lng: -9.1334,
+        description: 'Medieval castle with peacocks roaming freely. Amazing panoramic views of Lisbon!',
+        duration: 120,
         category: 'landmark',
-        startTime: '17:30',
-        kidsRating: 'Magical farewell! The tower sparkles for 5 minutes every hour after sunset. Unforgettable!'
+        startTime: '09:30',
+        kidsRating: 'Kids LOVE chasing the peacocks! Exploring castle walls is an adventure.',
+        transportToNext: {
+          mode: 'walk',
+          duration: 10,
+          distance: '0.7 km'
+        }
+      },
+      {
+        id: `${dayNumber}-1`,
+        name: 'Tram 28 Ride',
+        address: 'Largo Portas do Sol, 1100 Lisbon, Portugal',
+        lat: 38.7121,
+        lng: -9.1288,
+        description: 'Historic yellow tram through narrow streets of Alfama, Graça, and Baixa.',
+        duration: 60,
+        category: 'entertainment',
+        startTime: '12:00',
+        kidsRating: 'BEST activity! Kids think it\'s like an amusement park ride through the city!',
+        transportToNext: {
+          mode: 'tram',
+          duration: 15,
+          distance: '2.1 km'
+        }
+      },
+      {
+        id: `${dayNumber}-2`,
+        name: 'Elevador de Santa Justa',
+        address: 'R. do Ouro, 1150-060 Lisbon, Portugal',
+        lat: 38.7121,
+        lng: -9.1394,
+        description: 'Historic iron elevator with viewing platform at the top. Quick but fun experience!',
+        duration: 45,
+        category: 'landmark',
+        startTime: '13:30',
+        kidsRating: 'Kids love the elevator ride up! Great views from the platform.',
+        transportToNext: {
+          mode: 'walk',
+          duration: 8,
+          distance: '0.5 km'
+        }
+      },
+      {
+        id: `${dayNumber}-3`,
+        name: 'Praça do Comércio',
+        address: 'Praça do Comércio, 1100-148 Lisbon, Portugal',
+        lat: 38.7077,
+        lng: -9.1365,
+        description: 'Grand waterfront square with yellow arches. Perfect for sunset photos!',
+        duration: 60,
+        category: 'landmark',
+        startTime: '15:00',
+        kidsRating: 'Huge open square where kids can run around! Beautiful at sunset.'
       }
     ],
     5: [ // Nov 25 - Departure day - morning only
       {
         id: `${dayNumber}-0`,
-        name: 'Café de la Paix',
-        address: '5 Place de l\'Opéra, 75009 Paris, France',
-        lat: 48.8708,
-        lng: 2.3314,
-        description: 'Historic grand café near Opéra Garnier. Perfect for farewell breakfast.',
-        duration: 75,
-        category: 'restaurant',
+        name: 'Miradouro de Santa Luzia',
+        address: 'Largo Santa Luzia, 1100-487 Lisbon, Portugal',
+        lat: 38.7118,
+        lng: -9.1300,
+        description: 'Beautiful viewpoint with azulejo tiles. Perfect for farewell photos of Lisbon!',
+        duration: 45,
+        category: 'landmark',
         startTime: '09:00',
-        kidsRating: 'Elegant setting for final Parisian breakfast. Croissants and hot chocolate!',
+        kidsRating: 'Great views! Kids can spot the river and red rooftops.',
         transportToNext: {
           mode: 'walk',
-          duration: 5,
-          distance: '0.2 km'
+          duration: 8,
+          distance: '0.5 km'
         }
       },
       {
         id: `${dayNumber}-1`,
-        name: 'Opéra Garnier Exterior',
-        address: 'Place de l\'Opéra, 75009 Paris, France',
-        lat: 48.8720,
-        lng: 2.3318,
-        description: 'Quick photo stop at the stunning opera house before heading to train station.',
-        duration: 20,
-        category: 'landmark',
-        startTime: '10:30',
-        kidsRating: 'Beautiful architecture for final Paris photos before Eurostar!'
+        name: 'Alfama Breakfast Café',
+        address: 'Alfama, 1100 Lisbon, Portugal',
+        lat: 38.7131,
+        lng: -9.1288,
+        description: 'Traditional Portuguese café for farewell breakfast. Try pastéis de nata one last time!',
+        duration: 60,
+        category: 'restaurant',
+        startTime: '10:00',
+        kidsRating: 'Final custard tarts! Kids will miss these when we leave.'
       }
     ]
   };
@@ -1072,8 +1072,8 @@ function generateFallbackItinerary(
     ]
   };
 
-  const places = city === 'Paris' 
-    ? parisActivitiesByDay[dayNumber] || []
+  const places = city === 'Lisbon' 
+    ? lisbonActivitiesByDay[dayNumber] || []
     : londonActivitiesByDay[dayNumber] || [];
 
   const itinerary: DayItinerary = {
@@ -1084,11 +1084,11 @@ function generateFallbackItinerary(
     places
   };
   
-  // Add flight/train information for travel days
+  // Add flight information for travel days
   if (dayNumber === 1) {
-    itinerary.flight = SFO_TO_PARIS_FLIGHT;
+    itinerary.flight = SFO_TO_LISBON_FLIGHT;
   } else if (dayNumber === 5) {
-    itinerary.train = PARIS_TO_LONDON_TRAIN;
+    itinerary.flight = LISBON_TO_LONDON_FLIGHT;
   } else if (dayNumber === 9) {
     itinerary.flight = LONDON_TO_SFO_FLIGHT;
   }

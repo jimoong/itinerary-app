@@ -7,19 +7,19 @@ export const TRIP_DETAILS: TripDetails = {
     { role: "Girl", age: 9 },
     { role: "Boy", age: 6 }
   ],
-  parisDates: {
+  lisbonDates: {
     start: "2025-11-21",
-    end: "2025-11-25"  // 5 days in Paris: Nov 21 (arrival), 22, 23, 24, 25 (departure midday)
+    end: "2025-11-25"  // 5 days in Lisbon: Nov 21 (arrival), 22, 23, 24, 25 (departure midday)
   },
   londonDates: {
     start: "2025-11-25",
-    end: "2025-11-28"  // 4 days in London: Nov 25 (arrival afternoon), 26, 27, 28 (departure morning)
+    end: "2025-11-29"  // 5 days in London: Nov 25 (arrival afternoon), 26, 27, 28, 29 (departure morning)
   },
-  parisHotel: {
-    name: "Hyatt Regency Paris Étoile",
-    address: "3 Place du Général Koenig, 75017 Paris, France",
-    lat: 48.88012,
-    lng: 2.28332
+  lisbonHotel: {
+    name: "Hyatt Regency Lisbon",
+    address: "Rua da Junqueira, 65, 1300-343 Lisbon, Portugal",
+    lat: 38.69751,
+    lng: -9.19182
   },
   londonHotel: {
     name: "Hyatt Regency London Blackfriars",
@@ -30,45 +30,45 @@ export const TRIP_DETAILS: TripDetails = {
 };
 
 // Flight information for travel days
-export const SFO_TO_PARIS_FLIGHT: Flight = {
-  flightNumber: "UA990",
+export const SFO_TO_LISBON_FLIGHT: Flight = {
+  flightNumber: "TBD", // To be provided by user
   departure: {
     airport: "SFO",
     city: "San Francisco",
-    time: "18:30" // San Francisco local time (PST)
+    time: "18:00" // Placeholder - San Francisco local time (PST)
   },
   arrival: {
-    airport: "CDG",
-    city: "Paris",
-    time: "13:45" // Paris local time (CET) next day - 9hr flight + 9hr timezone
+    airport: "LIS",
+    city: "Lisbon",
+    time: "13:00" // Placeholder - Lisbon local time (WET) next day
   }
 };
 
-export const PARIS_TO_LONDON_TRAIN: Train = {
-  trainNumber: "Eurostar",
+export const LISBON_TO_LONDON_FLIGHT: Flight = {
+  flightNumber: "TBD", // To be provided by user
   departure: {
-    station: "Gare du Nord",
-    city: "Paris",
-    time: "12:30" // Paris local time (CET)
+    airport: "LIS",
+    city: "Lisbon",
+    time: "12:00" // Placeholder - Lisbon local time (WET) midday
   },
   arrival: {
-    station: "St Pancras International",
+    airport: "LHR",
     city: "London",
-    time: "13:57" // London local time (GMT) - 2h 27min journey
+    time: "14:30" // Placeholder - London local time (GMT) - ~2.5hr flight
   }
 };
 
 export const LONDON_TO_SFO_FLIGHT: Flight = {
-  flightNumber: "VS 19",
+  flightNumber: "TBD", // To be provided by user
   departure: {
     airport: "LHR",
     city: "London",
-    time: "11:30" // London local time (GMT)
+    time: "11:00" // London local time (GMT) - morning departure
   },
   arrival: {
     airport: "SFO",
     city: "San Francisco",
-    time: "14:30" // San Francisco local time (PST) - 8 hours behind London
+    time: "14:00" // San Francisco local time (PST) - 8 hours behind London
   }
 };
 

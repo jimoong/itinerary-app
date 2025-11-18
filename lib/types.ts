@@ -54,7 +54,7 @@ export interface Train {
 export interface DayItinerary {
   date: string; // ISO date string
   dayNumber: number;
-  city: string; // "Paris" or "London"
+  city: string; // "Lisbon" or "London"
   hotel: Hotel;
   places: Place[];
   flight?: Flight; // Optional flight information for travel days
@@ -75,7 +75,7 @@ export interface Trip {
 
 export interface TripDetails {
   travelers: Traveler[];
-  parisDates: {
+  lisbonDates: {
     start: string;
     end: string;
   };
@@ -83,7 +83,7 @@ export interface TripDetails {
     start: string;
     end: string;
   };
-  parisHotel: Hotel;
+  lisbonHotel: Hotel;
   londonHotel: Hotel;
 }
 

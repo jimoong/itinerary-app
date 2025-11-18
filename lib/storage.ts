@@ -1,7 +1,7 @@
 import { Trip } from './types';
 
 const STORAGE_KEY = 'itinerary_trip_data';
-const STORAGE_VERSION = '16'; // Version 16 for auto-replace duplicate locations
+const STORAGE_VERSION = '17'; // Version 17 for Lisbon (replaced Paris)
 const VERSIONS_KEY = 'itinerary_saved_versions';
 const MAX_SAVED_VERSIONS = 5; // Keep last 5 versions
 
