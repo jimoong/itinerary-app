@@ -35,7 +35,7 @@ export const PRAGUE_TO_LONDON_FLIGHT: Flight = {
   departure: {
     airport: "PRG",
     city: "Prague",
-    time: "13:50" // Prague local time (CET)
+    time: "14:50" // Prague local time (CET)
   },
   arrival: {
     airport: "LHR",
