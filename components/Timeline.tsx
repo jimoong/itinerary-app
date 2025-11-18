@@ -253,10 +253,9 @@ export default function Timeline({ places, flight, onRemovePlace, onPlaceClick, 
                                 }}
                                 className="w-full px-4 py-3 text-left hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors flex items-center gap-3 border-b border-gray-100 dark:border-slate-700"
                               >
-                                <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
+                                <Check className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                                 <div className="flex-1">
                                   <div className="text-base text-gray-700 dark:text-gray-300">Visited</div>
-                                  <div className="text-xs text-gray-500 dark:text-gray-400">Mark as visited & exclude from future</div>
                                 </div>
                               </button>
                             )}
@@ -273,8 +272,7 @@ export default function Timeline({ places, flight, onRemovePlace, onPlaceClick, 
                               >
                                 <EyeOff className="w-4 h-4 text-orange-600 dark:text-orange-400" />
                                 <div className="flex-1">
-                                  <div className="text-base text-gray-700 dark:text-gray-300">Do not show this</div>
-                                  <div className="text-xs text-gray-500 dark:text-gray-400">Exclude from future suggestions</div>
+                                  <div className="text-base text-red-600 dark:text-red-400">Do not show this</div>
                                 </div>
                               </button>
                             )}

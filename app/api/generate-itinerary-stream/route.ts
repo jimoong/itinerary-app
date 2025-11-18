@@ -106,8 +106,15 @@ async function replaceDuplicates(allDays: DayItinerary[], duplicates: Array<{ lo
 }
 
 export async function POST(request: NextRequest) {
+  // Check if this is a smart regeneration (from current time onwards)
+  const body = await request.json();
+  const { smartRegeneration, existingDays } = body;
+  
   console.log('========================================');
   console.log('🚀 STREAMING ITINERARY GENERATION');
+  if (smartRegeneration) {
+    console.log('⏰ SMART MODE: Generating from current time onwards');
+  }
   console.log('========================================');
 
   // Create a ReadableStream for Server-Sent Events
@@ -120,8 +127,40 @@ export async function POST(request: NextRequest) {
         let allDays: DayItinerary[] = [];
         let aiGeneratedCount = 0;
         let fallbackCount = 0;
+        
+        // Determine regeneration scope
+        let scope = { startDayNumber: 1, endDayNumber: 10, reason: 'Full generation' };
+        if (smartRegeneration) {
+          scope = getRegenerationScope();
+          console.log(`\n📍 ${scope.reason}`);
+          console.log(`📅 ${getRegenerationDescription(scope)}`);
+          
+          // If we have existing days, preserve the past ones
+          if (existingDays && Array.isArray(existingDays)) {
+            const pastDays = existingDays.filter((day: DayItinerary) => day.dayNumber < scope.startDayNumber);
+            allDays = pastDays;
+            
+            // Add past places to visited list
+            const pastPlaceNames = getPastDaysPlaceNames(existingDays, scope);
+            visitedPlaces.push(...pastPlaceNames);
+            
+            console.log(`✅ Preserved ${pastDays.length} past days`);
+            console.log(`📝 Avoiding ${visitedPlaces.length} places from past days`);
+            
+            // Send past days immediately
+            for (const day of pastDays) {
+              const data = JSON.stringify({ 
+                type: 'day', 
+                day,
+                progress: { current: day.dayNumber, total: 10 },
+                preserved: true
+              });
+              controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+            }
+          }
+        }
 
-        for (let i = 1; i <= 10; i++) {
+        for (let i = scope.startDayNumber; i <= scope.endDayNumber; i++) {
           console.log(`\n--- Day ${i}/10 ---`);
           
           // Generate the day

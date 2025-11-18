@@ -14,6 +14,7 @@ interface DayNavigationProps {
   canGoPrevious: boolean;
   canGoNext: boolean;
   onHardRefresh: () => void;
+  onSmartRegenerate: () => void;
   onRegenerateCurrentDay: () => void;
   onLoadVersion: (trip: Trip) => void;
   isRegenerating?: boolean;
@@ -27,6 +28,7 @@ export default function DayNavigation({
   canGoPrevious,
   canGoNext,
   onHardRefresh,
+  onSmartRegenerate,
   onRegenerateCurrentDay,
   onLoadVersion,
   isRegenerating = false
