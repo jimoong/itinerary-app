@@ -149,7 +149,22 @@ export async function generateDayItinerary(
   // Special constraints for flight days
   let flightDayConstraints = '';
   
-  if (dayNumber === 5) {
+  if (dayNumber === 1) {
+    // Day 1: Prague arrival evening
+    flightDayConstraints = `
+
+⚠️ PRAGUE ARRIVAL DAY CONSTRAINTS FOR DAY 1:
+- Arrived on flight EN 8958 from Frankfurt at 18:05 (6:05 PM)
+- After customs, baggage, and transport to hotel: arrive at hotel around 19:15-19:30
+- This is an ARRIVAL day with very limited evening time
+- ONLY suggest Prague evening activities from 19:45 to 21:30
+- Suggest 1-2 light evening activities near Andaz Prague hotel
+- Focus on: dinner near hotel, short evening walk to Old Town Square (nearby)
+- Keep activities relaxed and close to hotel after travel day
+- NO time-consuming activities - just settling in and first impressions
+- All activities must have start times AFTER 19:45
+`;
+  } else if (dayNumber === 5) {
     // Day 5: Prague departure ONLY (London arrival is Day 6)
     flightDayConstraints = `
 
@@ -172,13 +187,14 @@ export async function generateDayItinerary(
 
 ⚠️ LONDON ARRIVAL DAY CONSTRAINTS FOR DAY 6:
 - Arrived on flight BA0855 from Prague at 16:05 (4:05 PM)
-- After customs, baggage, and transport to hotel: arrive at hotel around 18:00-19:00
+- After customs, baggage, and transport to hotel: arrive at hotel around 18:00-18:30
 - This is an ARRIVAL day with limited evening time
-- ONLY suggest London evening activities from 18:30 to 21:00
+- ONLY suggest London evening activities from 18:45 to 21:30
 - Suggest 1-2 light evening activities near Hyatt Regency London Blackfriars
 - Focus on: dinner near hotel, short evening walk, nearby pub
 - Keep activities relaxed and close to hotel after travel day
 - NO time-consuming activities - just settling in
+- All activities must have start times AFTER 18:45
 `;
   } else if (dayNumber === 9) {
     // Day 9: London departure

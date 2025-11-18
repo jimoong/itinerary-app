@@ -1,7 +1,7 @@
 import { Trip } from './types';
 
 const STORAGE_KEY = 'itinerary_trip_data';
-const STORAGE_VERSION = '10'; // Version 10 for correct arrival day order (airport first)
+const STORAGE_VERSION = '11'; // Version 11 for arrival day time constraints
 
 export function saveTrip(trip: Trip): void {
   if (typeof window !== 'undefined') {
