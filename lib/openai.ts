@@ -254,7 +254,13 @@ Transport Guidelines:
 - Tram/Metro: if distance is 1-3km (public transport is fun for kids!)
 - Taxi: if distance is > 3km or when traveling with tired children
 
-Consider meal times (lunch around 12-1 PM, dinner around 6-7 PM if time allows)
+MEAL REQUIREMENTS (CRITICAL):
+- MUST include at least one restaurant for lunch (around 12-1 PM)
+- MUST include at least one restaurant for dinner (around 6-7 PM) if time allows
+- Restaurants should be family-friendly with options for kids
+- Consider local cuisine experiences (Czech food in Prague, British classics in London)
+- Include restaurants as separate timeline items with category: "restaurant"
+
 Include accurate coordinates for each location
 Each day should explore DIFFERENT neighborhoods and attractions
 If possible, mention seasonal activities for late November (Christmas preparations, winter atmosphere)${avoidPlaces}${flightDayConstraints}
