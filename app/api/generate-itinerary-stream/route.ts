@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
     async start(controller) {
       try {
         const visitedPlaces: string[] = [];
-        const allDays: DayItinerary[] = [];
+        let allDays: DayItinerary[] = [];
         let aiGeneratedCount = 0;
         let fallbackCount = 0;
 
