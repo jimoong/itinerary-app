@@ -146,6 +146,22 @@ export async function generateDayItinerary(
     ? `\n\nIMPORTANT: DO NOT suggest these places as they were visited on previous days:\n${previousPlaces.join('\n')}`
     : '';
 
+  // Special constraints for Day 5 (Prague departure with flight)
+  const flightDayConstraints = dayNumber === 5 ? `
+
+⚠️ CRITICAL FLIGHT DAY CONSTRAINTS FOR DAY 5:
+- Flight BA0855 departs Prague (PRG) at 14:50
+- Must arrive at airport by 12:50 (2 hours before departure for international flight)
+- Transportation from hotel to airport: ~45 minutes (need to leave hotel by 12:00)
+- Hotel checkout time: 11:30
+- ONLY suggest activities from 09:00 to 11:00 (2 hours MAXIMUM available time)
+- Activities MUST be within 10-15 minutes walking distance from ${hotel.name}
+- Suggest ONLY 1-2 quick activities (e.g., breakfast at nearby cafe, quick visit to nearby landmark)
+- NO time-consuming activities (museums, shows, etc.)
+- Focus on: breakfast spots, quick photo opportunities, last-minute shopping near hotel
+- All activities must end by 11:00 to allow time for packing and checkout
+` : '';
+
   const prompt = `Generate a detailed day itinerary for a family trip to ${city}.
 
 Trip Details:
@@ -206,7 +222,7 @@ Transport Guidelines:
 Consider meal times (lunch around 12-1 PM, dinner around 6-7 PM if time allows)
 Include accurate coordinates for each location
 Each day should explore DIFFERENT neighborhoods and attractions
-If possible, mention seasonal activities for late November (Christmas preparations, winter atmosphere)${avoidPlaces}
+If possible, mention seasonal activities for late November (Christmas preparations, winter atmosphere)${avoidPlaces}${flightDayConstraints}
 
 IMPORTANT: 
 - For each activity, explain WHY it's great for kids ages 6 and 9

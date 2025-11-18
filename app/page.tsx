@@ -141,14 +141,22 @@ async function calculateSmartRoute(
 
 // Utility function to add hotel as first and last place in the itinerary
 async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
+  // Special handling for Day 5 (flight day) - no return to hotel
+  const isFlightDay = day.dayNumber === 5;
+  
   // Check if hotels are already properly added with transport
-  if (day.places.length >= 2 && 
+  if (!isFlightDay && day.places.length >= 2 && 
       day.places[0].category === 'hotel' && 
       day.places[day.places.length - 1].category === 'hotel' &&
       day.places[0].transportToNext && // Has transport from start hotel
       day.places[day.places.length - 2].transportToNext // Has transport to end hotel
     ) {
     return day; // Already has hotels with transport
+  }
+
+  // For flight day, check if already processed
+  if (isFlightDay && day.places.length >= 1 && day.places[0].category === 'hotel') {
+    return day; // Already processed
   }
 
   // Remove existing hotels if present but incomplete
@@ -176,10 +184,11 @@ async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
   }
 
   // Add hotel at start (with start time and transport to first place)
+  const startTime = isFlightDay ? '09:00' : '08:00'; // Later start on flight day
   const startHotel: Place = { 
     ...hotelPlace, 
     id: `hotel-start-${day.dayNumber}`, 
-    startTime: '08:00',
+    startTime,
     transportToNext: hotelToFirstRoute ? {
       mode: hotelToFirstRoute.mode,
       duration: hotelToFirstRoute.duration,
@@ -187,7 +196,15 @@ async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
     } : undefined
   };
   
-  // Calculate route from last place back to hotel
+  if (isFlightDay) {
+    // For flight day, only add start hotel (no return)
+    return {
+      ...day,
+      places: [startHotel, ...placesWithoutHotels]
+    };
+  }
+  
+  // Calculate route from last place back to hotel (normal days)
   let lastToHotelRoute = null;
   if (placesWithoutHotels.length > 0) {
     const lastPlace = placesWithoutHotels[placesWithoutHotels.length - 1];
@@ -221,6 +238,108 @@ async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
   return {
     ...day,
     places: [startHotel, ...updatedPlaces, endHotel]
+  };
+}
+
+// Add flight and airport transportation for Day 5
+async function addFlightToDay(day: DayItinerary): Promise<DayItinerary> {
+  // Only process Day 5 (Prague to London flight day)
+  if (day.dayNumber !== 5 || !day.flight) {
+    return day;
+  }
+
+  // Check if flight is already added
+  const hasFlightPlace = day.places.some(p => p.category === 'airport');
+  if (hasFlightPlace) {
+    return day; // Already processed
+  }
+
+  // Prague Airport (Václav Havel Airport Prague)
+  const pragueAirport = {
+    lat: 50.1008,
+    lng: 14.2600,
+    name: 'Václav Havel Airport Prague',
+    address: 'Aviatická 1019/8, 161 00 Praha 6, Czechia'
+  };
+
+  // Find the last activity (before checkout)
+  const lastActivityIndex = day.places.findIndex(p => p.category === 'hotel' && p.id.includes('end'));
+  const insertIndex = lastActivityIndex > 0 ? lastActivityIndex : day.places.length;
+
+  // Get the last place before hotel checkout
+  const lastPlace = day.places[insertIndex - 1];
+
+  // Calculate route from last place to hotel (for checkout)
+  let lastToHotelRoute = null;
+  if (lastPlace && lastPlace.category !== 'hotel') {
+    lastToHotelRoute = await calculateSmartRoute(
+      { lat: lastPlace.lat, lng: lastPlace.lng },
+      { lat: day.hotel.lat, lng: day.hotel.lng }
+    );
+  }
+
+  // Calculate route from hotel to airport
+  const hotelToAirportRoute = await calculateSmartRoute(
+    { lat: day.hotel.lat, lng: day.hotel.lng },
+    { lat: pragueAirport.lat, lng: pragueAirport.lng }
+  );
+
+  // If route calculation failed, return day as-is
+  if (!hotelToAirportRoute) {
+    console.error('Failed to calculate route from hotel to airport');
+    return day;
+  }
+
+  // Update last place with transport to hotel
+  const updatedPlaces = [...day.places];
+  if (lastPlace && lastPlace.category !== 'hotel' && lastToHotelRoute) {
+    updatedPlaces[insertIndex - 1] = {
+      ...lastPlace,
+      transportToNext: {
+        mode: lastToHotelRoute.mode,
+        duration: lastToHotelRoute.duration,
+        distance: lastToHotelRoute.distance
+      }
+    };
+  }
+
+  // Add hotel checkout place
+  const checkoutHotel: Place = {
+    id: `hotel-checkout-${day.dayNumber}`,
+    name: day.hotel.name,
+    address: day.hotel.address,
+    lat: day.hotel.lat,
+    lng: day.hotel.lng,
+    description: 'Hotel checkout',
+    duration: 30, // 30 min for checkout
+    category: 'hotel',
+    startTime: '11:00',
+    transportToNext: {
+      mode: hotelToAirportRoute.mode,
+      duration: hotelToAirportRoute.duration,
+      distance: hotelToAirportRoute.distance
+    }
+  };
+
+  // Add airport place
+  const airportPlace: Place = {
+    id: `airport-${day.dayNumber}`,
+    name: pragueAirport.name,
+    address: pragueAirport.address,
+    lat: pragueAirport.lat,
+    lng: pragueAirport.lng,
+    description: `Check-in for flight ${day.flight.flightNumber}`,
+    duration: 120, // 2 hours at airport before flight
+    category: 'airport',
+    startTime: '12:00', // Arrive at airport by 12:00 for 14:50 flight
+  };
+
+  // Insert checkout hotel and airport
+  updatedPlaces.splice(insertIndex, 0, checkoutHotel, airportPlace);
+
+  return {
+    ...day,
+    places: updatedPlaces
   };
 }
 
@@ -270,9 +389,13 @@ export default function Home() {
         const daysWithHotels = await Promise.all(
           savedTrip.days.map(day => addHotelsToDay(day))
         );
+        // Add flight to Day 5 if applicable
+        const daysWithFlights = await Promise.all(
+          daysWithHotels.map(day => addFlightToDay(day))
+        );
         const tripWithHotels = {
           ...savedTrip,
-          days: daysWithHotels
+          days: daysWithFlights
         };
         setTrip(tripWithHotels);
         setIsLoading(false);
@@ -376,6 +499,10 @@ export default function Home() {
         const daysWithHotels = await Promise.all(
           data.days.map((day: DayItinerary) => addHotelsToDay(day))
         );
+        // Add flights to each day
+        const daysWithFlights = await Promise.all(
+          daysWithHotels.map((day: DayItinerary) => addFlightToDay(day))
+        );
         
         const newTrip: Trip = {
           travelers: [
@@ -384,7 +511,7 @@ export default function Home() {
             { role: "Girl", age: 9 },
             { role: "Boy", age: 6 }
           ],
-          days: daysWithHotels,
+          days: daysWithFlights,
           startDate: data.days[0].date,
           endDate: data.days[data.days.length - 1].date,
         };
@@ -431,9 +558,10 @@ export default function Home() {
               if (event.type === 'day') {
                 console.log(`📅 Received day ${event.progress.current}/${event.progress.total}`);
                 
-                // Add hotels to the day
+                // Add hotels and flights to the day
                 const dayWithHotels = await addHotelsToDay(event.day);
-                allDays.push(dayWithHotels);
+                const dayWithFlight = await addFlightToDay(dayWithHotels);
+                allDays.push(dayWithFlight);
                 
                 // Update trip progressively
                 const progressTrip: Trip = {
@@ -528,18 +656,19 @@ export default function Home() {
 
       const data = await response.json();
       
-      // Add hotels to the regenerated day
+      // Add hotels and flights to the regenerated day
       const dayWithHotels = await addHotelsToDay(data.day);
+      const dayWithFlight = await addFlightToDay(dayWithHotels);
       
       setTrip({
         ...trip,
-        days: trip.days.map((d, i) => i === currentDayIndex ? dayWithHotels : d)
+        days: trip.days.map((d, i) => i === currentDayIndex ? dayWithFlight : d)
       });
       
       // Save to localStorage
       const updatedTrip = {
         ...trip,
-        days: trip.days.map((d, i) => i === currentDayIndex ? dayWithHotels : d)
+        days: trip.days.map((d, i) => i === currentDayIndex ? dayWithFlight : d)
       };
       saveTrip(updatedTrip);
       

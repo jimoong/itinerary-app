@@ -186,6 +186,7 @@ export default function Timeline({ places, flight, onRemovePlace, onPlaceClick, 
         {places.map((place, index) => {
         const isHighlighted = highlightedPlaceId === place.id;
         const isHotel = place.category === 'hotel';
+        const isAirport = place.category === 'airport';
         
         const isRefreshing = refreshingPlaceIndex === index;
         
@@ -212,9 +213,9 @@ export default function Timeline({ places, flight, onRemovePlace, onPlaceClick, 
                 <div className="timeline__line" />
               )}
 
-              {/* Timeline dot with number or hotel icon */}
-              <div className={`timeline__dot ${isHighlighted ? 'timeline__dot--highlighted' : ''} ${isHotel ? 'bg-red-500' : ''}`}>
-                {isHotel ? '🏨' : index + 1}
+              {/* Timeline dot with number or hotel/airport icon */}
+              <div className={`timeline__dot ${isHighlighted ? 'timeline__dot--highlighted' : ''} ${isHotel ? 'bg-red-500' : ''} ${isAirport ? 'bg-blue-500' : ''}`}>
+                {isHotel ? '🏨' : isAirport ? '✈️' : index + 1}
               </div>
 
               {/* Content */}
@@ -231,8 +232,8 @@ export default function Timeline({ places, flight, onRemovePlace, onPlaceClick, 
                     </>
                   )}
 
-                  {/* Action buttons - hide for hotel items */}
-                  {!isHotel && (
+                  {/* Action buttons - hide for hotel and airport items */}
+                  {!isHotel && !isAirport && (
                     <div className="flex gap-1 absolute right-0">
                       {/* Info button */}
                       <button

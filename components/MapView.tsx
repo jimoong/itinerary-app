@@ -175,8 +175,9 @@ export default function MapView({ places, onMarkerClick, highlightedPlaceId, cur
     places.forEach((place, index) => {
       const isHighlighted = highlightedPlaceId === place.id;
       const isHotel = place.category === 'hotel';
+      const isAirport = place.category === 'airport';
       
-      // Use different shapes for hotel, highlighted, and normal markers
+      // Use different shapes for hotel, airport, highlighted, and normal markers
       let markerIcon;
       let markerLabel;
       
@@ -193,6 +194,23 @@ export default function MapView({ places, onMarkerClick, highlightedPlaceId, cur
         };
         markerLabel = {
           text: '🏨',
+          color: 'white',
+          fontSize: '16px',
+          fontWeight: 'bold',
+        };
+      } else if (isAirport) {
+        // Airport marker - plane icon
+        markerIcon = {
+          path: 'M 0,-10 L -2,-8 L -8,-6 L -8,-4 L -2,-5 L -2,4 L -4,6 L -4,8 L 0,7 L 4,8 L 4,6 L 2,4 L 2,-5 L 8,-4 L 8,-6 L 2,-8 Z', // Plane shape
+          scale: 1.2,
+          fillColor: '#3B82F6', // Blue color for airport
+          fillOpacity: 1,
+          strokeColor: 'white',
+          strokeWeight: 2,
+          anchor: new google.maps.Point(0, 0),
+        };
+        markerLabel = {
+          text: '✈️',
           color: 'white',
           fontSize: '16px',
           fontWeight: 'bold',
