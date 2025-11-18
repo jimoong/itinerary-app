@@ -1,7 +1,7 @@
 import { Trip } from './types';
 
 const STORAGE_KEY = 'itinerary_trip_data';
-const STORAGE_VERSION = '13'; // Version 13 for Paris trip (replaced Prague)
+const STORAGE_VERSION = '14'; // Version 14 for Musée d'Orsay priority
 
 export function saveTrip(trip: Trip): void {
   if (typeof window !== 'undefined') {

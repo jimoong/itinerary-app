@@ -237,6 +237,7 @@ CRITICAL - DO NOT SUGGEST TRANSPORTATION AS ACTIVITIES:
 - Focus ONLY on actual destinations and activities
 
 PARIS-SPECIFIC RECOMMENDATIONS (if applicable):
+- Musée d'Orsay: MUST-VISIT! Impressionist masterpieces (Monet, Van Gogh, Renoir) in stunning Beaux-Arts railway station. Kids enjoy the giant clock and colorful paintings
 - Eiffel Tower: Book skip-the-line tickets, go at sunset
 - Louvre Museum: Focus on highlights (Mona Lisa, Egyptian wing) - kids love mummies
 - Arc de Triomphe: Climb to top for panoramic views
@@ -251,9 +252,10 @@ PARIS-SPECIFIC RECOMMENDATIONS (if applicable):
 PARIS CLUSTERING EXAMPLES:
 - Cluster 1 (Eiffel Area): Metro → Eiffel Tower → Trocadéro Gardens → Seine cruise (walkable)
 - Cluster 2 (Louvre/Tuileries): Metro → Louvre Museum → Tuileries Garden → lunch nearby (walkable)
-- Cluster 3 (Montmartre): Metro → Sacré-Cœur → Place du Tertre → crêpe café (walkable)
-- Cluster 4 (Latin Quarter): Metro → Notre-Dame area → Luxembourg Gardens → toy sailboats (walkable)
-- Cluster 5 (Champs-Élysées): Metro → Arc de Triomphe → Champs-Élysées walk → Christmas lights (walkable)
+- Cluster 3 (Orsay/Left Bank): Metro → Musée d'Orsay → Seine walk → nearby café (walkable)
+- Cluster 4 (Montmartre): Metro → Sacré-Cœur → Place du Tertre → crêpe café (walkable)
+- Cluster 5 (Latin Quarter): Metro → Notre-Dame area → Luxembourg Gardens → toy sailboats (walkable)
+- Cluster 6 (Champs-Élysées): Metro → Arc de Triomphe → Champs-Élysées walk → Christmas lights (walkable)
 - Use metro between clusters, walk within clusters
 
 LONDON-SPECIFIC RECOMMENDATIONS (if applicable):
@@ -515,7 +517,7 @@ CRITICAL - MUST BE A SPECIFIC PLACE:
 
 ${city === 'Paris' ? `
 PARIS ALTERNATIVES (choose ONE that's NOT in the avoid list):
-- Museums: Louvre, Musée d'Orsay, Musée Grévin (wax museum), Rodin Museum
+- Museums: Musée d'Orsay (PRIORITY!), Louvre, Musée Grévin (wax museum), Rodin Museum
 - Activities: Eiffel Tower, Arc de Triomphe, Seine cruise, Montmartre funicular
 - Food: Angelina (hot chocolate), Café de Flore, traditional crêperies, bistros
 - Landmarks: Notre-Dame area, Sacré-Cœur, Champs-Élysées, Luxembourg Gardens
