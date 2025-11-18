@@ -10,6 +10,8 @@ import { loadTrip, saveTrip, clearTrip } from '@/lib/storage';
 import { TRIP_DETAILS, SFO_TO_LISBON_FLIGHT, LISBON_TO_LONDON_FLIGHT } from '@/lib/constants';
 import { findNextPlace } from '@/lib/timeUtils';
 import { RefreshCw, Plus, Loader2, RotateCcw } from 'lucide-react';
+import { markPlaceAsVisited, getVisitedPlaces } from '@/lib/visitedPlaces';
+import { addToExcludedList as addToExcludedPOIs } from '@/lib/excludedPOIs';
 
 type TransportMode = 'walk' | 'taxi' | 'metro' | 'tram';
 
@@ -615,7 +617,18 @@ export default function Home() {
   const [nextPlaceIndex, setNextPlaceIndex] = useState<number | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [showCurrentLocation, setShowCurrentLocation] = useState(false);
+  const [visitedPlaceIds, setVisitedPlaceIds] = useState<Set<string>>(new Set());
   const timelineScrollRef = useRef<HTMLDivElement>(null);
+
+  // Load visited places on mount
+  useEffect(() => {
+    const visited = getVisitedPlaces();
+    const visitedIds = new Set(visited.map(v => {
+      // Create a consistent ID format for matching
+      return `visited-${v.name.toLowerCase().replace(/\s+/g, '-')}`;
+    }));
+    setVisitedPlaceIds(visitedIds);
+  }, []);
 
   // Request user's geolocation on mount
   useEffect(() => {
@@ -1008,6 +1021,52 @@ export default function Home() {
     });
   };
 
+  const handleMarkAsVisited = (placeIndex: number) => {
+    if (!trip || !currentDay) return;
+
+    const place = currentDay.places[placeIndex];
+    if (!place || place.category === 'hotel' || place.category === 'airport') return;
+
+    // Mark as visited in localStorage
+    markPlaceAsVisited(
+      place.name,
+      place.address,
+      currentDay.city as 'Lisbon' | 'London',
+      place.lat,
+      place.lng
+    );
+
+    // Add to excluded list for future generation
+    addToExcludedPOIs(
+      place.name,
+      currentDay.city as 'Lisbon' | 'London',
+      'User marked as visited'
+    );
+
+    // Update visited places state
+    const newVisitedIds = new Set(visitedPlaceIds);
+    newVisitedIds.add(place.id);
+    setVisitedPlaceIds(newVisitedIds);
+
+    console.log(`✅ Marked "${place.name}" as visited`);
+  };
+
+  const handleExcludePlace = (placeIndex: number) => {
+    if (!trip || !currentDay) return;
+
+    const place = currentDay.places[placeIndex];
+    if (!place || place.category === 'hotel' || place.category === 'airport') return;
+
+    // Add to excluded list (runtime only, not saved to localStorage)
+    addToExcludedPOIs(
+      place.name,
+      currentDay.city as 'Lisbon' | 'London',
+      'User excluded'
+    );
+
+    console.log(`🚫 Excluded "${place.name}" from future suggestions`);
+  };
+
   const handleAddPlace = (place: Omit<Place, 'id'>) => {
     if (!trip) return;
 
@@ -1234,9 +1293,12 @@ export default function Home() {
                 onRemovePlace={handleRemovePlace}
                 onPlaceClick={setHighlightedPlaceId}
                 onRefreshPlace={handleRefreshPlace}
+                onMarkAsVisited={handleMarkAsVisited}
+                onExcludePlace={handleExcludePlace}
                 highlightedPlaceId={highlightedPlaceId}
                 refreshingPlaceIndex={refreshingPlaceIndex}
                 nextPlaceIndex={nextPlaceIndex}
+                visitedPlaceIds={visitedPlaceIds}
               />
             </div>
 
