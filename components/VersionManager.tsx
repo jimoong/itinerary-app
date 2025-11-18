@@ -110,13 +110,13 @@ export default function VersionManager({ currentTrip, onLoadVersion }: VersionMa
           
           {/* Panel */}
           <div className={`fixed z-50 bg-white dark:bg-slate-900 shadow-2xl flex flex-col
-                          md:right-0 md:top-0 md:w-[45%] md:max-w-[600px] md:h-full
+                          md:left-0 md:right-auto md:top-0 md:w-[45%] md:max-w-[600px] md:h-full
                           bottom-0 left-0 right-0 h-[70vh] rounded-t-2xl md:rounded-none
                           md:left-auto
                           transition-transform duration-300 ease-in-out
                           ${isAnimating 
                             ? 'translate-x-0 translate-y-0' 
-                            : 'md:translate-x-full md:translate-y-0 translate-y-full'
+                            : 'md:-translate-x-full md:translate-y-0 translate-y-full'
                           }`}>
             {/* Header */}
             <div className="flex-shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-6 py-4 flex items-center justify-between">

@@ -2,6 +2,7 @@ import { DayItinerary, Place, TripDetails } from './types';
 import { callAI } from './aiProvider';
 import { SFO_TO_LISBON_FLIGHT, LISBON_TO_LONDON_FLIGHT, LONDON_TO_SFO_FLIGHT } from './constants';
 import { getFixedSchedulesForDate, formatFixedScheduleForPrompt, type FixedSchedule } from './fixedSchedules';
+import { formatExcludedPOIsForPrompt, getExcludedPOIsSummary } from './excludedPOIs';
 
 // Helper function to clean JSON response from markdown code blocks
 function cleanJsonResponse(content: string): string {
@@ -99,6 +100,7 @@ export async function generateDayItinerary(
   previousPlaces?: string[]
 ): Promise<DayItinerary> {
   console.log(`[generateDayItinerary] Starting generation for day ${dayNumber}/${totalDays}`);
+  console.log(`[generateDayItinerary] ${getExcludedPOIsSummary()}`);
   
   // Handle date assignment for 9 days with overlap on Nov 25
   let date: string;
@@ -152,6 +154,9 @@ export async function generateDayItinerary(
   const fixedSchedulesInfo = fixedSchedules.length > 0
     ? `\n\n${'='.repeat(60)}\n⚠️⚠️⚠️ FIXED SCHEDULES - PRE-BOOKED ACTIVITIES ⚠️⚠️⚠️\n${'='.repeat(60)}\n\nThe following activities are ALREADY BOOKED and CANNOT be changed:\n${fixedSchedules.map(schedule => formatFixedScheduleForPrompt(schedule)).join('\n')}\n${'='.repeat(60)}\n\n⚠️ CRITICAL INSTRUCTIONS FOR FIXED SCHEDULES:\n1. DO NOT suggest any activities during the fixed schedule times\n2. Plan activities BEFORE or AFTER the fixed schedules\n3. Consider travel time to reach fixed schedule locations\n4. If fixed schedule requires early arrival, ensure previous activity ends with enough time\n5. Include the fixed schedule as a place in your itinerary at the specified time\n6. Use the exact details provided (name, address, coordinates, duration)\n${'='.repeat(60)}\n`
     : '';
+
+  // Get excluded POIs for this city
+  const excludedPOIsInfo = formatExcludedPOIsForPrompt(city as 'Lisbon' | 'London');
 
   // Special constraints for flight days
   let flightDayConstraints = '';
@@ -213,7 +218,7 @@ export async function generateDayItinerary(
   }
 
   const prompt = `Generate a detailed day itinerary for a family trip to ${city}.
-${fixedSchedulesInfo}
+${fixedSchedulesInfo}${excludedPOIsInfo}
 Trip Details:
 - Date: ${date} (Day ${dayNumber} of ${totalDays})
 - ${dayContext}
@@ -506,10 +511,13 @@ export async function regenerateSinglePlace(
     ? calculateTimeDifference(suggestedStartTime, nextPlace.startTime)
     : 180; // Default 3 hours
 
+  // Get excluded POIs for this city
+  const excludedPOIsInfo = formatExcludedPOIsForPrompt(city as 'Lisbon' | 'London');
+
   const prompt = `Generate a SINGLE alternative place for a family trip to ${city}.
 
 CRITICAL: You MUST suggest a COMPLETELY DIFFERENT place than "${currentPlace.name}". The new place should be a fresh alternative, not the same location.
-
+${excludedPOIsInfo}
 Context:
 - Date: ${date} (Day ${dayNumber})
 - City: ${city}
