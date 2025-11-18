@@ -1388,6 +1388,7 @@ export default function Home() {
         onHardRefresh={handleResetAll}
         onSmartRegenerate={handleSmartRegenerate}
         onRegenerateCurrentDay={regenerateCurrentDay}
+        onSelectDay={(dayIndex) => setCurrentDayIndex(dayIndex)}
         onLoadVersion={(loadedTrip) => {
           setTrip(loadedTrip);
           setCurrentDayIndex(0);

@@ -17,6 +17,7 @@ interface DayNavigationProps {
   onSmartRegenerate: () => void;
   onRegenerateCurrentDay: () => void;
   onLoadVersion: (trip: Trip) => void;
+  onSelectDay: (dayIndex: number) => void;
   isRegenerating?: boolean;
 }
 
@@ -31,10 +32,13 @@ export default function DayNavigation({
   onSmartRegenerate,
   onRegenerateCurrentDay,
   onLoadVersion,
+  onSelectDay,
   isRegenerating = false
 }: DayNavigationProps) {
   const [showMenu, setShowMenu] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const datePickerRef = useRef<HTMLDivElement>(null);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -42,16 +46,19 @@ export default function DayNavigation({
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setShowMenu(false);
       }
+      if (datePickerRef.current && !datePickerRef.current.contains(event.target as Node)) {
+        setShowDatePicker(false);
+      }
     };
 
-    if (showMenu) {
+    if (showMenu || showDatePicker) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showMenu]);
+  }, [showMenu, showDatePicker]);
   let formattedDate = 'Invalid Date';
   
   try {
@@ -90,8 +97,71 @@ export default function DayNavigation({
               <ChevronLeft className="w-4 h-4" />
             </button>
 
-          <div>
-            <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{formattedDate}</p>
+          <div className="relative" ref={datePickerRef}>
+            <button
+              onClick={() => setShowDatePicker(!showDatePicker)}
+              className="text-2xl font-semibold text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+            >
+              {formattedDate}
+            </button>
+
+            {/* Date Picker Dropdown */}
+            {showDatePicker && currentTrip && (
+              <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-gray-200 dark:border-slate-700 overflow-hidden z-50 max-h-96 overflow-y-auto">
+                {currentTrip.days.map((day, index) => {
+                  const isSelected = day.dayNumber === currentDay.dayNumber;
+                  let dayFormattedDate = 'Invalid Date';
+                  
+                  try {
+                    const [year, month, dayNum] = day.date.split('-').map(Number);
+                    const date = new Date(year, month - 1, dayNum);
+                    if (!isNaN(date.getTime())) {
+                      dayFormattedDate = format(date, 'MMM d');
+                    }
+                  } catch (error) {
+                    console.error('Error formatting date:', error);
+                  }
+
+                  return (
+                    <button
+                      key={day.dayNumber}
+                      onClick={() => {
+                        onSelectDay(index);
+                        setShowDatePicker(false);
+                      }}
+                      className={`w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-between border-b border-gray-100 dark:border-slate-700 last:border-b-0 ${
+                        isSelected ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`text-xs font-medium px-2 py-1 rounded ${
+                          isSelected 
+                            ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300' 
+                            : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400'
+                        }`}>
+                          Day {day.dayNumber}
+                        </div>
+                        <div>
+                          <div className={`font-medium ${
+                            isSelected 
+                              ? 'text-blue-700 dark:text-blue-300' 
+                              : 'text-gray-900 dark:text-gray-100'
+                          }`}>
+                            {dayFormattedDate}
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            {day.city}
+                          </div>
+                        </div>
+                      </div>
+                      {isSelected && (
+                        <div className="w-2 h-2 rounded-full bg-blue-600 dark:bg-blue-400"></div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <button
