@@ -52,10 +52,35 @@ export async function generateMasterPOIList(
     }
 
     console.log('[generateMasterPOIList] ✅ AI response received');
+    console.log('[generateMasterPOIList] Response length:', response.content.length);
     
-    // Clean and parse JSON
+    // Clean and parse JSON with better error handling
     const cleaned = cleanJsonResponse(response.content);
-    const parsed = JSON.parse(cleaned);
+    console.log('[generateMasterPOIList] Cleaned response length:', cleaned.length);
+    
+    let parsed;
+    try {
+      parsed = JSON.parse(cleaned);
+    } catch (parseError) {
+      console.error('[generateMasterPOIList] ❌ JSON parse error:', parseError);
+      console.error('[generateMasterPOIList] First 500 chars:', cleaned.substring(0, 500));
+      console.error('[generateMasterPOIList] Last 500 chars:', cleaned.substring(Math.max(0, cleaned.length - 500)));
+      
+      // Try to extract position from error message
+      if (parseError instanceof Error && parseError.message.includes('position')) {
+        const posMatch = parseError.message.match(/position (\d+)/);
+        if (posMatch) {
+          const pos = parseInt(posMatch[1], 10);
+          const contextStart = Math.max(0, pos - 200);
+          const contextEnd = Math.min(cleaned.length, pos + 200);
+          console.error(`[generateMasterPOIList] Context around position ${pos}:`);
+          console.error(cleaned.substring(contextStart, contextEnd));
+          console.error(' '.repeat(Math.min(200, pos - contextStart)) + '^--- Error here');
+        }
+      }
+      
+      throw parseError;
+    }
     
     // Validate response structure
     if (!parsed.lisbon || !parsed.london || !Array.isArray(parsed.lisbon) || !Array.isArray(parsed.london)) {
