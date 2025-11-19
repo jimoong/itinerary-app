@@ -9,11 +9,11 @@ export const TRIP_DETAILS: TripDetails = {
   ],
   lisbonDates: {
     start: "2025-11-21",
-    end: "2025-11-25"  // 5 days in Lisbon: Nov 21 (arrival), 22, 23, 24, 25 (departure midday)
+    end: "2025-11-24"  // 4 days in Lisbon: Nov 21 (arrival), 22, 23, 24 (departure morning 7am)
   },
   londonDates: {
-    start: "2025-11-25",
-    end: "2025-11-29"  // 5 days in London: Nov 25 (arrival afternoon), 26, 27, 28 (full day), 29 (departure morning)
+    start: "2025-11-24",
+    end: "2025-11-29"  // 6 days in London: Nov 24 (arrival morning), 25, 26, 27, 28, 29 (departure morning)
   },
   lisbonHotel: {
     name: "Hyatt Regency Lisbon",
@@ -26,6 +26,12 @@ export const TRIP_DETAILS: TripDetails = {
     address: "1 Blackfriars, London SE1 8NZ, United Kingdom",
     lat: 51.51226,
     lng: -0.10464
+  },
+  londonHotelAlternate: {
+    name: "Hyatt Place London City East",
+    address: "Mountview House, 24 Commercial Rd, London E1 1EW, United Kingdom",
+    lat: 51.51556,
+    lng: -0.06389
   }
 };
 
@@ -51,12 +57,12 @@ export const LISBON_TO_LONDON_FLIGHT: Flight = {
   departure: {
     airport: "LIS",
     city: "Lisbon",
-    time: "12:00" // Placeholder - Lisbon local time (WET) midday
+    time: "07:00" // Nov 24, 7:00 AM WET
   },
   arrival: {
     airport: "LHR",
     city: "London",
-    time: "14:30" // Placeholder - London local time (GMT) - ~2.5hr flight
+    time: "09:30" // Nov 24, 9:30 AM GMT (~2.5hr flight)
   }
 };
 

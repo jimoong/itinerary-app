@@ -85,5 +85,6 @@ export interface TripDetails {
   };
   lisbonHotel: Hotel;
   londonHotel: Hotel;
+  londonHotelAlternate?: Hotel; // For Nov 24-25 stay
 }
 

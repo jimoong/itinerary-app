@@ -1,7 +1,7 @@
 import { Trip } from './types';
 
 const STORAGE_KEY = 'itinerary_trip_data';
-const STORAGE_VERSION = '20'; // Version 20 for updated flight information (UA 713/64 to Lisbon)
+const STORAGE_VERSION = '21'; // Version 21 for itinerary changes (Lisbon to London on Nov 24, alternate hotel)
 const VERSIONS_KEY = 'itinerary_saved_versions';
 const MAX_SAVED_VERSIONS = 5; // Keep last 5 versions
 
