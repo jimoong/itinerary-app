@@ -834,103 +834,10 @@ export default function Home() {
         
         setTrip(newTrip);
         saveTrip(newTrip);
-        console.log('✅ Non-streaming generation complete');
+        console.log('✅ Generation complete');
         setIsLoading(false);
         return;
       }
-
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-      
-      if (!reader) {
-        throw new Error('Response body is not readable');
-      }
-
-      const allDays: DayItinerary[] = [];
-      let buffer = '';
-
-      // Read the stream
-      while (true) {
-        const { done, value } = await reader.read();
-        
-        if (done) {
-          console.log('✅ Stream complete');
-          break;
-        }
-
-        // Decode the chunk and add to buffer
-        buffer += decoder.decode(value, { stream: true });
-        
-        // Process complete messages (separated by \n\n)
-        const messages = buffer.split('\n\n');
-        buffer = messages.pop() || ''; // Keep incomplete message in buffer
-        
-        for (const message of messages) {
-          if (message.startsWith('data: ')) {
-            const jsonStr = message.substring(6);
-            try {
-              const event = JSON.parse(jsonStr);
-              
-              if (event.type === 'day') {
-                console.log(`📅 Received day ${event.progress.current}/${event.progress.total}`);
-                
-                // Add hotels, flights, Lisbon arrival, and London arrival to the day
-                const dayWithHotels = await addHotelsToDay(event.day);
-                const dayWithFlight = await addFlightToDay(dayWithHotels);
-                const dayWithLisbonArrival = await addLisbonArrival(dayWithFlight);
-                const dayWithLondonArrival = await addLondonArrival(dayWithLisbonArrival);
-                allDays.push(dayWithLondonArrival);
-                
-                // Update trip progressively
-                const progressTrip: Trip = {
-                  travelers: [
-                    { role: "Dad", age: 46 },
-                    { role: "Mom", age: 39 },
-                    { role: "Girl", age: 9 },
-                    { role: "Boy", age: 6 }
-                  ],
-                  days: [...allDays],
-                  startDate: allDays[0].date,
-                  endDate: allDays[allDays.length - 1].date,
-                };
-                
-                setTrip(progressTrip);
-                console.log(`✨ UI updated with ${allDays.length} days`);
-              } else if (event.type === 'complete') {
-                console.log('✅ Generation complete:', event.summary);
-              } else if (event.type === 'error') {
-                console.error('❌ Stream error:', event.error);
-                throw new Error(event.error);
-              }
-            } catch (parseError) {
-              console.error('Error parsing SSE message:', parseError);
-            }
-          }
-        }
-      }
-      
-      if (allDays.length !== 9) {
-        console.error('Invalid number of days received:', allDays.length);
-        alert(`Error: Expected 9 days but got ${allDays.length}. Check API configuration.`);
-        setIsLoading(false);
-        return;
-      }
-      
-      const finalTrip: Trip = {
-        travelers: [
-          { role: "Dad", age: 46 },
-          { role: "Mom", age: 39 },
-          { role: "Girl", age: 9 },
-          { role: "Boy", age: 6 }
-        ],
-        days: allDays,
-        startDate: allDays[0].date,
-        endDate: allDays[allDays.length - 1].date,
-      };
-      
-      console.log('💾 Saving final trip to localStorage');
-      saveTrip(finalTrip);
-      console.log('🎉 Trip generation complete!');
     } catch (error) {
       console.error('Error generating trip:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
