@@ -124,9 +124,9 @@ export async function POST(request: NextRequest) {
       let aiGeneratedCount = 0;
       let fallbackCount = 0;
       
-      for (let i = 1; i <= 10; i++) {
-        console.log(`\n--- Day ${i}/10 ---`);
-        const day = await generateDayItinerary(TRIP_DETAILS, i, 10, visitedPlaces);
+      for (let i = 1; i <= 9; i++) {
+        console.log(`\n--- Day ${i}/9 ---`);
+        const day = await generateDayItinerary(TRIP_DETAILS, i, 9, visitedPlaces);
         allDays.push(day);
         
         // Track if this was AI generated or fallback (check if it has the expected structure)
@@ -189,7 +189,7 @@ export async function POST(request: NextRequest) {
       if (avoidPlaces && avoidPlaces.length > 0) {
         console.log(`Avoiding ${avoidPlaces.length} places from other days`);
       }
-      const day = await generateDayItinerary(TRIP_DETAILS, dayNumber, 10, avoidPlaces || []);
+      const day = await generateDayItinerary(TRIP_DETAILS, dayNumber, 9, avoidPlaces || []);
       return NextResponse.json({ day });
     }
 

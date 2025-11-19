@@ -1,7 +1,7 @@
 import { Trip } from './types';
 
 const STORAGE_KEY = 'itinerary_trip_data';
-const STORAGE_VERSION = '24'; // Version 24 for Day 4 restructure (Lisbon departure + London arrival same day)
+const STORAGE_VERSION = '25'; // Version 25 for 9-day itinerary fix (Nov 21-29, no duplicate dates)
 const VERSIONS_KEY = 'itinerary_saved_versions';
 const MAX_SAVED_VERSIONS = 5; // Keep last 5 versions
 

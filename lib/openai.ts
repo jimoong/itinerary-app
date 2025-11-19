@@ -102,9 +102,10 @@ export async function generateDayItinerary(
   console.log(`[generateDayItinerary] Starting generation for day ${dayNumber}/${totalDays}`);
   console.log(`[generateDayItinerary] ${getExcludedPOIsSummary()}`);
   
-  // Handle date assignment for 10 days
-  // Lisbon: Days 1-4 (Nov 21-24)
-  // London: Days 4-10 (Nov 24-29) - Day 4 is travel day (both cities)
+  // Handle date assignment for 9 days
+  // Lisbon: Days 1-3 (Nov 21-23)
+  // Travel: Day 4 (Nov 24) - Lisbon departure + London arrival
+  // London: Days 5-9 (Nov 25-29)
   let date: string;
   let city: string;
   
@@ -117,14 +118,12 @@ export async function generateDayItinerary(
   } else if (dayNumber === 4) {
     // Day 4: Travel day - Nov 24 (both Lisbon departure and London arrival)
     // For AI generation, we'll treat this as London to generate afternoon activities
-    const lisbonStart = new Date(details.lisbonDates.start);
-    lisbonStart.setDate(lisbonStart.getDate() + 3); // Nov 24
-    date = lisbonStart.toISOString().split('T')[0];
+    date = '2025-11-24';
     city = 'London'; // Generate London activities for afternoon
   } else {
-    // London days 5-10: Nov 25-29
+    // London days 5-9: Nov 25-29
     const londonStart = new Date(details.londonDates.start);
-    londonStart.setDate(londonStart.getDate() + (dayNumber - 4));
+    londonStart.setDate(londonStart.getDate() + (dayNumber - 4)); // 5-4=1 (Nov 25), 9-4=5 (Nov 29)
     date = londonStart.toISOString().split('T')[0];
     city = 'London';
   }
@@ -132,8 +131,8 @@ export async function generateDayItinerary(
   const hotel = city === 'Lisbon' ? details.lisbonHotel : details.londonHotel;
 
   // Determine if this is arrival or departure day
-  const isFirstDayInCity = (city === 'Lisbon' && dayNumber === 1) || (city === 'London' && dayNumber === 5);
-  const isLastDayInCity = (city === 'Lisbon' && dayNumber === 4) || (city === 'London' && dayNumber === 10);
+  const isFirstDayInCity = (city === 'Lisbon' && dayNumber === 1) || (city === 'London' && dayNumber === 4);
+  const isLastDayInCity = (city === 'Lisbon' && dayNumber === 4) || (city === 'London' && dayNumber === 9);
   
   // Special handling for Day 4: Departure from Lisbon (morning) + Arrival in London (afternoon)
   const isTravelDay = dayNumber === 4;
@@ -226,11 +225,11 @@ export async function generateDayItinerary(
 - Suggest 4-5 activities for full day from 09:00 to 21:00
 - Plan route to end near Blackfriars area
 `;
-  } else if (dayNumber === 10) {
-    // Day 10: London departure (Nov 29)
+  } else if (dayNumber === 9) {
+    // Day 9: London departure (Nov 29)
     flightDayConstraints = `
 
-⚠️ CRITICAL FLIGHT DAY CONSTRAINTS FOR DAY 10 (London Departure - Nov 29):
+⚠️ CRITICAL FLIGHT DAY CONSTRAINTS FOR DAY 9 (London Departure - Nov 29):
 - Flight departs London (LHR) at 11:00 to San Francisco (SFO)
 - Must arrive at airport by 09:00 (2 hours before departure for international flight)
 - Transportation from hotel to airport: ~45-60 minutes (leave hotel by 08:00)
@@ -497,17 +496,19 @@ export async function regenerateSinglePlace(
 ): Promise<Place> {
   console.log('regenerateSinglePlace called with:', { dayNumber, placeIndex, placesCount: currentPlaces.length, additionalAvoidPlaces: additionalAvoidPlaces?.length || 0 });
   
-  // Determine city based on day number
-  const city = dayNumber <= 5 ? 'Lisbon' : 'London';
+  // Determine city based on day number (9 days total)
+  const city = dayNumber <= 3 ? 'Lisbon' : 'London';
   let date: string;
   
-  if (dayNumber <= 5) {
+  if (dayNumber <= 3) {
     const lisbonStart = new Date(details.lisbonDates.start);
     lisbonStart.setDate(lisbonStart.getDate() + (dayNumber - 1));
     date = lisbonStart.toISOString().split('T')[0];
+  } else if (dayNumber === 4) {
+    date = '2025-11-24';
   } else {
     const londonStart = new Date(details.londonDates.start);
-    londonStart.setDate(londonStart.getDate() + (dayNumber - 6));
+    londonStart.setDate(londonStart.getDate() + (dayNumber - 4));
     date = londonStart.toISOString().split('T')[0];
   }
 
@@ -1198,72 +1199,7 @@ function generateFallbackItinerary(
         kidsRating: 'Easy evening near hotel for packing and rest.'
       }
     ],
-    9: [ // Nov 29 - Full day
-      {
-        id: `${dayNumber}-0`,
-        name: 'Buckingham Palace',
-        address: 'London SW1A 1AA, United Kingdom',
-        lat: 51.5014,
-        lng: -0.1419,
-        description: 'Official residence of the King. See the palace exterior and walk through St. James\'s Park.',
-        duration: 90,
-        category: 'landmark',
-        startTime: '09:30',
-        kidsRating: 'Kids love seeing the royal palace! Check if Changing of the Guard is scheduled.',
-        transportToNext: {
-          mode: 'walk',
-          duration: 15,
-          distance: '1.1 km'
-        }
-      },
-      {
-        id: `${dayNumber}-1`,
-        name: 'Harrods',
-        address: '87-135 Brompton Rd, London SW1X 7XL, United Kingdom',
-        lat: 51.4994,
-        lng: -0.1634,
-        description: 'Iconic luxury department store. Visit the famous Food Halls even if not shopping!',
-        duration: 120,
-        category: 'shopping',
-        startTime: '11:30',
-        kidsRating: 'The Food Halls are like a museum! Kids amazed by the elaborate displays and treats.',
-        transportToNext: {
-          mode: 'metro',
-          duration: 20,
-          distance: '3.5 km'
-        }
-      },
-      {
-        id: `${dayNumber}-2`,
-        name: 'Covent Garden',
-        address: 'Covent Garden, London WC2E 8RF, United Kingdom',
-        lat: 51.5118,
-        lng: -0.1226,
-        description: 'Historic market with street performers, shops, and cafes.',
-        duration: 120,
-        category: 'shopping',
-        startTime: '14:30',
-        kidsRating: 'Street performers everywhere! Great for last-minute souvenir shopping.',
-        transportToNext: {
-          mode: 'walk',
-          duration: 8,
-          distance: '0.6 km'
-        }
-      },
-      {
-        id: `${dayNumber}-3`,
-        name: 'Farewell Dinner',
-        address: 'Covent Garden Area, London WC2, United Kingdom',
-        lat: 51.5115,
-        lng: -0.1220,
-        description: 'Final dinner in London. Many family-friendly restaurants in the area.',
-        duration: 90,
-        category: 'restaurant',
-        startTime: '17:00',
-        kidsRating: 'Celebrate the amazing trip! Reflect on favorite memories.'
-      }
-    ],
-    10: [ // Nov 30 - Departure day - morning only
+    9: [ // Nov 29 - Departure day - morning only
       {
         id: `${dayNumber}-0`,
         name: 'Hotel Breakfast',
@@ -1296,7 +1232,7 @@ function generateFallbackItinerary(
     itinerary.flight = SFO_TO_LISBON_FLIGHT;
   } else if (dayNumber === 4) {
     itinerary.flight = LISBON_TO_LONDON_FLIGHT;
-  } else if (dayNumber === 10) {
+  } else if (dayNumber === 9) {
     itinerary.flight = LONDON_TO_SFO_FLIGHT;
   }
   

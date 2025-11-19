@@ -204,7 +204,7 @@ export async function POST(request: NextRequest) {
               const data = JSON.stringify({ 
                 type: 'day', 
                 day,
-                progress: { current: i + 1, total: 10 }
+                progress: { current: i + 1, total: 9 }
               });
               controller.enqueue(encoder.encode(`data: ${data}\n\n`));
               console.log(`✅ Day ${day.dayNumber} sent to client`);
@@ -215,8 +215,8 @@ export async function POST(request: NextRequest) {
             // Fall back to old method
             allDays = [];
             for (let i = scope.startDayNumber; i <= scope.endDayNumber; i++) {
-              console.log(`\n--- Day ${i}/10 (FALLBACK) ---`);
-              const day = await generateDayItinerary(TRIP_DETAILS, i, 10, visitedPlaces);
+              console.log(`\n--- Day ${i}/9 (FALLBACK) ---`);
+              const day = await generateDayItinerary(TRIP_DETAILS, i, 9, visitedPlaces);
               allDays.push(day);
               fallbackCount++;
               
@@ -237,10 +237,10 @@ export async function POST(request: NextRequest) {
         } else {
           // OLD METHOD: Day-by-day generation (for smart regeneration or when two-phase is disabled)
           for (let i = scope.startDayNumber; i <= scope.endDayNumber; i++) {
-            console.log(`\n--- Day ${i}/10 ---`);
+            console.log(`\n--- Day ${i}/9 ---`);
             
             // Generate the day
-            const day = await generateDayItinerary(TRIP_DETAILS, i, 10, visitedPlaces);
+            const day = await generateDayItinerary(TRIP_DETAILS, i, 9, visitedPlaces);
             allDays.push(day);
             
             // Track AI vs fallback
@@ -270,7 +270,7 @@ export async function POST(request: NextRequest) {
             const data = JSON.stringify({ 
               type: 'day', 
               day,
-              progress: { current: i, total: 10 }
+              progress: { current: i, total: 9 }
             });
             controller.enqueue(encoder.encode(`data: ${data}\n\n`));
             
@@ -302,7 +302,7 @@ export async function POST(request: NextRequest) {
               const data = JSON.stringify({ 
                 type: 'day', 
                 day: allDays[i],
-                progress: { current: i + 1, total: 10 }
+                progress: { current: i + 1, total: 9 }
               });
               controller.enqueue(encoder.encode(`data: ${data}\n\n`));
             }

@@ -143,11 +143,11 @@ async function calculateSmartRoute(
 
 // Utility function to add hotel as first and last place in the itinerary
 async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
-  // Special handling for departure flight days (Day 4 and Day 10) - no return to hotel
-  const isDepartureFlightDay = day.dayNumber === 4 || day.dayNumber === 10;
+  // Special handling for departure flight days (Day 4 and Day 9) - no return to hotel
+  const isDepartureFlightDay = day.dayNumber === 4 || day.dayNumber === 9;
   
-  // Special handling for arrival days (Day 1 and Day 5) - no start hotel (airport comes first)
-  const isArrivalDay = day.dayNumber === 1 || day.dayNumber === 5;
+  // Special handling for arrival days (Day 1 and Day 4) - no start hotel (airport comes first)
+  const isArrivalDay = day.dayNumber === 1 || day.dayNumber === 4;
   
   // Check if hotels are already properly added with transport
   if (!isDepartureFlightDay && !isArrivalDay && day.places.length >= 2 && 
@@ -172,8 +172,8 @@ async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
   // Remove existing hotels if present but incomplete
   let placesWithoutHotels = day.places.filter(p => p.category !== 'hotel');
 
-  // Determine which hotel to use (alternate hotel for Nov 24 only, which is day 5)
-  const useAlternateHotel = (day.dayNumber === 5) && TRIP_DETAILS.londonHotelAlternate;
+  // Determine which hotel to use (alternate hotel for Nov 24 only, which is day 4)
+  const useAlternateHotel = (day.dayNumber === 4) && TRIP_DETAILS.londonHotelAlternate;
   const hotelToUse = useAlternateHotel ? TRIP_DETAILS.londonHotelAlternate! : day.hotel;
 
   const hotelPlace: Place = {
@@ -233,8 +233,8 @@ async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
   }
   
   // Add hotel at start (with start time and transport to first place)
-  // Day 4: 04:00 (Lisbon early departure), Day 6: 08:00 (from Hyatt Place City East), Day 10: 06:00 (London departure), others: 08:00
-  const startTime = day.dayNumber === 4 ? '04:00' : (day.dayNumber === 10 ? '06:00' : '08:00');
+  // Day 4: 04:00 (Lisbon early departure), Day 5: 08:00 (from Hyatt Place City East), Day 9: 06:00 (London departure), others: 08:00
+  const startTime = day.dayNumber === 4 ? '04:00' : (day.dayNumber === 9 ? '06:00' : '08:00');
   const startHotel: Place = { 
     ...hotelPlace, 
     id: `hotel-start-${day.dayNumber}`, 
@@ -255,8 +255,8 @@ async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
   }
   
   // Calculate route from last place back to hotel (normal days)
-  // For Day 6, end at Hyatt Regency Blackfriars (not the alternate hotel)
-  const endHotelToUse = day.dayNumber === 6 ? day.hotel : hotelToUse;
+  // For Day 5, end at Hyatt Regency Blackfriars (not the alternate hotel)
+  const endHotelToUse = day.dayNumber === 5 ? day.hotel : hotelToUse;
   let lastToHotelRoute = null;
   if (placesWithoutHotels.length > 0) {
     const lastPlace = placesWithoutHotels[placesWithoutHotels.length - 1];
@@ -284,8 +284,8 @@ async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
       })
     : [];
   
-  // For Day 6, create end hotel with Hyatt Regency Blackfriars (different from start hotel)
-  const endHotel = day.dayNumber === 6 
+  // For Day 5, create end hotel with Hyatt Regency Blackfriars (different from start hotel)
+  const endHotel = day.dayNumber === 5 
     ? {
         id: `hotel-end-${day.dayNumber}`,
         name: day.hotel.name,
@@ -305,10 +305,10 @@ async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
   };
 }
 
-// Add flight and airport transportation for Day 4 and Day 10
+// Add flight and airport transportation for Day 4 and Day 9
 async function addFlightToDay(day: DayItinerary): Promise<DayItinerary> {
-  // Only process Day 4 (Lisbon to London flight) or Day 10 (London to SFO flight)
-  if ((day.dayNumber !== 4 && day.dayNumber !== 10) || !day.flight) {
+  // Only process Day 4 (Lisbon to London flight) or Day 9 (London to SFO flight)
+  if ((day.dayNumber !== 4 && day.dayNumber !== 9) || !day.flight) {
     return day;
   }
 
@@ -524,21 +524,21 @@ async function addLisbonArrival(day: DayItinerary): Promise<DayItinerary> {
   };
 }
 
-// Add London arrival for Day 6 (Flight from Lisbon)
+// Add London arrival for Day 4 (Flight from Lisbon)
 async function addLondonArrival(day: DayItinerary): Promise<DayItinerary> {
-  // Only process Day 5 (London arrival from Lisbon via flight on Nov 24)
-  if (day.dayNumber !== 5) {
+  // Only process Day 4 (London arrival from Lisbon via flight on Nov 24)
+  if (day.dayNumber !== 4) {
     return day;
   }
 
   // Check if airport arrival is already added
   const hasAirportArrival = day.places.some(p => p.category === 'airport');
   if (hasAirportArrival) {
-    console.log('[addLondonArrival] Day 5 already has airport arrival, skipping');
+    console.log('[addLondonArrival] Day 4 already has airport arrival, skipping');
     return day;
   }
 
-  console.log('[addLondonArrival] Processing Day 5 London arrival');
+  console.log('[addLondonArrival] Processing Day 4 London arrival');
   console.log('[addLondonArrival] Initial places:', day.places.map(p => `${p.name} (${p.category})`));
 
   // London Heathrow Airport (LHR)
@@ -552,7 +552,7 @@ async function addLondonArrival(day: DayItinerary): Promise<DayItinerary> {
   // Remove the start hotel (we'll add airport first, then hotel)
   let placesWithoutStartHotel = day.places.filter(p => !(p.category === 'hotel' && p.id.includes('start')));
   
-  // Use alternate hotel for Day 5 (Nov 24)
+  // Use alternate hotel for Day 4 (Nov 24)
   const hotelToUse = TRIP_DETAILS.londonHotelAlternate || day.hotel;
   
   // Calculate route from airport to hotel
@@ -616,7 +616,7 @@ async function addLondonArrival(day: DayItinerary): Promise<DayItinerary> {
   const updatedPlaces = [flightArrival, hotelCheckIn, ...placesWithoutStartHotel];
 
   console.log('[addLondonArrival] Final places:', updatedPlaces.map(p => `${p.name} (${p.category})`));
-  console.log('[addLondonArrival] ✅ Day 6 London arrival complete');
+  console.log('[addLondonArrival] ✅ Day 4 London arrival complete');
 
   return {
     ...day,
@@ -814,7 +814,7 @@ export default function Home() {
         const daysWithLisbonArrival = await Promise.all(
           daysWithFlights.map((day: DayItinerary) => addLisbonArrival(day))
         );
-        // Add London arrival to Day 6
+        // Add London arrival to Day 4
         const daysWithLondonArrival = await Promise.all(
           daysWithLisbonArrival.map((day: DayItinerary) => addLondonArrival(day))
         );
