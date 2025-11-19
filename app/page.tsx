@@ -172,8 +172,8 @@ async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
   // Remove existing hotels if present but incomplete
   let placesWithoutHotels = day.places.filter(p => p.category !== 'hotel');
 
-  // Determine which hotel to use (alternate hotel for Nov 24-25, which are days 5-6)
-  const useAlternateHotel = (day.dayNumber === 5 || day.dayNumber === 6) && TRIP_DETAILS.londonHotelAlternate;
+  // Determine which hotel to use (alternate hotel for Nov 24 only, which is day 5)
+  const useAlternateHotel = (day.dayNumber === 5) && TRIP_DETAILS.londonHotelAlternate;
   const hotelToUse = useAlternateHotel ? TRIP_DETAILS.londonHotelAlternate! : day.hotel;
 
   const hotelPlace: Place = {
