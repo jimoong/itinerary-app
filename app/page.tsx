@@ -173,41 +173,48 @@ async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
   // Remove existing hotels if present but incomplete
   let placesWithoutHotels = day.places.filter(p => p.category !== 'hotel');
 
-  // Determine which hotel to use (alternate hotel for Nov 24 only, which is day 4)
-  const useAlternateHotel = (day.dayNumber === 4) && TRIP_DETAILS.londonHotelAlternate;
-  const hotelToUse = useAlternateHotel ? TRIP_DETAILS.londonHotelAlternate! : day.hotel;
+  // Determine which hotel to use for START of day
+  // Day 4: Use alternate hotel (Hyatt Place City East)
+  // Day 5: START from alternate hotel (where they stayed night of Nov 24), END at regular hotel
+  // Others: Use regular hotel
+  const useAlternateHotelForStart = (day.dayNumber === 4 || day.dayNumber === 5) && TRIP_DETAILS.londonHotelAlternate;
+  const startHotelToUse = useAlternateHotelForStart ? TRIP_DETAILS.londonHotelAlternate! : day.hotel;
+  
+  // For END of day, use regular hotel for Day 5, alternate for Day 4, regular for others
+  const useAlternateHotelForEnd = (day.dayNumber === 4) && TRIP_DETAILS.londonHotelAlternate;
+  const endHotelToUse = useAlternateHotelForEnd ? TRIP_DETAILS.londonHotelAlternate! : day.hotel;
 
-  const hotelPlace: Place = {
+  const startHotelPlace: Place = {
     id: `hotel-${day.dayNumber}`,
-    name: hotelToUse.name,
-    address: hotelToUse.address,
-    lat: hotelToUse.lat,
-    lng: hotelToUse.lng,
+    name: startHotelToUse.name,
+    address: startHotelToUse.address,
+    lat: startHotelToUse.lat,
+    lng: startHotelToUse.lng,
     description: 'Your hotel',
     duration: 0,
     category: 'hotel',
   };
 
-  // Calculate route from hotel to first place if there are places
+  // Calculate route from START hotel to first place if there are places
   let hotelToFirstRoute = null;
   if (placesWithoutHotels.length > 0) {
     const firstPlace = placesWithoutHotels[0];
     hotelToFirstRoute = await calculateSmartRoute(
-      { lat: hotelToUse.lat, lng: hotelToUse.lng },
+      { lat: startHotelToUse.lat, lng: startHotelToUse.lng },
       { lat: firstPlace.lat, lng: firstPlace.lng }
     );
   }
 
   // For arrival days, skip adding start hotel (airport arrival function handles it)
   if (isArrivalDay) {
-    // Just add end hotel for arrival days
+    // Just add end hotel for arrival days (use END hotel, not start)
     const lastPlace = placesWithoutHotels[placesWithoutHotels.length - 1];
     let lastToHotelRoute = null;
     
     if (lastPlace) {
       lastToHotelRoute = await calculateSmartRoute(
         { lat: lastPlace.lat, lng: lastPlace.lng },
-        { lat: hotelToUse.lat, lng: hotelToUse.lng }
+        { lat: endHotelToUse.lat, lng: endHotelToUse.lng }
       );
     }
     
@@ -225,7 +232,16 @@ async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
       return place;
     });
     
-    const endHotel = { ...hotelPlace, id: `hotel-end-${day.dayNumber}` };
+    const endHotel: Place = { 
+      id: `hotel-end-${day.dayNumber}`,
+      name: endHotelToUse.name,
+      address: endHotelToUse.address,
+      lat: endHotelToUse.lat,
+      lng: endHotelToUse.lng,
+      description: 'Your hotel',
+      duration: 0,
+      category: 'hotel',
+    };
     
     return {
       ...day,
@@ -237,7 +253,7 @@ async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
   // Day 4: 04:00 (Lisbon early departure), Day 5: 08:00 (from Hyatt Place City East), Day 9: 06:00 (London departure), others: 08:00
   const startTime = day.dayNumber === 4 ? '04:00' : (day.dayNumber === 9 ? '06:00' : '08:00');
   const startHotel: Place = { 
-    ...hotelPlace, 
+    ...startHotelPlace, 
     id: `hotel-start-${day.dayNumber}`, 
     startTime,
     transportToNext: hotelToFirstRoute ? {
@@ -255,9 +271,8 @@ async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
     };
   }
   
-  // Calculate route from last place back to hotel (normal days)
-  // For Day 5, end at Hyatt Regency Blackfriars (not the alternate hotel)
-  const endHotelToUse = day.dayNumber === 5 ? day.hotel : hotelToUse;
+  // Calculate route from last place back to END hotel (normal days)
+  // endHotelToUse is already defined above
   let lastToHotelRoute = null;
   if (placesWithoutHotels.length > 0) {
     const lastPlace = placesWithoutHotels[placesWithoutHotels.length - 1];
@@ -285,19 +300,17 @@ async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
       })
     : [];
   
-  // For Day 5, create end hotel with Hyatt Regency Blackfriars (different from start hotel)
-  const endHotel = day.dayNumber === 5 
-    ? {
-        id: `hotel-end-${day.dayNumber}`,
-        name: day.hotel.name,
-        address: day.hotel.address,
-        lat: day.hotel.lat,
-        lng: day.hotel.lng,
-        description: 'Your hotel',
-        duration: 0,
-        category: 'hotel' as const
-      }
-    : { ...hotelPlace, id: `hotel-end-${day.dayNumber}` };
+  // Create end hotel (use END hotel, not start)
+  const endHotel: Place = {
+    id: `hotel-end-${day.dayNumber}`,
+    name: endHotelToUse.name,
+    address: endHotelToUse.address,
+    lat: endHotelToUse.lat,
+    lng: endHotelToUse.lng,
+    description: 'Your hotel',
+    duration: 0,
+    category: 'hotel'
+  };
 
   // Insert hotel at beginning and end
   return {

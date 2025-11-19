@@ -1,7 +1,7 @@
 import { Trip } from './types';
 
 const STORAGE_KEY = 'itinerary_trip_data';
-const STORAGE_VERSION = '26'; // Version 26: Remove fallback data, add empty states, fix musical reservations
+const STORAGE_VERSION = '27'; // Version 27: Fix hotel logic for Day 5 (start from alternate hotel, end at regular hotel)
 const VERSIONS_KEY = 'itinerary_saved_versions';
 const MAX_SAVED_VERSIONS = 5; // Keep last 5 versions
 
