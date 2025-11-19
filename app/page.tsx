@@ -814,8 +814,8 @@ export default function Home() {
         
         const data = await fallbackResponse.json();
         
-        if (!data.days || data.days.length !== 10) {
-          throw new Error(`Expected 10 days but got ${data.days?.length || 0}`);
+        if (!data.days || data.days.length !== 9) {
+          throw new Error(`Expected 9 days but got ${data.days?.length || 0}`);
         }
         
         // Add hotels to each day
@@ -924,9 +924,9 @@ export default function Home() {
         }
       }
       
-      if (allDays.length !== 10) {
+      if (allDays.length !== 9) {
         console.error('Invalid number of days received:', allDays.length);
-        alert(`Error: Expected 10 days but got ${allDays.length}. Check API configuration.`);
+        alert(`Error: Expected 9 days but got ${allDays.length}. Check API configuration.`);
         setIsLoading(false);
         return;
       }

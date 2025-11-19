@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
         let aiGeneratedCount = 0;
         
         // Determine regeneration scope
-        let scope = { startDayNumber: 1, endDayNumber: 10, reason: 'Full generation' };
+        let scope = { startDayNumber: 1, endDayNumber: 9, reason: 'Full generation' };
         if (smartRegeneration) {
           scope = getRegenerationScope();
           console.log(`\n📍 ${scope.reason}`);
@@ -158,7 +158,7 @@ export async function POST(request: NextRequest) {
               const data = JSON.stringify({ 
                 type: 'day', 
                 day,
-                progress: { current: day.dayNumber, total: 10 },
+                progress: { current: day.dayNumber, total: 9 },
                 preserved: true
               });
               controller.enqueue(encoder.encode(`data: ${data}\n\n`));
@@ -174,7 +174,7 @@ export async function POST(request: NextRequest) {
             type: 'progress', 
             message: 'Generating master POI list...',
             phase: 1,
-            progress: { current: 0, total: 10 }
+            progress: { current: 0, total: 9 }
           })}\n\n`));
           
           try {
@@ -188,7 +188,7 @@ export async function POST(request: NextRequest) {
               type: 'progress', 
               message: 'Distributing POIs across days...',
               phase: 2,
-              progress: { current: 0, total: 10 }
+              progress: { current: 0, total: 9 }
             })}\n\n`));
             
             const distributedDays = await distributePOIsAcrossDays(masterPOIs, TRIP_DETAILS);
@@ -229,7 +229,7 @@ export async function POST(request: NextRequest) {
               const data = JSON.stringify({ 
                 type: 'day', 
                 day,
-                progress: { current: i, total: 10 }
+                progress: { current: i, total: 9 }
               });
               controller.enqueue(encoder.encode(`data: ${data}\n\n`));
             }

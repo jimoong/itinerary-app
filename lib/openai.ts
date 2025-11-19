@@ -421,7 +421,7 @@ ${'='.repeat(80)}\n` : ''}`;
         itinerary.flight = SFO_TO_LISBON_FLIGHT;
       } else if (dayNumber === 5) {
         itinerary.flight = LISBON_TO_LONDON_FLIGHT;
-      } else if (dayNumber === 10) {
+      } else if (dayNumber === 9) {
         itinerary.flight = LONDON_TO_SFO_FLIGHT;
       }
       
