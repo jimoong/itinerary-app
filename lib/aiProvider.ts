@@ -5,7 +5,7 @@ type AIProvider = 'openai' | 'gemini';
 
 const AI_PROVIDER: AIProvider = (process.env.AI_PROVIDER as AIProvider) || 'openai'; // Note: If using Gemini, make sure your API key has the required permissions
 const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-3.5-turbo';
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-pro';
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
 
 // Timeout settings (in milliseconds)
 const OPENAI_TIMEOUT = parseInt(process.env.OPENAI_TIMEOUT || '30000'); // 30 seconds
@@ -136,6 +136,8 @@ async function callGemini(prompt: string): Promise<AIResponse> {
 
     console.log(`[aiProvider] Gemini: Starting streaming request`);
     console.log(`[aiProvider] Gemini: Model=${GEMINI_MODEL}, Timeout=${GEMINI_TIMEOUT}ms`);
+    console.log(`[aiProvider] Gemini: Prompt length=${prompt.length} chars`);
+    console.log(`[aiProvider] Gemini: First 200 chars of prompt:`, prompt.substring(0, 200));
 
     const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
     
@@ -172,16 +174,26 @@ async function callGemini(prompt: string): Promise<AIResponse> {
 
     // Collect the streamed content
     console.log(`[aiProvider] Gemini: Stream started, collecting chunks...`);
+    let firstChunkReceived = false;
     for await (const chunk of streamResult.stream) {
+      if (!firstChunkReceived) {
+        console.log(`[aiProvider] Gemini: ✅ First chunk received!`);
+        firstChunkReceived = true;
+      }
       const chunkText = chunk.text();
       if (chunkText) {
         partialContent += chunkText;
         chunkCount++;
+        if (chunkCount === 1) {
+          console.log(`[aiProvider] Gemini: First chunk text (first 100 chars):`, chunkText.substring(0, 100));
+        }
         if (chunkCount % 5 === 0) {
           console.log(`[aiProvider] Gemini: Received ${chunkCount} chunks, ${partialContent.length} chars so far`);
         }
       }
     }
+    
+    console.log(`[aiProvider] Gemini: Stream loop completed. Chunks received: ${chunkCount}`);
 
     if (!partialContent) {
       const emptyError = new Error(`No response text from Gemini streaming (model: ${GEMINI_MODEL}, timeout: ${GEMINI_TIMEOUT}ms)`);
