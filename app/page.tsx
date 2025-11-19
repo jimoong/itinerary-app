@@ -409,10 +409,8 @@ async function addFlightToDay(day: DayItinerary): Promise<DayItinerary> {
     address: departurePoint.address,
     lat: departurePoint.lat,
     lng: departurePoint.lng,
-    description: day.dayNumber === 5 
-      ? `Check-in for Eurostar train ${day.train?.trainNumber}`
-      : `Check-in for flight ${day.flight?.flightNumber}`,
-    duration: day.dayNumber === 5 ? 60 : 120, // 1 hour for train, 2 hours for flight
+    description: `Check-in for flight ${day.flight?.flightNumber}`,
+    duration: 120, // 2 hours for flight check-in
     category: 'airport',
     startTime: departureArrivalTime,
   };
