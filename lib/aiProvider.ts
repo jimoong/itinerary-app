@@ -164,7 +164,7 @@ async function callGemini(prompt: string): Promise<AIResponse> {
         ],
         generationConfig: {
           temperature: 0.7,
-          maxOutputTokens: 8192, // Increased from 2000 to 8192 for more detailed responses
+          maxOutputTokens: 16384, // Increased to 16K for master POI list generation
           topP: 0.95,
           topK: 40,
         }

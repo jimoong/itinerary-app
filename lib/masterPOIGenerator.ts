@@ -2,7 +2,7 @@
  * Master POI List Generator
  * 
  * Phase 1 of the two-phase itinerary generation system.
- * Generates a comprehensive list of 40-60 POIs for the entire trip.
+ * Generates a comprehensive list of 30-40 POIs for the entire trip.
  */
 
 import { Place, TripDetails } from './types';
@@ -188,7 +188,7 @@ ${londonExcluded}
 ${visitedInfo}
 
 🎯 YOUR TASK:
-Generate a comprehensive master list of 40-60 family-friendly POIs (Points of Interest) for the ENTIRE trip.
+Generate a comprehensive master list of 30-40 family-friendly POIs (Points of Interest) for the ENTIRE trip.
 
 REQUIREMENTS:
 1. **MUST-VISIT INCLUSION**: ALL high-priority must-visit locations MUST be included in your list
