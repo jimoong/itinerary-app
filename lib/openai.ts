@@ -46,35 +46,35 @@ export function cleanJsonResponse(content: string): string {
     // Try to repair truncated JSON
     let repaired = cleaned;
     
+    // Check if we're in an unterminated string (do this FIRST, before counting braces)
+    let inString = false;
+    let escapeNext = false;
+    for (let i = 0; i < repaired.length; i++) {
+      const char = repaired[i];
+      if (escapeNext) {
+        escapeNext = false;
+        continue;
+      }
+      if (char === '\\') {
+        escapeNext = true;
+        continue;
+      }
+      if (char === '"') {
+        inString = !inString;
+      }
+    }
+    
     // Count braces and brackets
     const openBraces = (repaired.match(/{/g) || []).length;
     const closeBraces = (repaired.match(/}/g) || []).length;
     const openBrackets = (repaired.match(/\[/g) || []).length;
     const closeBrackets = (repaired.match(/\]/g) || []).length;
     
-    console.log(`[cleanJsonResponse] Braces: ${openBraces}/${closeBraces}, Brackets: ${openBrackets}/${closeBrackets}`);
+    console.log(`[cleanJsonResponse] Braces: ${openBraces}/${closeBraces}, Brackets: ${openBrackets}/${closeBrackets}, inString: ${inString}`);
     
-    // If JSON appears truncated, try to close it
-    if (openBraces > closeBraces || openBrackets > closeBrackets) {
+    // If JSON appears truncated (unterminated string OR unbalanced braces/brackets), try to close it
+    if (inString || openBraces > closeBraces || openBrackets > closeBrackets) {
       console.log('[cleanJsonResponse] Detected truncated JSON, attempting to close...');
-      
-      // Check if we're in an unterminated string
-      let inString = false;
-      let escapeNext = false;
-      for (let i = 0; i < repaired.length; i++) {
-        const char = repaired[i];
-        if (escapeNext) {
-          escapeNext = false;
-          continue;
-        }
-        if (char === '\\') {
-          escapeNext = true;
-          continue;
-        }
-        if (char === '"') {
-          inString = !inString;
-        }
-      }
       
       // If we're in an unterminated string, close it
       if (inString) {
@@ -85,13 +85,13 @@ export function cleanJsonResponse(content: string): string {
       // Remove any incomplete last item (likely truncated)
       // Find the last complete object/value before truncation
       const lastCommaIndex = repaired.lastIndexOf(',');
-      if (lastCommaIndex > 0 && !inString) {
-        // Only remove trailing content if we're not fixing a string issue
+      if (lastCommaIndex > 0 && inString) {
+        // If we just closed an unterminated string, the content after the last comma is incomplete
         const afterComma = repaired.substring(lastCommaIndex + 1).trim();
         // Check if what's after the comma looks incomplete (no closing brace/bracket)
         if (!afterComma.includes('}') && !afterComma.includes(']')) {
           repaired = repaired.substring(0, lastCommaIndex);
-          console.log('[cleanJsonResponse] Removed incomplete trailing content');
+          console.log('[cleanJsonResponse] Removed incomplete trailing content after unterminated string');
         }
       }
       
@@ -103,9 +103,11 @@ export function cleanJsonResponse(content: string): string {
       
       if (newOpenBrackets > newCloseBrackets) {
         repaired += ']'.repeat(newOpenBrackets - newCloseBrackets);
+        console.log(`[cleanJsonResponse] Closed ${newOpenBrackets - newCloseBrackets} unterminated array(s)`);
       }
       if (newOpenBraces > newCloseBraces) {
         repaired += '}'.repeat(newOpenBraces - newCloseBraces);
+        console.log(`[cleanJsonResponse] Closed ${newOpenBraces - newCloseBraces} unterminated object(s)`);
       }
       
       try {
