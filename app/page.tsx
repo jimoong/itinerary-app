@@ -367,8 +367,8 @@ async function addFlightToDay(day: DayItinerary): Promise<DayItinerary> {
   }
 
   // Define checkout and departure times based on day
-  const checkoutTime = day.dayNumber === 5 ? '11:00' : '08:00';
-  const departureArrivalTime = day.dayNumber === 5 ? '11:30' : '09:30';
+  const checkoutTime = day.dayNumber === 4 ? '05:00' : '08:00';
+  const departureArrivalTime = day.dayNumber === 4 ? '05:30' : '09:30';
   
   // Add hotel checkout place
   const checkoutHotel: Place = {
