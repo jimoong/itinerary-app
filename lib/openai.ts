@@ -76,22 +76,26 @@ export function cleanJsonResponse(content: string): string {
     if (inString || openBraces > closeBraces || openBrackets > closeBrackets) {
       console.log('[cleanJsonResponse] Detected truncated JSON, attempting to close...');
       
-      // If we're in an unterminated string, close it
+      // If we're in an unterminated string, we need to remove the incomplete item
       if (inString) {
-        console.log('[cleanJsonResponse] Detected unterminated string, closing it');
-        repaired += '"';
-      }
-      
-      // Remove any incomplete last item (likely truncated)
-      // Find the last complete object/value before truncation
-      const lastCommaIndex = repaired.lastIndexOf(',');
-      if (lastCommaIndex > 0 && inString) {
-        // If we just closed an unterminated string, the content after the last comma is incomplete
-        const afterComma = repaired.substring(lastCommaIndex + 1).trim();
-        // Check if what's after the comma looks incomplete (no closing brace/bracket)
-        if (!afterComma.includes('}') && !afterComma.includes(']')) {
+        console.log('[cleanJsonResponse] Detected unterminated string, removing incomplete item');
+        
+        // Find the last complete item by looking for the last comma before the unterminated string
+        // We need to find where the current (incomplete) object/property started
+        const lastCommaIndex = repaired.lastIndexOf(',');
+        const lastOpenBrace = repaired.lastIndexOf('{');
+        
+        // If there's a comma after the last opening brace, remove from that comma
+        // Otherwise, we're in the first property of an object, so we need to handle differently
+        if (lastCommaIndex > lastOpenBrace) {
+          // Remove everything from the last comma onwards
           repaired = repaired.substring(0, lastCommaIndex);
-          console.log('[cleanJsonResponse] Removed incomplete trailing content after unterminated string');
+          console.log('[cleanJsonResponse] Removed incomplete item from last comma');
+        } else {
+          // We're in the first property of an object, remove from the opening brace
+          // But keep the brace and close it properly
+          repaired = repaired.substring(0, lastOpenBrace + 1);
+          console.log('[cleanJsonResponse] Removed incomplete first property, keeping object structure');
         }
       }
       
