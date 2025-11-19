@@ -233,8 +233,8 @@ async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
   }
   
   // Add hotel at start (with start time and transport to first place)
-  // Day 5: 09:00 (Lisbon departure), Day 10: 06:00 (London early departure), others: 08:00
-  const startTime = day.dayNumber === 10 ? '06:00' : (isDepartureFlightDay ? '09:00' : '08:00');
+  // Day 4: 04:00 (Lisbon early departure), Day 6: 08:00 (from Hyatt Place City East), Day 10: 06:00 (London departure), others: 08:00
+  const startTime = day.dayNumber === 4 ? '04:00' : (day.dayNumber === 10 ? '06:00' : '08:00');
   const startHotel: Place = { 
     ...hotelPlace, 
     id: `hotel-start-${day.dayNumber}`, 
@@ -255,12 +255,14 @@ async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
   }
   
   // Calculate route from last place back to hotel (normal days)
+  // For Day 6, end at Hyatt Regency Blackfriars (not the alternate hotel)
+  const endHotelToUse = day.dayNumber === 6 ? day.hotel : hotelToUse;
   let lastToHotelRoute = null;
   if (placesWithoutHotels.length > 0) {
     const lastPlace = placesWithoutHotels[placesWithoutHotels.length - 1];
     lastToHotelRoute = await calculateSmartRoute(
       { lat: lastPlace.lat, lng: lastPlace.lng },
-      { lat: hotelToUse.lat, lng: hotelToUse.lng }
+      { lat: endHotelToUse.lat, lng: endHotelToUse.lng }
     );
   }
 
@@ -282,7 +284,19 @@ async function addHotelsToDay(day: DayItinerary): Promise<DayItinerary> {
       })
     : [];
   
-  const endHotel = { ...hotelPlace, id: `hotel-end-${day.dayNumber}` };
+  // For Day 6, create end hotel with Hyatt Regency Blackfriars (different from start hotel)
+  const endHotel = day.dayNumber === 6 
+    ? {
+        id: `hotel-end-${day.dayNumber}`,
+        name: day.hotel.name,
+        address: day.hotel.address,
+        lat: day.hotel.lat,
+        lng: day.hotel.lng,
+        description: 'Your hotel',
+        duration: 0,
+        category: 'hotel' as const
+      }
+    : { ...hotelPlace, id: `hotel-end-${day.dayNumber}` };
 
   // Insert hotel at beginning and end
   return {
@@ -367,8 +381,8 @@ async function addFlightToDay(day: DayItinerary): Promise<DayItinerary> {
   }
 
   // Define checkout and departure times based on day
-  const checkoutTime = day.dayNumber === 4 ? '05:00' : '08:00';
-  const departureArrivalTime = day.dayNumber === 4 ? '05:30' : '09:30';
+  const checkoutTime = day.dayNumber === 4 ? '04:00' : '08:00';
+  const departureArrivalTime = day.dayNumber === 4 ? '04:30' : '09:30';
   
   // Add hotel checkout place
   const checkoutHotel: Place = {
