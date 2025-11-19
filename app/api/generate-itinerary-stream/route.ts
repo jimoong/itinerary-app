@@ -184,12 +184,6 @@ export async function POST(request: NextRequest) {
             
             // ===== PHASE 2: Distribute POIs Across Days =====
             console.log('\n📅 [PHASE 2] Distributing POIs across days...');
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
-              type: 'progress', 
-              message: 'Distributing POIs across days...',
-              phase: 2,
-              progress: { current: 0, total: 9 }
-            })}\n\n`));
             
             const distributedDays = await distributePOIsAcrossDays(masterPOIs, TRIP_DETAILS);
             console.log(`✅ Distribution complete: ${distributedDays.length} days`);
@@ -206,8 +200,12 @@ export async function POST(request: NextRequest) {
                 day,
                 progress: { current: i + 1, total: 9 }
               });
-              controller.enqueue(encoder.encode(`data: ${data}\n\n`));
-              console.log(`✅ Day ${day.dayNumber} sent to client`);
+              try {
+                controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+                console.log(`✅ Day ${day.dayNumber} sent to client`);
+              } catch (e) {
+                console.warn(`⚠️ Could not send day ${day.dayNumber} to client (stream closed)`);
+              }
             }
             
           } catch (error) {
