@@ -1,7 +1,7 @@
 import { Trip } from './types';
 
 const STORAGE_KEY = 'itinerary_trip_data';
-const STORAGE_VERSION = '25'; // Version 25 for 9-day itinerary fix (Nov 21-29, no duplicate dates)
+const STORAGE_VERSION = '26'; // Version 26: Remove fallback data, add empty states, fix musical reservations
 const VERSIONS_KEY = 'itinerary_saved_versions';
 const MAX_SAVED_VERSIONS = 5; // Keep last 5 versions
 
@@ -134,7 +134,7 @@ export function loadTrip(): Trip | null {
           const trip = parsed.trip;
           
           // Validate the trip data
-          if (!trip.days || !Array.isArray(trip.days) || trip.days.length !== 10) {
+          if (!trip.days || !Array.isArray(trip.days) || trip.days.length !== 9) {
             console.warn('Invalid trip data: wrong number of days. Clearing...');
             clearTrip();
             return null;

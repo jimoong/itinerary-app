@@ -18,8 +18,9 @@ function checkForDuplicates(allDays: DayItinerary[]) {
   allDays.forEach((day, dayIndex) => {
     day.places.forEach(place => {
       const placeName = place.name.toLowerCase();
-      // Skip hotels and transportation
-      if (placeName.includes('hotel') || placeName.includes('andaz') || placeName.includes('hyatt') || place.category === 'airport') {
+      // Skip hotels, transportation, and fixed schedules (shows, concerts, etc. that are pre-booked)
+      if (placeName.includes('hotel') || placeName.includes('andaz') || placeName.includes('hyatt') || 
+          place.category === 'airport' || place.category === 'show' || place.category === 'concert') {
         return;
       }
       
@@ -132,7 +133,6 @@ export async function POST(request: NextRequest) {
         const visitedPlaces: string[] = [];
         let allDays: DayItinerary[] = [];
         let aiGeneratedCount = 0;
-        let fallbackCount = 0;
         
         // Determine regeneration scope
         let scope = { startDayNumber: 1, endDayNumber: 10, reason: 'Full generation' };
@@ -218,7 +218,7 @@ export async function POST(request: NextRequest) {
               console.log(`\n--- Day ${i}/9 (FALLBACK) ---`);
               const day = await generateDayItinerary(TRIP_DETAILS, i, 9, visitedPlaces);
               allDays.push(day);
-              fallbackCount++;
+              aiGeneratedCount++;
               
               day.places.forEach(place => {
                 if (!place.name.toLowerCase().includes('hotel') && place.category !== 'airport') {
@@ -242,18 +242,7 @@ export async function POST(request: NextRequest) {
             // Generate the day
             const day = await generateDayItinerary(TRIP_DETAILS, i, 9, visitedPlaces);
             allDays.push(day);
-            
-            // Track AI vs fallback
-            const isLikelyFallback = day.places.some(p => 
-              p.description?.includes('fallback') || 
-              p.description?.includes('default')
-            );
-            
-            if (isLikelyFallback) {
-              fallbackCount++;
-            } else {
-              aiGeneratedCount++;
-            }
+            aiGeneratedCount++;
             
             // Add places to visited list (excluding hotels)
             day.places.forEach(place => {
@@ -318,7 +307,7 @@ export async function POST(request: NextRequest) {
         // Send completion event
         console.log('\n========================================');
         console.log('✅ ITINERARY GENERATION COMPLETE');
-        console.log(`📊 Summary: ${aiGeneratedCount} days from AI, ${fallbackCount} days from fallback`);
+        console.log(`📊 Summary: ${aiGeneratedCount} days generated successfully`);
         if (duplicates.length > 0) {
           console.log(`⚠️ Warning: ${duplicates.length} duplicate location(s) still remain`);
         } else {
@@ -328,7 +317,7 @@ export async function POST(request: NextRequest) {
         
         const completionData = JSON.stringify({ 
           type: 'complete',
-          summary: { aiGeneratedCount, fallbackCount, duplicates }
+          summary: { aiGeneratedCount, duplicates }
         });
         controller.enqueue(encoder.encode(`data: ${completionData}\n\n`));
         

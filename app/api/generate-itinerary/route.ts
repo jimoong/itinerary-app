@@ -10,8 +10,9 @@ function checkForDuplicates(allDays: DayItinerary[]) {
   allDays.forEach((day, dayIndex) => {
     day.places.forEach(place => {
       const placeName = place.name.toLowerCase();
-      // Skip hotels and transportation
-      if (placeName.includes('hotel') || placeName.includes('andaz') || placeName.includes('hyatt') || place.category === 'airport') {
+      // Skip hotels, transportation, and fixed schedules (shows, concerts, etc. that are pre-booked)
+      if (placeName.includes('hotel') || placeName.includes('andaz') || placeName.includes('hyatt') || 
+          place.category === 'airport' || place.category === 'show' || place.category === 'concert') {
         return;
       }
       
@@ -122,25 +123,12 @@ export async function POST(request: NextRequest) {
       const allDays = [];
       const visitedPlaces: string[] = [];
       let aiGeneratedCount = 0;
-      let fallbackCount = 0;
       
       for (let i = 1; i <= 9; i++) {
         console.log(`\n--- Day ${i}/9 ---`);
         const day = await generateDayItinerary(TRIP_DETAILS, i, 9, visitedPlaces);
         allDays.push(day);
-        
-        // Track if this was AI generated or fallback (check if it has the expected structure)
-        // Fallback data typically has specific placeholder patterns
-        const isLikelyFallback = day.places.some(p => 
-          p.description?.includes('fallback') || 
-          p.description?.includes('default')
-        );
-        
-        if (isLikelyFallback) {
-          fallbackCount++;
-        } else {
-          aiGeneratedCount++;
-        }
+        aiGeneratedCount++;
         
         // Add this day's places to visited list (excluding hotels)
         day.places.forEach(place => {
@@ -173,7 +161,7 @@ export async function POST(request: NextRequest) {
       
       console.log('\n========================================');
       console.log('✅ ITINERARY GENERATION COMPLETE');
-      console.log(`📊 Summary: ${aiGeneratedCount} days from AI, ${fallbackCount} days from fallback`);
+      console.log(`📊 Summary: ${aiGeneratedCount} days generated successfully`);
       if (duplicates.length > 0) {
         console.log(`⚠️ Warning: ${duplicates.length} duplicate location(s) still remain`);
       } else {

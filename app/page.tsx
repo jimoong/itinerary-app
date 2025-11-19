@@ -5,6 +5,7 @@ import MapView from '@/components/MapView';
 import Timeline from '@/components/Timeline';
 import DayNavigation from '@/components/DayNavigation';
 import EditPlace from '@/components/EditPlace';
+import EmptyState from '@/components/EmptyState';
 import { Trip, Place, DayItinerary } from '@/lib/types';
 import { loadTrip, saveTrip, clearTrip } from '@/lib/storage';
 import { TRIP_DETAILS, SFO_TO_LISBON_FLIGHT, LISBON_TO_LONDON_FLIGHT } from '@/lib/constants';
@@ -627,6 +628,7 @@ async function addLondonArrival(day: DayItinerary): Promise<DayItinerary> {
 export default function Home() {
   const [trip, setTrip] = useState<Trip | null>(null);
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
+  const [generationError, setGenerationError] = useState<string | null>(null);
   const [highlightedPlaceId, setHighlightedPlaceId] = useState<string | undefined>();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -752,6 +754,7 @@ export default function Home() {
 
   const generateAllDays = async (smartMode: boolean = false) => {
     setIsLoading(true);
+    setGenerationError(null); // Clear any previous errors
     
     // Try streaming first, fallback to non-streaming if it fails
     let useStreaming = true;
@@ -932,7 +935,9 @@ export default function Home() {
       console.log('🎉 Trip generation complete!');
     } catch (error) {
       console.error('Error generating trip:', error);
-      alert('Failed to generate itinerary. Check console for details. Make sure API keys are set in .env.local');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      setGenerationError(`Failed to generate itinerary: ${errorMessage}`);
+      setTrip(null); // Clear any partial trip data
     } finally {
       setIsLoading(false);
     }
@@ -1188,19 +1193,29 @@ export default function Home() {
         );
       }
 
+      // Show error state if generation failed
+      if (generationError) {
+        return (
+          <EmptyState
+            title="Generation Failed"
+            message={generationError}
+            actions={[
+              { label: "Try Again", onClick: () => generateAllDays(false) }
+            ]}
+          />
+        );
+      }
+
+      // Show empty state if no trip exists
       if (!trip) {
         return (
-          <div className="h-screen flex items-center justify-center bg-white dark:bg-slate-950">
-            <div className="text-center">
-              <p className="text-lg text-gray-600 dark:text-gray-400">Failed to load itinerary</p>
-              <button
-                onClick={() => generateAllDays(false)}
-                className="mt-4 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                Try Again
-              </button>
-            </div>
-          </div>
+          <EmptyState
+            title="No Itinerary Yet"
+            message="Generate a new itinerary to get started."
+            actions={[
+              { label: "Generate New", onClick: () => generateAllDays(false) }
+            ]}
+          />
         );
       }
 
