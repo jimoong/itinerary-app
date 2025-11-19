@@ -102,20 +102,29 @@ export async function generateDayItinerary(
   console.log(`[generateDayItinerary] Starting generation for day ${dayNumber}/${totalDays}`);
   console.log(`[generateDayItinerary] ${getExcludedPOIsSummary()}`);
   
-  // Handle date assignment for 9 days with overlap on Nov 25
+  // Handle date assignment for 10 days
+  // Lisbon: Days 1-4 (Nov 21-24)
+  // London: Days 4-10 (Nov 24-29) - Day 4 is travel day (both cities)
   let date: string;
   let city: string;
   
-  if (dayNumber <= 5) {
-    // Lisbon days 1-5: Nov 21-25
+  if (dayNumber <= 3) {
+    // Lisbon days 1-3: Nov 21-23
     const lisbonStart = new Date(details.lisbonDates.start);
     lisbonStart.setDate(lisbonStart.getDate() + (dayNumber - 1));
     date = lisbonStart.toISOString().split('T')[0];
     city = 'Lisbon';
+  } else if (dayNumber === 4) {
+    // Day 4: Travel day - Nov 24 (both Lisbon departure and London arrival)
+    // For AI generation, we'll treat this as London to generate afternoon activities
+    const lisbonStart = new Date(details.lisbonDates.start);
+    lisbonStart.setDate(lisbonStart.getDate() + 3); // Nov 24
+    date = lisbonStart.toISOString().split('T')[0];
+    city = 'London'; // Generate London activities for afternoon
   } else {
-    // London days 6-9: Nov 25-28
+    // London days 5-10: Nov 25-29
     const londonStart = new Date(details.londonDates.start);
-    londonStart.setDate(londonStart.getDate() + (dayNumber - 6));
+    londonStart.setDate(londonStart.getDate() + (dayNumber - 4));
     date = londonStart.toISOString().split('T')[0];
     city = 'London';
   }
@@ -932,7 +941,55 @@ function generateFallbackItinerary(
   };
 
   const londonActivitiesByDay: { [key: number]: Place[] } = {
-    6: [ // Nov 25 - Arrival day - afternoon/evening only
+    4: [ // Nov 24 - Arrival day from Lisbon - afternoon/evening only
+      {
+        id: `${dayNumber}-0`,
+        name: 'Borough Market',
+        address: '8 Southwark St, London SE1 1TL, United Kingdom',
+        lat: 51.5054,
+        lng: -0.0910,
+        description: 'Historic food market near London Bridge. Great for lunch with diverse international food stalls. Close to hotel area.',
+        duration: 90,
+        category: 'restaurant',
+        startTime: '12:30',
+        kidsRating: 'Kids love the variety! From fresh donuts to international street food. Vibrant atmosphere!',
+        transportToNext: {
+          mode: 'walk',
+          duration: 10,
+          distance: '0.8 km'
+        }
+      },
+      {
+        id: `${dayNumber}-1`,
+        name: 'Tower Bridge',
+        address: 'Tower Bridge Rd, London SE1 2UP, United Kingdom',
+        lat: 51.5055,
+        lng: -0.0754,
+        description: 'Iconic London landmark with glass floor walkway. Great first London experience and photo opportunity!',
+        duration: 60,
+        category: 'landmark',
+        startTime: '14:30',
+        kidsRating: 'Walking on the glass floor is thrilling! Amazing views of the Thames and city.',
+        transportToNext: {
+          mode: 'walk',
+          duration: 15,
+          distance: '1.2 km'
+        }
+      },
+      {
+        id: `${dayNumber}-2`,
+        name: 'Dinner near hotel',
+        address: 'Commercial Rd, London E1, United Kingdom',
+        lat: 51.5155,
+        lng: -0.0639,
+        description: 'Casual dinner near Hyatt Place City East. Many family-friendly options in the area.',
+        duration: 90,
+        category: 'restaurant',
+        startTime: '18:00',
+        kidsRating: 'Relaxed first evening after travel. Easy walk back to hotel for rest.'
+      }
+    ],
+    5: [ // Nov 25 - Hotel transition day - full day
       {
         id: `${dayNumber}-0`,
         name: 'Hyde Park Winter Wonderland',
@@ -963,7 +1020,7 @@ function generateFallbackItinerary(
         kidsRating: 'Casual dining perfect for tired travelers. Fish & chips or pizza - kid favorites!'
       }
     ],
-    7: [ // Nov 26 - Full day
+    6: [ // Nov 26 - Full day
       {
         id: `${dayNumber}-0`,
         name: 'Natural History Museum',
@@ -1011,7 +1068,7 @@ function generateFallbackItinerary(
         kidsRating: 'ABSOLUTELY UNMISSABLE! These shows are spectacular and age-appropriate. Lion King puppetry or Matilda magic - both amazing. Book early!'
       }
     ],
-    8: [ // Nov 27 - Full day
+    7: [ // Nov 27 - Full day
       {
         id: `${dayNumber}-0`,
         name: 'Tower of London',
@@ -1076,18 +1133,117 @@ function generateFallbackItinerary(
         kidsRating: 'Spectacular night views! The 30-minute rotation shows the entire lit-up city. Safe capsules perfect for families.'
       }
     ],
-    9: [ // Nov 28 - Departure day - morning only
+    8: [ // Nov 28 - Full day
       {
         id: `${dayNumber}-0`,
-        name: 'Covent Garden Market',
+        name: 'British Museum',
+        address: 'Great Russell St, London WC1B 3DG, United Kingdom',
+        lat: 51.5194,
+        lng: -0.1270,
+        description: 'World-class museum with ancient artifacts including Egyptian mummies and Rosetta Stone. FREE admission!',
+        duration: 180,
+        category: 'museum',
+        startTime: '10:00',
+        kidsRating: 'Kids love the Egyptian mummies and ancient treasures! Interactive family trails available.',
+        transportToNext: {
+          mode: 'walk',
+          duration: 12,
+          distance: '0.9 km'
+        }
+      },
+      {
+        id: `${dayNumber}-1`,
+        name: 'Dishoom Covent Garden',
+        address: '12 Upper St Martin\'s Ln, London WC2H 9FB, United Kingdom',
+        lat: 51.5126,
+        lng: -0.1270,
+        description: 'Popular Indian restaurant with family-friendly atmosphere and delicious food.',
+        duration: 90,
+        category: 'restaurant',
+        startTime: '13:30',
+        kidsRating: 'Kids menu available. Flavorful dishes that aren\'t too spicy!',
+        transportToNext: {
+          mode: 'walk',
+          duration: 5,
+          distance: '0.4 km'
+        }
+      },
+      {
+        id: `${dayNumber}-2`,
+        name: 'Leicester Square & Piccadilly Circus',
+        address: 'Leicester Square, London WC2H 7NA, United Kingdom',
+        lat: 51.5103,
+        lng: -0.1301,
+        description: 'Vibrant entertainment district with street performers and iconic neon lights.',
+        duration: 60,
+        category: 'landmark',
+        startTime: '15:30',
+        kidsRating: 'Bustling atmosphere with street performers! Great for people-watching.',
+        transportToNext: {
+          mode: 'metro',
+          duration: 15,
+          distance: '2.5 km'
+        }
+      },
+      {
+        id: `${dayNumber}-3`,
+        name: 'Dinner near hotel',
+        address: 'Blackfriars, London SE1, United Kingdom',
+        lat: 51.5123,
+        lng: -0.1047,
+        description: 'Relaxed dinner near Hyatt Regency Blackfriars.',
+        duration: 90,
+        category: 'restaurant',
+        startTime: '18:00',
+        kidsRating: 'Easy evening near hotel for packing and rest.'
+      }
+    ],
+    9: [ // Nov 29 - Full day
+      {
+        id: `${dayNumber}-0`,
+        name: 'Buckingham Palace',
+        address: 'London SW1A 1AA, United Kingdom',
+        lat: 51.5014,
+        lng: -0.1419,
+        description: 'Official residence of the King. See the palace exterior and walk through St. James\'s Park.',
+        duration: 90,
+        category: 'landmark',
+        startTime: '09:30',
+        kidsRating: 'Kids love seeing the royal palace! Check if Changing of the Guard is scheduled.',
+        transportToNext: {
+          mode: 'walk',
+          duration: 15,
+          distance: '1.1 km'
+        }
+      },
+      {
+        id: `${dayNumber}-1`,
+        name: 'Harrods',
+        address: '87-135 Brompton Rd, London SW1X 7XL, United Kingdom',
+        lat: 51.4994,
+        lng: -0.1634,
+        description: 'Iconic luxury department store. Visit the famous Food Halls even if not shopping!',
+        duration: 120,
+        category: 'shopping',
+        startTime: '11:30',
+        kidsRating: 'The Food Halls are like a museum! Kids amazed by the elaborate displays and treats.',
+        transportToNext: {
+          mode: 'metro',
+          duration: 20,
+          distance: '3.5 km'
+        }
+      },
+      {
+        id: `${dayNumber}-2`,
+        name: 'Covent Garden',
         address: 'Covent Garden, London WC2E 8RF, United Kingdom',
         lat: 51.5118,
         lng: -0.1226,
-        description: 'Historic covered market with street performers, shops, and cafes. Perfect for final morning browsing.',
-        duration: 90,
+        description: 'Historic market with street performers, shops, and cafes.',
+        duration: 120,
         category: 'shopping',
-        startTime: '09:00',
-        kidsRating: 'Street performers and buskers entertain while you shop. Apple Market has unique gifts. Fun farewell activity!',
+        startTime: '14:30',
+        kidsRating: 'Street performers everywhere! Great for last-minute souvenir shopping.',
         transportToNext: {
           mode: 'walk',
           duration: 8,
@@ -1095,16 +1251,30 @@ function generateFallbackItinerary(
         }
       },
       {
-        id: `${dayNumber}-1`,
-        name: 'Final London Meal',
+        id: `${dayNumber}-3`,
+        name: 'Farewell Dinner',
         address: 'Covent Garden Area, London WC2, United Kingdom',
         lat: 51.5115,
         lng: -0.1220,
-        description: 'Last meal in London before heading to airport. Many family-friendly options in Covent Garden.',
-        duration: 75,
+        description: 'Final dinner in London. Many family-friendly restaurants in the area.',
+        duration: 90,
         category: 'restaurant',
-        startTime: '11:00',
-        kidsRating: 'Relaxed farewell meal. Reflect on the amazing trip while kids can watch street performers one last time!'
+        startTime: '17:00',
+        kidsRating: 'Celebrate the amazing trip! Reflect on favorite memories.'
+      }
+    ],
+    10: [ // Nov 30 - Departure day - morning only
+      {
+        id: `${dayNumber}-0`,
+        name: 'Hotel Breakfast',
+        address: 'Hyatt Regency London Blackfriars, 1 Blackfriars, London SE1 8NZ',
+        lat: 51.5123,
+        lng: -0.1047,
+        description: 'Quick breakfast at hotel before departure.',
+        duration: 45,
+        category: 'restaurant',
+        startTime: '06:30',
+        kidsRating: 'Final English breakfast! Early start for the flight home.'
       }
     ]
   };
@@ -1124,7 +1294,7 @@ function generateFallbackItinerary(
   // Add flight information for travel days
   if (dayNumber === 1) {
     itinerary.flight = SFO_TO_LISBON_FLIGHT;
-  } else if (dayNumber === 5) {
+  } else if (dayNumber === 4) {
     itinerary.flight = LISBON_TO_LONDON_FLIGHT;
   } else if (dayNumber === 10) {
     itinerary.flight = LONDON_TO_SFO_FLIGHT;
