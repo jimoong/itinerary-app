@@ -213,8 +213,16 @@ export async function POST(request: NextRequest) {
           } catch (error) {
             console.error('❌ Two-phase generation failed, falling back to old method:', error);
             // Fall back to old method
+            // Reset allDays and visitedPlaces since two-phase failed
             allDays = [];
-            for (let i = scope.startDayNumber; i <= scope.endDayNumber; i++) {
+            visitedPlaces.length = 0; // Clear visited places
+            
+            // For fallback, always generate all days (ignore smart regeneration scope)
+            const fallbackStart = 1;
+            const fallbackEnd = 9;
+            console.log(`🔄 Fallback: Generating all days (${fallbackStart}-${fallbackEnd})`);
+            
+            for (let i = fallbackStart; i <= fallbackEnd; i++) {
               console.log(`\n--- Day ${i}/9 (FALLBACK) ---`);
               const day = await generateDayItinerary(TRIP_DETAILS, i, 9, visitedPlaces);
               allDays.push(day);
