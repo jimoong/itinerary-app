@@ -58,12 +58,41 @@ export function cleanJsonResponse(content: string): string {
     if (openBraces > closeBraces || openBrackets > closeBrackets) {
       console.log('[cleanJsonResponse] Detected truncated JSON, attempting to close...');
       
+      // Check if we're in an unterminated string
+      let inString = false;
+      let escapeNext = false;
+      for (let i = 0; i < repaired.length; i++) {
+        const char = repaired[i];
+        if (escapeNext) {
+          escapeNext = false;
+          continue;
+        }
+        if (char === '\\') {
+          escapeNext = true;
+          continue;
+        }
+        if (char === '"') {
+          inString = !inString;
+        }
+      }
+      
+      // If we're in an unterminated string, close it
+      if (inString) {
+        console.log('[cleanJsonResponse] Detected unterminated string, closing it');
+        repaired += '"';
+      }
+      
       // Remove any incomplete last item (likely truncated)
       // Find the last complete object/value before truncation
       const lastCommaIndex = repaired.lastIndexOf(',');
-      if (lastCommaIndex > 0) {
-        repaired = repaired.substring(0, lastCommaIndex);
-        console.log('[cleanJsonResponse] Removed incomplete trailing content');
+      if (lastCommaIndex > 0 && !inString) {
+        // Only remove trailing content if we're not fixing a string issue
+        const afterComma = repaired.substring(lastCommaIndex + 1).trim();
+        // Check if what's after the comma looks incomplete (no closing brace/bracket)
+        if (!afterComma.includes('}') && !afterComma.includes(']')) {
+          repaired = repaired.substring(0, lastCommaIndex);
+          console.log('[cleanJsonResponse] Removed incomplete trailing content');
+        }
       }
       
       // Close missing brackets and braces
@@ -84,7 +113,7 @@ export function cleanJsonResponse(content: string): string {
         console.log('[cleanJsonResponse] ✅ Successfully repaired truncated JSON');
         return repaired;
       } catch (e) {
-        console.warn('[cleanJsonResponse] Repair attempt failed');
+        console.warn('[cleanJsonResponse] Repair attempt failed:', e instanceof Error ? e.message : e);
       }
     }
     
