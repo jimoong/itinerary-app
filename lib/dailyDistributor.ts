@@ -151,8 +151,7 @@ async function distributeCityPOIs(
           description: poi.description,
           duration: poi.duration || 90,
           category: poi.category || 'attraction',
-          startTime: poi.startTime,
-          kidsRating: poi.kidsRating
+          startTime: poi.startTime
         };
       });
       
@@ -322,8 +321,8 @@ ${dayInfo}
    - Include dinner option (18:00-20:00)
    - Place restaurants near other activities
 
-RESPONSE FORMAT:
-Return a JSON object with this structure:
+RESPONSE FORMAT (KEEP CONCISE):
+Return JSON with SHORT descriptions (max 6 words). NO kidsRating field.
 
 {
   "days": [
@@ -332,29 +331,26 @@ Return a JSON object with this structure:
       "places": [
         {
           "name": "Oceanário de Lisboa",
-          "address": "Esplanada Dom Carlos I, 1990-005 Lisboa, Portugal",
+          "address": "Esplanada Dom Carlos I, Lisboa",
           "lat": 38.7633,
           "lng": -9.0935,
-          "description": "One of Europe's best aquariums",
+          "description": "Large aquarium with marine life",
           "duration": 120,
           "category": "aquarium",
-          "startTime": "15:30",
-          "kidsRating": "Perfect for ages 6-9"
+          "startTime": "15:30"
         }
-        // ... more places for day 1
       ]
     }
-    // ... more days
   ]
 }
 
-CRITICAL REMINDERS:
+CRITICAL:
+- SHORT descriptions (max 6 words)
+- NO kidsRating field
 - Include ALL must-visit POIs (⭐)
-- Cluster geographically (same neighborhood = same day)
-- Respect time constraints (arrival/departure/fixed schedules)
-- Include restaurants for meals
-- Don't overschedule - quality over quantity
-- Assign realistic start times based on duration and travel
+- Cluster geographically
+- Respect time constraints
+- Include meal options
 
 Generate the distribution now:`;
 
