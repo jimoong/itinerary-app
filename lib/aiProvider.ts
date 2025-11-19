@@ -5,7 +5,7 @@ type AIProvider = 'openai' | 'gemini';
 
 const AI_PROVIDER: AIProvider = (process.env.AI_PROVIDER as AIProvider) || 'openai'; // Note: If using Gemini, make sure your API key has the required permissions
 const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-3.5-turbo';
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-pro'; // Changed from gemini-1.5-flash to gemini-1.5-pro for better reliability
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-pro'; // Using gemini-pro (v1 stable API)
 
 // Timeout settings (in milliseconds)
 const OPENAI_TIMEOUT = parseInt(process.env.OPENAI_TIMEOUT || '30000'); // 30 seconds
