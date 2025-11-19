@@ -16,6 +16,7 @@ export interface MasterPOI extends Omit<Place, 'id' | 'startTime' | 'transportTo
   city: 'Lisbon' | 'London';
   priority: 'high' | 'medium' | 'low';
   isMustVisit?: boolean;
+  // Note: kidsRating removed to reduce response size
 }
 
 interface MasterPOIListResponse {
@@ -98,8 +99,7 @@ export async function generateMasterPOIList(
         category: poi.category || 'attraction',
         city: 'Lisbon' as const,
         priority: poi.priority || 'medium',
-        isMustVisit: poi.isMustVisit || false,
-        kidsRating: poi.kidsRating
+        isMustVisit: poi.isMustVisit || false
       })),
       london: parsed.london.map((poi: any, idx: number) => ({
         name: poi.name,
@@ -111,8 +111,7 @@ export async function generateMasterPOIList(
         category: poi.category || 'attraction',
         city: 'London' as const,
         priority: poi.priority || 'medium',
-        isMustVisit: poi.isMustVisit || false,
-        kidsRating: poi.kidsRating
+        isMustVisit: poi.isMustVisit || false
       })),
       totalCount: parsed.lisbon.length + parsed.london.length
     };
@@ -235,12 +234,11 @@ Return a JSON object with this exact structure:
       "address": "Esplanada Dom Carlos I, 1990-005 Lisboa, Portugal",
       "lat": 38.7633,
       "lng": -9.0935,
-      "description": "One of Europe's best aquariums with massive central tank and diverse marine life",
+      "description": "Large aquarium with diverse marine life",
       "duration": 120,
       "category": "aquarium",
       "priority": "high",
-      "isMustVisit": true,
-      "kidsRating": "Perfect for ages 6-9, interactive exhibits"
+      "isMustVisit": true
     }
     // ... more Lisbon POIs
   ],
@@ -250,22 +248,22 @@ Return a JSON object with this exact structure:
       "address": "Cromwell Rd, South Kensington, London SW7 5BD, UK",
       "lat": 51.4967,
       "lng": -0.1764,
-      "description": "World-famous museum with dinosaur skeletons, blue whale, and interactive galleries",
+      "description": "Famous museum with dinosaur exhibits",
       "duration": 150,
       "category": "museum",
       "priority": "high",
-      "isMustVisit": true,
-      "kidsRating": "Excellent for kids, dinosaurs are the highlight"
+      "isMustVisit": true
     }
     // ... more London POIs
   ]
 }
 
 CRITICAL REMINDERS:
+- Keep descriptions SHORT (max 8 words)
+- NO kidsRating field needed
 - Include ALL high-priority must-visit locations
 - Mark must-visit locations with "isMustVisit": true
-- Provide MORE POIs than needed (we'll distribute them intelligently in Phase 2)
-- Focus on family-friendly, kid-tested attractions
+- Provide MORE POIs than needed (we'll distribute them in Phase 2)
 - Include accurate addresses and coordinates
 - Vary the duration (30 min to 3 hours)
 - Include restaurants for different meal times
