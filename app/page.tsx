@@ -774,31 +774,16 @@ export default function Home() {
     
     try {
       if (smartMode) {
-        console.log('⏰ Starting SMART streaming itinerary generation (from current time)...');
+        console.log('⏰ Starting SMART itinerary generation (from current time)...');
       } else {
-        console.log('🚀 Starting streaming itinerary generation...');
+        console.log('🚀 Starting itinerary generation...');
       }
       
-      const response = await fetch('/api/generate-itinerary-stream', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          smartRegeneration: smartMode,
-          existingDays: smartMode && trip ? trip.days : undefined
-        }),
-      });
-
-      console.log('Response status:', response.status);
-
-      if (!response.ok) {
-        console.warn('⚠️ Streaming failed, falling back to non-streaming API');
-        useStreaming = false;
-      } else {
-        useStreaming = true;
-      }
+      // Always use non-streaming API (streaming has reliability issues)
+      useStreaming = false;
       
       if (!useStreaming) {
-        // Fallback to non-streaming API
+        // Use non-streaming API
         console.log('📡 Using non-streaming API...');
         const fallbackResponse = await fetch('/api/generate-itinerary', {
           method: 'POST',
