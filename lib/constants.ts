@@ -30,17 +30,19 @@ export const TRIP_DETAILS: TripDetails = {
 };
 
 // Flight information for travel days
+// UA 713: SFO to EWR (Nov 20, 10:45 AM - 7:10 PM)
+// UA 64: EWR to LIS (Nov 20, 8:25 PM - Nov 21, 8:10 AM)
 export const SFO_TO_LISBON_FLIGHT: Flight = {
-  flightNumber: "TBD", // To be provided by user
+  flightNumber: "UA 64", // Second leg (Newark to Lisbon)
   departure: {
     airport: "SFO",
     city: "San Francisco",
-    time: "18:00" // Placeholder - San Francisco local time (PST)
+    time: "10:45" // Nov 20, 10:45 AM PST (UA 713 departure)
   },
   arrival: {
     airport: "LIS",
     city: "Lisbon",
-    time: "13:00" // Placeholder - Lisbon local time (WET) next day
+    time: "08:10" // Nov 21, 8:10 AM WET (UA 64 arrival)
   }
 };
 
