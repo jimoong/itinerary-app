@@ -123,8 +123,11 @@ export async function generateDayItinerary(
   const hotel = city === 'Lisbon' ? details.lisbonHotel : details.londonHotel;
 
   // Determine if this is arrival or departure day
-  const isFirstDayInCity = (city === 'Lisbon' && dayNumber === 1) || (city === 'London' && dayNumber === 6);
-  const isLastDayInCity = (city === 'Lisbon' && dayNumber === 5) || (city === 'London' && dayNumber === 10);
+  const isFirstDayInCity = (city === 'Lisbon' && dayNumber === 1) || (city === 'London' && dayNumber === 5);
+  const isLastDayInCity = (city === 'Lisbon' && dayNumber === 4) || (city === 'London' && dayNumber === 10);
+  
+  // Special handling for Day 4: Departure from Lisbon (morning) + Arrival in London (afternoon)
+  const isTravelDay = dayNumber === 4;
   
   // Adjust time windows
   let startTime = '09:00';
@@ -132,18 +135,24 @@ export async function generateDayItinerary(
   let numActivities = '4-6';
   
   if (isFirstDayInCity) {
-    startTime = '14:00'; // Assume afternoon arrival
+    startTime = city === 'Lisbon' ? '14:00' : '12:00'; // Lisbon: afternoon arrival, London: noon arrival
     endTime = '20:00';
     numActivities = '2-3';
   } else if (isLastDayInCity) {
     startTime = '09:00';
-    endTime = '14:00'; // Assume afternoon departure
+    endTime = city === 'Lisbon' ? '04:00' : '08:00'; // Lisbon: early morning departure, London: morning departure
+    numActivities = '0'; // No activities on departure day - handled by flight logic
+  } else if (isTravelDay && city === 'London') {
+    // Day 4 London activities (after arrival)
+    startTime = '12:00'; // After flight arrival and hotel check-in
+    endTime = '20:00';
     numActivities = '2-3';
   }
 
   const dayContext = isFirstDayInCity ? `This is the ARRIVAL day in ${city}.` : 
-                     isLastDayInCity ? `This is the DEPARTURE day from ${city}.` :
-                     `This is day ${dayNumber - (city === 'London' ? 5 : 0)} of ${city === 'Lisbon' ? 5 : 5} in ${city}.`;
+                     isLastDayInCity ? `This is the DEPARTURE day from ${city}. DO NOT suggest any activities - just return empty places array.` :
+                     isTravelDay && city === 'London' ? `This is the ARRIVAL day in ${city} (afternoon arrival from Lisbon at 10am).` :
+                     `This is day ${dayNumber - (city === 'London' ? 4 : 0)} of ${city === 'Lisbon' ? 4 : 6} in ${city}.`;
 
   const avoidPlaces = previousPlaces && previousPlaces.length > 0 
     ? `\n\n🚫 CRITICAL - PLACES ALREADY VISITED (ABSOLUTELY DO NOT REPEAT ANY OF THESE):\n${previousPlaces.map(p => `  ❌ ${p}`).join('\n')}\n\n⚠️ YOU MUST SUGGEST COMPLETELY DIFFERENT PLACES NOT IN THIS LIST.\n⚠️ Suggesting any place from this list will result in REJECTION.\n⚠️ Focus on VARIETY - each day should explore different neighborhoods and attraction types.\n⚠️ If previous days visited museums, focus on outdoor activities, landmarks, or food experiences today.\n`
@@ -162,43 +171,51 @@ export async function generateDayItinerary(
   let flightDayConstraints = '';
   
   if (dayNumber === 1) {
-    // Day 1: Lisbon arrival afternoon
+    // Day 1: Lisbon arrival morning
     flightDayConstraints = `
 
 ⚠️ LISBON ARRIVAL DAY CONSTRAINTS FOR DAY 1:
-- Arrived on flight from San Francisco at 13:00 (1:00 PM) - placeholder time
-- After customs, baggage, and taxi to hotel: arrive at hotel around 15:00-15:30
-- This is an ARRIVAL day but with afternoon/evening time available
-- Suggest 2-3 light activities from 17:00 to 21:30
-- Focus on: nearby Belém area (close to hotel), dinner near hotel, evening walk
+- Arrived on flight from San Francisco at 08:10 (8:10 AM)
+- After customs, baggage, and taxi to hotel: arrive at hotel around 10:00
+- This is an ARRIVAL day with full day available
+- Suggest 3-4 activities from 10:30 to 21:00
+- Focus on: nearby Belém area (close to hotel), central Lisbon, dinner
 - Keep activities relaxed after long-haul flight (jet lag)
-- All activities must have start times AFTER 17:00
+- All activities must have start times AFTER 10:30
+`;
+  } else if (dayNumber === 4 && city === 'Lisbon') {
+    // Day 4: Lisbon departure - NO ACTIVITIES
+    flightDayConstraints = `
+
+⚠️ LISBON DEPARTURE DAY CONSTRAINTS FOR DAY 4:
+- This is a DEPARTURE day - DO NOT suggest any activities in Lisbon
+- Leave hotel at 04:00 (4:00 AM) for early flight
+- Flight departs at 07:00 (7:00 AM) to London
+- Return EMPTY places array: { "places": [] }
+`;
+  } else if (dayNumber === 4 && city === 'London') {
+    // Day 4: London arrival afternoon - IMPORTANT!
+    flightDayConstraints = `
+
+⚠️ LONDON ARRIVAL DAY CONSTRAINTS FOR DAY 4 (Nov 24):
+- Flight arrives from Lisbon at 09:30 (9:30 AM)
+- Hotel check-in at Hyatt Place City East by 11:00 (11:00 AM)
+- Start London activities from 12:00 (noon) onwards
+- Suggest 2-3 afternoon/evening activities in London
+- Focus on areas near Hyatt Place City East or central London
+- End day by 21:00 (9:00 PM)
+- This is the FIRST day in London - suggest welcoming activities
 `;
   } else if (dayNumber === 5) {
-    // Day 5: Lisbon departure ONLY (London arrival is Day 6)
+    // Day 5: London full day (hotel transition day)
     flightDayConstraints = `
 
-⚠️ PARIS DEPARTURE DAY CONSTRAINTS FOR DAY 5:
-- Eurostar train to London departs at 12:30 from Gare du Nord
-- Must check out of hotel by 11:00 AM
-- Must arrive at Gare du Nord by 11:30 (1 hour before departure for customs/security)
-- Morning activities ONLY from 08:00 to 10:30
-- Suggest ONLY 1 quick activity (early breakfast at hotel or nearby café)
-- NO sightseeing - focus on breakfast and final packing
-- This is a morning departure day with train travel
-`;
-  } else if (dayNumber === 6) {
-    // Day 6: London arrival afternoon
-    flightDayConstraints = `
-
-⚠️ LONDON ARRIVAL DAY CONSTRAINTS FOR DAY 6:
-- Arrived on flight from Lisbon at 14:30 (2:30 PM) - placeholder time
-- After transport to hotel: arrive at hotel around 15:30-16:00
-- This is an ARRIVAL day with afternoon/evening time available
-- Suggest 2-3 activities from 16:30 to 21:30
-- Focus on: nearby attractions, dinner near hotel, evening walk
-- Keep first day relaxed after flight
-- All activities must have start times AFTER 16:30
+⚠️ LONDON HOTEL TRANSITION DAY CONSTRAINTS FOR DAY 5 (Nov 25):
+- Start from Hyatt Place City East in the morning
+- Full day of London activities
+- End day at Hyatt Regency Blackfriars (different hotel)
+- Suggest 4-5 activities for full day from 09:00 to 21:00
+- Plan route to end near Blackfriars area
 `;
   } else if (dayNumber === 10) {
     // Day 10: London departure (Nov 29)
@@ -651,8 +668,8 @@ function generateFallbackItinerary(
   city: string,
   hotel: any
 ): DayItinerary {
-  const isFirstDayInCity = (city === 'Lisbon' && dayNumber === 1) || (city === 'London' && dayNumber === 6);
-  const isLastDayInCity = (city === 'Lisbon' && dayNumber === 5) || (city === 'London' && dayNumber === 10);
+  const isFirstDayInCity = (city === 'Lisbon' && dayNumber === 1) || (city === 'London' && dayNumber === 5);
+  const isLastDayInCity = (city === 'Lisbon' && dayNumber === 4) || (city === 'London' && dayNumber === 10);
   
   const lisbonActivitiesByDay: { [key: number]: Place[] } = {
     1: [ // Nov 21 - Arrival day - afternoon/evening only
