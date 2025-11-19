@@ -23,6 +23,19 @@ export function cleanJsonResponse(content: string): string {
   
   cleaned = cleaned.trim();
   
+  // Handle duplicate responses (AI sometimes returns the same JSON twice)
+  // Look for pattern: } ``` ```json { (closing brace, markdown end, markdown start, opening brace)
+  const duplicatePattern = /\}\s*```\s*```json\s*\{/;
+  if (duplicatePattern.test(cleaned)) {
+    console.warn('[cleanJsonResponse] Detected duplicate response, extracting first occurrence');
+    // Find the first complete JSON object
+    const firstJsonEnd = cleaned.indexOf('}\n```');
+    if (firstJsonEnd > 0) {
+      cleaned = cleaned.substring(0, firstJsonEnd + 1);
+      console.log('[cleanJsonResponse] Extracted first JSON object, removed duplicate');
+    }
+  }
+  
   // Try to fix common JSON issues
   try {
     // First attempt: parse as-is
